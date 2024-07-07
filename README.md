@@ -1,8 +1,19 @@
-![Logo do R](/public/ecocell_banner.png)
+![Logo](/public/ecocell_banner.png)
 
 <hr>
 
-## 1 - DESCRIÇÃO DO PROJETO
+## 1 - OBJETIVO DO PROJETO
+
+O Ecocell é um projeto para cumprir o disposto na Atividade Extensionista do Bacharelado em Engenharia de Software da Uninter.
+
+O objetivo é desenvolver uma aplicação que esteja dentro do escopo das ODS - Objetivo de Desenvolvimento Sustentável da ONU.
+
+O Ecocell contempla as seguintes ODS:
+- Cidades e comunidades sustentáveis;
+- Ação contra a mudança global do clima; e,
+- Vida terrestre.
+
+## 2 - DESCRIÇÃO DO PROJETO
 
 <b>EcoCell</b> é um aplicativo mobile (celular) que tem o objetivo de unir pessoas, órgãos públicos, organizações não governamentais e empresas para a realização e controle de descarte inteligente e sustentável de materiais eletrônicos estragados e/ou obsoletos.
 
@@ -16,7 +27,7 @@ O Coletor é uma pessoa jurídica que se cadastra no EcoCell para fazer a coleta
 
 <hr>
 
-## 1.1 - SISTEMA DE PONTOS
+## 2.1 - SISTEMA DE PONTOS
 
 O sistema de pontos é uma solução gameficada que atribui pontos para o Descartante, Ponto de Descarte e o Coletor.
 
@@ -29,7 +40,7 @@ O Ponto de Descarte receberá pontos da seguinte maneira: efetivar o recebimento
 O Coletor receberá pontos ao coletar material  - mediante compra ou não - nos estabelecimentos cadastrados como Ponto de Descarte. Ao coletar o material descartado, o Coletor deverá marcar como efetivada a coleta, assim como o Ponto de Descarte deverá marcar como efetivada. Assim, ambas coletas efetivadas, o Coletor receberá seus pontos referentes a essa coleta e, como mencionado acima, o Ponto de Descarte também receberá seus pontos.
 
 
-## 1.2 - RANQUEAMENTO
+## 2.2 - RANQUEAMENTO
 
 Haverá três modalidades de ranqueamento, que são elas: Ranqueamento Descartante, Ranqueamento Ponto de Descarte e Ranqueamento Coletor.
 
@@ -41,4 +52,4 @@ A Matriz também entrará no ranqueamento municipal da cidade de sua sede.
 
 A modalidade Municipal contará com as empresas que tiverem sede no município, sendo elas Matrizes ou Filiais. 
 
-Na modalidade Municipal, os pontos da Matriz serão somente da Matriz, pois nesse tipo de ranqueamento todas as empresas, tanto a Matriz quanto as Filiais, concorrem entre si.
+Na modalidade Municipal, os pontos da Matriz serão somente da Matriz, pois nesse tipo de ranqueamento todas as empresas, tanto a Matriz quanto as Filiais concorrem entre si.
