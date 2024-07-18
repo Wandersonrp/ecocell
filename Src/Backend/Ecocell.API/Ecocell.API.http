@@ -1,0 +1,6 @@
+@Ecocell.API_HostAddress = http://localhost:5150
+
+GET {{Ecocell.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
