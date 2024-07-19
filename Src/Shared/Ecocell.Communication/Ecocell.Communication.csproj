@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Enums\" />
     <Folder Include="Responses\" />
     <Folder Include="Requests\" />
   </ItemGroup>

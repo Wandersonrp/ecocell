@@ -11,4 +11,10 @@
     <Folder Include="UseCases\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Ecocell.Communication\Ecocell.Communication.csproj" />
+    <ProjectReference Include="..\..\Shared\Ecocell.Exception\Ecocell.Exception.csproj" />
+    <ProjectReference Include="..\Ecocell.Domain\Ecocell.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

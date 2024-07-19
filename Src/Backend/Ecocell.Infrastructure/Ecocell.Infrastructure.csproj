@@ -7,11 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Context\" />
     <Folder Include="Data\Repositories\" />
     <Folder Include="Services\Auth\Jwt\" />
-    <Folder Include="Services\Cryptography\" />
     <Folder Include="Services\LoggedUser\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>		
+    <Using Include="BCrypt.Net.BCrypt" Alias="BC" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Ecocell.Exception\Ecocell.Exception.csproj" />
+    <ProjectReference Include="..\Ecocell.Domain\Ecocell.Domain.csproj" />
   </ItemGroup>
 
 </Project>
