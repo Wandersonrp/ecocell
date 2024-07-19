@@ -14,4 +14,9 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Ecocell.Communication\Ecocell.Communication.csproj" />
+    <ProjectReference Include="..\Ecocell.Application\Ecocell.Application.csproj" />
+  </ItemGroup>
+
 </Project>

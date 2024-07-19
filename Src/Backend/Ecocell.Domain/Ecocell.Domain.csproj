@@ -7,11 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\" />
     <Folder Include="Repositories\" />
     <Folder Include="Services\Auth\" />
-    <Folder Include="Services\Cryptography\" />
     <Folder Include="Services\LoggedUser\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Ecocell.Communication\Ecocell.Communication.csproj" />
   </ItemGroup>
 
 </Project>
