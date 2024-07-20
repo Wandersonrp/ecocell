@@ -15,5 +15,5 @@ public class User
     public Role Role { get; set; } = Role.User;
     public Status Status { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }    
 }
