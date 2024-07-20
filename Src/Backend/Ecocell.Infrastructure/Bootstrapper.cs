@@ -8,8 +8,7 @@ namespace Ecocell.Infrastructure;
 
 public static class Bootstrapper
 {
-    public static void InitializeInfra(this IServiceCollection services, IConfiguration configuration
-    )
+    public static void InitializeInfra(this IServiceCollection services, IConfiguration configuration)
     {
         AddDbContext(services, configuration);
     }
