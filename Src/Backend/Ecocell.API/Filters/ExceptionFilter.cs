@@ -10,7 +10,7 @@ public class ExceptionFilter : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
-        if(context.Exception is NotFoundException)
+        if(context.Exception is EcocellException)
         {
             HandleProjectException(context);
         }
@@ -22,16 +22,13 @@ public class ExceptionFilter : IExceptionFilter
 
     private static void HandleProjectException(ExceptionContext context)
     {
-        if(context.Exception is EcocellException)
-        {
-            var ecocellException = (EcocellException)context.Exception;
+        var ecocellException = (EcocellException)context.Exception;
 
-            context.HttpContext.Response.StatusCode = (int)ecocellException.GetStatusCode();
+        context.HttpContext.Response.StatusCode = (int)ecocellException.GetStatusCode();
 
-            var responseJson = new ResponseErrorJson(ecocellException.GetErrorMessages());
+        var responseJson = new ResponseErrorJson(ecocellException.GetErrorMessages());
 
-            context.Result = new ObjectResult(responseJson);
-        }
+        context.Result = new ObjectResult(responseJson);
     }
 
     private static void ThrowUnknowException(ExceptionContext context)
