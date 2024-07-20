@@ -9,4 +9,5 @@ public abstract class EcocellException : SystemException
     }
 
     public abstract HttpStatusCode GetStatusCode();
+    public abstract IList<string> GetErrorMessages();
 }

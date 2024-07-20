@@ -1,4 +1,5 @@
-﻿using Ecocell.Exception;
+﻿using Ecocell.Communication.Responses;
+using Ecocell.Exception;
 using Ecocell.Exception.ExceptionBase;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -26,13 +27,22 @@ public class ExceptionFilter : IExceptionFilter
             var ecocellException = (EcocellException)context.Exception;
 
             context.HttpContext.Response.StatusCode = (int)ecocellException.GetStatusCode();
-            context.Result = new ObjectResult(ecocellException.Message);
+
+            var responseJson = new ResponseErrorJson(ecocellException.GetErrorMessages());
+
+            context.Result = new ObjectResult(responseJson);
         }
     }
 
     private static void ThrowUnknowException(ExceptionContext context)
     {
         context.HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        context.Result = new ObjectResult(ResourceErrorMessages.UNKNOWN_ERROR);
+
+        var responseJson = new ResponseErrorJson(new List<string>
+        {
+            ResourceErrorMessages.UNKNOWN_ERROR
+        });
+
+        context.Result = new ObjectResult(responseJson);
     }
 }

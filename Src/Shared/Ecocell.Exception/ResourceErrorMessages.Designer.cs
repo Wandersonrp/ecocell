@@ -61,11 +61,29 @@ namespace Ecocell.Exception {
         }
         
         /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Resource already exists:.
+        /// </summary>
+        public static string CONFLICT_ERROR {
+            get {
+                return ResourceManager.GetString("CONFLICT_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Consulta uma cadeia de caracteres localizada semelhante a Connection string not found.
         /// </summary>
         public static string CONNECTION_STRING_NOT_FOUND {
             get {
                 return ResourceManager.GetString("CONNECTION_STRING_NOT_FOUND", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Resource not found:.
+        /// </summary>
+        public static string NOT_FOUND_ERROR {
+            get {
+                return ResourceManager.GetString("NOT_FOUND_ERROR", resourceCulture);
             }
         }
         
