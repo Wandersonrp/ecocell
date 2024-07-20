@@ -1,0 +1,20 @@
+﻿<div class="container" style="@($"background-color: {Customization.Tokens.Color.GreyLighten2}")">
+    <MudButton 
+        Variant="Variant.Filled" 
+        Color="@_buttonLeftColor" 
+        OnClick="OnButtonLeftClick"
+        Style="@($"width: 50%; color: {_buttonLeftText}; border-radius: 8px; padding: 0.75rem; max-height: 100%")"
+        DropShadow="@_buttonLeftDropShadow"
+    >
+        @ButtonLeftText
+    </MudButton>
+    <MudButton 
+        Variant="Variant.Filled" 
+        Color="@_buttonRightColor"
+        OnClick="OnButtonRightClick"
+        Style="@($"width: 50%; color: {_buttonRightText}; border-radius: 8px; padding: 0.75rem; max-height: 100%;")"
+        DropShadow="@_buttonRightDropShadow"
+    >
+        @ButtonRightText
+    </MudButton>
+</div>

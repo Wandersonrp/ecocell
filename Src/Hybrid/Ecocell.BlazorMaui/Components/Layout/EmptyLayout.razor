@@ -1,0 +1,17 @@
+﻿@inherits LayoutComponentBase
+
+@using Ecocell.Razor.Customization.Themes
+
+<div class="sidebar">
+    <NavMenu />
+</div>
+
+<MudThemeProvider Theme="_defaultTheme.MudTheme"/>
+
+@Body
+
+
+@code 
+{
+    private DefaultTheme _defaultTheme = new DefaultTheme();
+}

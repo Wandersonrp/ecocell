@@ -13,21 +13,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{D542E6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hybrid", "Hybrid", "{F931C61A-6149-46C6-8E7B-B91674213478}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.Application", "Src\Backend\Ecocell.Application\Ecocell.Application.csproj", "{EE47832F-50F9-4889-A8E8-20C6A88E7C3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.Application", "Src\Backend\Ecocell.Application\Ecocell.Application.csproj", "{EE47832F-50F9-4889-A8E8-20C6A88E7C3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.Domain", "Src\Backend\Ecocell.Domain\Ecocell.Domain.csproj", "{5C2A30D4-F7CB-405E-9902-27B7C427EF52}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.Domain", "Src\Backend\Ecocell.Domain\Ecocell.Domain.csproj", "{5C2A30D4-F7CB-405E-9902-27B7C427EF52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.Infrastructure", "Src\Backend\Ecocell.Infrastructure\Ecocell.Infrastructure.csproj", "{B2A7049A-8911-43B7-B0FD-CC0B770AA613}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.Infrastructure", "Src\Backend\Ecocell.Infrastructure\Ecocell.Infrastructure.csproj", "{B2A7049A-8911-43B7-B0FD-CC0B770AA613}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.Communication", "Src\Shared\Ecocell.Communication\Ecocell.Communication.csproj", "{A2D6D27C-647F-42DE-B781-D8614F8C6391}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.Communication", "Src\Shared\Ecocell.Communication\Ecocell.Communication.csproj", "{A2D6D27C-647F-42DE-B781-D8614F8C6391}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.Exception", "Src\Shared\Ecocell.Exception\Ecocell.Exception.csproj", "{D90A0AEB-B9E2-4C5F-807B-389F36FD0DD2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.Exception", "Src\Shared\Ecocell.Exception\Ecocell.Exception.csproj", "{D90A0AEB-B9E2-4C5F-807B-389F36FD0DD2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.Razor", "Src\Shared\Ecocell.Razor\Ecocell.Razor.csproj", "{224E1BE7-8519-447B-9FFE-46550E274ACD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.Razor", "Src\Shared\Ecocell.Razor\Ecocell.Razor.csproj", "{224E1BE7-8519-447B-9FFE-46550E274ACD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.BlazorMaui", "Src\Hybrid\Ecocell.BlazorMaui\Ecocell.BlazorMaui.csproj", "{BA8D09FE-2B5F-407F-A3E6-5003E1D0B202}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.BlazorMaui", "Src\Hybrid\Ecocell.BlazorMaui\Ecocell.BlazorMaui.csproj", "{BA8D09FE-2B5F-407F-A3E6-5003E1D0B202}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecocell.API", "Src\Backend\Ecocell.API\Ecocell.API.csproj", "{BCCE845E-4057-49E5-BD46-5A486100DEE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecocell.API", "Src\Backend\Ecocell.API\Ecocell.API.csproj", "{BCCE845E-4057-49E5-BD46-5A486100DEE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

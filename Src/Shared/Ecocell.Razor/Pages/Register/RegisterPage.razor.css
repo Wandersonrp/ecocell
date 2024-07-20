@@ -1,0 +1,38 @@
+﻿.page {
+    height: 100vh;
+    width: 100vw;    
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.25rem;
+
+    width: 100%;
+    padding: 0 2.25rem 0 2.2rem;
+}
+
+.text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.625rem;
+    
+    width: 100%;
+    padding: 0.625rem 0 0.625rem 0;
+}
+
+.text h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 900;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    width: 100%;
+}
