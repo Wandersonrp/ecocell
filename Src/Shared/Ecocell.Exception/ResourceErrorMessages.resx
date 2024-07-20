@@ -120,4 +120,7 @@
   <data name="CONNECTION_STRING_NOT_FOUND" xml:space="preserve">
     <value>Connection string not found</value>
   </data>
+  <data name="UNKNOWN_ERROR" xml:space="preserve">
+    <value>Unknown error</value>
+  </data>
 </root>

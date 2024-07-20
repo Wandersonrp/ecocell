@@ -68,5 +68,14 @@ namespace Ecocell.Exception {
                 return ResourceManager.GetString("CONNECTION_STRING_NOT_FOUND", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Unknown error.
+        /// </summary>
+        public static string UNKNOWN_ERROR {
+            get {
+                return ResourceManager.GetString("UNKNOWN_ERROR", resourceCulture);
+            }
+        }
     }
 }
