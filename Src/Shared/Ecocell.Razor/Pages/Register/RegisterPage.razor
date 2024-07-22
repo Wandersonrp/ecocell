@@ -1,4 +1,6 @@
 ﻿@page "/register"
+
+@using Ecocell.Razor.Components.RegisterForm.NaturalPerson
 @using Ecocell.Razor.Components.Switches
 
 <div class="page">
@@ -9,6 +11,7 @@
 
         <div class="form">
             <SwitchButtons ButtonLeftText="Pessoa física" ButtonRightText="Pessoa jurídica"/>
+            <RegisterFormNaturalPerson />
         </div>
     </div>    
 </div>

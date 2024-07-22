@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Ecocell.Application.UseCases.Users.NaturalPerson.RegisterNaturalPerson;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecocell.Application;
@@ -10,5 +11,13 @@ public static class Bootstrapper
         Infrastructure
             .Bootstrapper
             .InitializeInfra(services, configuration);
+
+        AddUseCases(services);
+    }
+
+    private static void AddUseCases(IServiceCollection services)
+    {
+        services
+            .AddScoped<IRegisterNaturalPerson, RegisterNaturalPersonUseCase>();
     }
 }
