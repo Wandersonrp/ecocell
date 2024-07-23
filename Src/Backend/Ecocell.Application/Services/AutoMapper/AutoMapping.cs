@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using Ecocell.Communication.Requests.Users;
+using Ecocell.Communication.Requests.Document;
+using Ecocell.Communication.Requests.Users.NaturalPerson;
 using Ecocell.Domain.Entities;
 
 namespace Ecocell.Application.Services.AutoMapper;
@@ -13,7 +14,10 @@ public class AutoMapping : Profile
 
     private void RequestToDomain()
     {
-        CreateMap<RequestRegisterUserJson, NaturalPerson>()
-            .ForMember(dest => dest.Password, opt => opt.Ignore());
+        CreateMap<RequestDocumentJson, Document>();
+
+        CreateMap<RequestRegisterNaturalPersonJson, NaturalPerson>()
+            .ForMember(dest => dest.Password, opt => opt.Ignore())
+            .ForMember(dest => dest.BirthDate, opt => opt.Ignore());
     }
 }

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ecocell.Infrastructure.Migrations
 {
     [DbContext(typeof(EcocellDbContext))]
-    [Migration("20240720133543_Initial")]
+    [Migration("20240723102705_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -48,11 +48,13 @@ namespace Ecocell.Infrastructure.Migrations
 
                     b.Property<string>("Latitude")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar")
+                        .HasColumnName("latitude");
 
                     b.Property<string>("Longitude")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar")
+                        .HasColumnName("longitude");
 
                     b.Property<string>("Neighborhood")
                         .IsRequired()
@@ -88,6 +90,7 @@ namespace Ecocell.Infrastructure.Migrations
             modelBuilder.Entity("Ecocell.Domain.Entities.Document", b =>
                 {
                     b.Property<Guid>("DocumentId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("document_id");
 
@@ -119,11 +122,11 @@ namespace Ecocell.Infrastructure.Migrations
                         .HasColumnName("avatar_url");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<int>("DocumentId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
                         .HasColumnName("document_id");
 
                     b.Property<string>("Email")
@@ -152,7 +155,7 @@ namespace Ecocell.Infrastructure.Migrations
                         .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UserType")
@@ -161,6 +164,9 @@ namespace Ecocell.Infrastructure.Migrations
                         .HasColumnName("user_type");
 
                     b.HasKey("UserId");
+
+                    b.HasIndex("DocumentId")
+                        .IsUnique();
 
                     b.ToTable("Users", (string)null);
 
@@ -237,15 +243,16 @@ namespace Ecocell.Infrastructure.Migrations
                     b.ToTable("NaturalPeople", (string)null);
                 });
 
-            modelBuilder.Entity("Ecocell.Domain.Entities.Document", b =>
+            modelBuilder.Entity("Ecocell.Domain.Entities.User", b =>
                 {
-                    b.HasOne("Ecocell.Domain.Entities.User", "User")
-                        .WithOne("Document")
-                        .HasForeignKey("Ecocell.Domain.Entities.Document", "DocumentId")
+                    b.HasOne("Ecocell.Domain.Entities.Document", "Document")
+                        .WithOne("User")
+                        .HasForeignKey("Ecocell.Domain.Entities.User", "DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_users_documents");
 
-                    b.Navigation("User");
+                    b.Navigation("Document");
                 });
 
             modelBuilder.Entity("Ecocell.Domain.Entities.LegalPerson", b =>
@@ -281,10 +288,9 @@ namespace Ecocell.Infrastructure.Migrations
                     b.Navigation("LegalPerson");
                 });
 
-            modelBuilder.Entity("Ecocell.Domain.Entities.User", b =>
+            modelBuilder.Entity("Ecocell.Domain.Entities.Document", b =>
                 {
-                    b.Navigation("Document")
-                        .IsRequired();
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

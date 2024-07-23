@@ -1,5 +1,6 @@
 ﻿using Ecocell.Application.UseCases.Users.NaturalPerson.RegisterNaturalPerson;
 using Ecocell.Communication.Enums.User;
+using Ecocell.Communication.Requests.Document;
 using Ecocell.Communication.Requests.Users;
 using Ecocell.Communication.Requests.Users.NaturalPerson;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +27,12 @@ public class RegisterController : ControllerBase
                 Email = request.Email,
                 Password = request.Password,
                 PasswordConfirmation = request.PasswordConfirmation,
+                Document = new RequestDocumentJson
+                { 
+                    Text = request.Document.Text,
+                    DocumentType = request.Document.DocumentType,
+                },
+                IsDiscarding = request.IsDiscarding
             });
         }
 

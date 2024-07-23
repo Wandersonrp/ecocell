@@ -79,11 +79,56 @@ namespace Ecocell.Exception {
         }
         
         /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Invalid email.
+        /// </summary>
+        public static string INVALID_EMAIL {
+            get {
+                return ResourceManager.GetString("INVALID_EMAIL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Consulta uma cadeia de caracteres localizada semelhante a Resource not found:.
         /// </summary>
         public static string NOT_FOUND_ERROR {
             get {
                 return ResourceManager.GetString("NOT_FOUND_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a The property can not be null: .
+        /// </summary>
+        public static string NOT_NULL_ERROR {
+            get {
+                return ResourceManager.GetString("NOT_NULL_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Password confirmation must be equal password.
+        /// </summary>
+        public static string PASSWORD_CONFIRMATION_ERROR {
+            get {
+                return ResourceManager.GetString("PASSWORD_CONFIRMATION_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Password must have at most 20 characteres.
+        /// </summary>
+        public static string PASSWORD_MAX_LENGTH_ERROR {
+            get {
+                return ResourceManager.GetString("PASSWORD_MAX_LENGTH_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Password must have at least 8 characters.
+        /// </summary>
+        public static string PASSWORD_MIN_LENGTH_ERROR {
+            get {
+                return ResourceManager.GetString("PASSWORD_MIN_LENGTH_ERROR", resourceCulture);
             }
         }
         

@@ -1,9 +1,11 @@
 ﻿using Ecocell.Domain.Repositories;
 using Ecocell.Domain.Repositories.Users.NaturalPerson;
+using Ecocell.Domain.Services.Cryptography;
 using Ecocell.Infrastructure.Data;
 using Ecocell.Infrastructure.Data.Context;
 using Ecocell.Infrastructure.Data.Repositories.Users.NaturalPerson;
 using Ecocell.Infrastructure.Extensions;
+using Ecocell.Infrastructure.Services.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +19,7 @@ public static class Bootstrapper
         AddDbContext(services, configuration);
         AddRepositories(services);
         AddUnitOfWork(services);
+        AddServices(services);
     }
 
     private static void AddDbContext(IServiceCollection services, IConfiguration configuration)
@@ -37,5 +40,12 @@ public static class Bootstrapper
     private static void AddUnitOfWork(IServiceCollection services)
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+    }
+
+    private static void AddServices(IServiceCollection services)
+    {
+        services
+            .AddScoped<IHashGenerator, HashService>()
+            .AddScoped<IHashComparer, HashService>();
     }
 }

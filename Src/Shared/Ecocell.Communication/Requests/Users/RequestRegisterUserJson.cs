@@ -23,4 +23,7 @@ public record RequestRegisterUserJson
 
     [JsonPropertyName("user_type")]
     public UserType UserType { get; set; }
+
+    [JsonPropertyName("is_discarding")]
+    public bool IsDiscarding { get; set; }
 }

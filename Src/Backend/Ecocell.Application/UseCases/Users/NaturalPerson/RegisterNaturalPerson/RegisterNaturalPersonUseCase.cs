@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Ecocell.Communication.Requests.Users.NaturalPerson;
-using Ecocell.Domain.Entities;
 using Ecocell.Domain.Repositories;
 using Ecocell.Domain.Repositories.Users.NaturalPerson;
 using Ecocell.Domain.Services.Cryptography;
@@ -40,6 +39,8 @@ public class RegisterNaturalPersonUseCase : IRegisterNaturalPerson
         var hashedPassword = _hashGenerator.Hash(request.Password); 
 
         naturalPerson.Password = hashedPassword;
+
+        naturalPerson.DocumentId = naturalPerson.Document.DocumentId;
 
         await _naturalPersonWriteOnlyRepository.AddAsync(naturalPerson);
 
