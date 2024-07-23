@@ -123,8 +123,23 @@
   <data name="CONNECTION_STRING_NOT_FOUND" xml:space="preserve">
     <value>Connection string not found</value>
   </data>
+  <data name="INVALID_EMAIL" xml:space="preserve">
+    <value>Invalid email</value>
+  </data>
   <data name="NOT_FOUND_ERROR" xml:space="preserve">
     <value>Resource not found:</value>
+  </data>
+  <data name="NOT_NULL_ERROR" xml:space="preserve">
+    <value>The property can not be null: </value>
+  </data>
+  <data name="PASSWORD_CONFIRMATION_ERROR" xml:space="preserve">
+    <value>Password confirmation must be equal password</value>
+  </data>
+  <data name="PASSWORD_MAX_LENGTH_ERROR" xml:space="preserve">
+    <value>Password must have at most 20 characteres</value>
+  </data>
+  <data name="PASSWORD_MIN_LENGTH_ERROR" xml:space="preserve">
+    <value>Password must have at least 8 characters</value>
   </data>
   <data name="UNKNOWN_ERROR" xml:space="preserve">
     <value>Unknown error</value>

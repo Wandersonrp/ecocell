@@ -13,8 +13,8 @@ public class NaturalPersonRepository : INaturalPersonReadOnlyRepository, INatura
     }
 
     public async Task AddAsync(Domain.Entities.NaturalPerson naturalPerson)
-    {
-        await _context.Users.AddAsync(naturalPerson);
+    {        
+        await _context.NaturalPeople.AddAsync(naturalPerson);
     }
 
     public async Task<bool> ExistsWithSameDocument(string document)

@@ -24,33 +24,12 @@ namespace Ecocell.Infrastructure.Migrations
                     city = table.Column<string>(type: "varchar(100)", nullable: false),
                     state = table.Column<string>(type: "varchar(50)", nullable: false),
                     country = table.Column<string>(type: "varchar(50)", nullable: false),
-                    Latitude = table.Column<string>(type: "text", nullable: false),
-                    Longitude = table.Column<string>(type: "text", nullable: false)
+                    latitude = table.Column<string>(type: "varchar", nullable: false),
+                    longitude = table.Column<string>(type: "varchar", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_address", x => x.address_id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    name = table.Column<string>(type: "varchar(100)", nullable: false),
-                    email = table.Column<string>(type: "varchar(100)", nullable: false),
-                    document_id = table.Column<int>(type: "integer", nullable: false),
-                    password = table.Column<string>(type: "text", nullable: false),
-                    avatar_url = table.Column<string>(type: "text", nullable: true),
-                    user_type = table.Column<string>(type: "text", nullable: false),
-                    role = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<string>(type: "text", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.user_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -64,11 +43,32 @@ namespace Ecocell.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_document", x => x.document_id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "varchar(100)", nullable: false),
+                    email = table.Column<string>(type: "varchar(100)", nullable: false),
+                    document_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    password = table.Column<string>(type: "text", nullable: false),
+                    avatar_url = table.Column<string>(type: "text", nullable: true),
+                    user_type = table.Column<string>(type: "text", nullable: false),
+                    role = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.user_id);
                     table.ForeignKey(
-                        name: "FK_Documents_Users_document_id",
+                        name: "fk_users_documents",
                         column: x => x.document_id,
-                        principalTable: "Users",
-                        principalColumn: "user_id",
+                        principalTable: "Documents",
+                        principalColumn: "document_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -129,14 +129,17 @@ namespace Ecocell.Infrastructure.Migrations
                 table: "LegalPeople",
                 column: "address_id",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_document_id",
+                table: "Users",
+                column: "document_id",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Documents");
-
             migrationBuilder.DropTable(
                 name: "LegalPeople");
 
@@ -148,6 +151,9 @@ namespace Ecocell.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Documents");
         }
     }
 }

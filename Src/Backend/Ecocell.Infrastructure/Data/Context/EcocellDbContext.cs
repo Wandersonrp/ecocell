@@ -9,6 +9,8 @@ public class EcocellDbContext : DbContext
     {}
 
     public DbSet<User> Users { get; set; }
+    public DbSet<NaturalPerson> NaturalPeople { get; set; }
+    public DbSet<LegalPerson> LegalPeople { get; set; }    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,11 +22,12 @@ public class EcocellDbContext : DbContext
             
             user.HasOne(e => e.Document)
                 .WithOne(e => e.User)
-                .HasForeignKey<Document>(e => e.DocumentId)
+                .HasForeignKey<User>(e => e.DocumentId)
+                .HasConstraintName("fk_users_documents")
                 .IsRequired();
 
             user.Property(e => e.DocumentId)
-                .HasColumnName("document_id");
+                .HasColumnName("document_id");                
 
             user.HasKey(e => e.UserId);
 
@@ -65,12 +68,12 @@ public class EcocellDbContext : DbContext
 
             user.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
-                .HasColumnType("timestamp without time zone")
+                .HasColumnType("timestamp with time zone")
                 .IsRequired();
 
             user.Property(e => e.UpdatedAt)
                 .HasColumnName("updated_at")
-                .HasColumnType("timestamp without time zone");             
+                .HasColumnType("timestamp with time zone");             
         });        
 
         modelBuilder.Entity<Document>(document =>
@@ -96,7 +99,8 @@ public class EcocellDbContext : DbContext
 
         modelBuilder.Entity<NaturalPerson>(naturalPerson =>
         {
-            naturalPerson.ToTable("NaturalPeople");            
+            naturalPerson.ToTable("NaturalPeople")
+                .HasBaseType<User>();
 
             naturalPerson.HasOne<User>()
                 .WithOne()
@@ -111,11 +115,69 @@ public class EcocellDbContext : DbContext
             naturalPerson.Property(e => e.BirthDate)
                 .HasColumnName("birth_date")
                 .HasColumnType("date");
-        });        
+        });
+
+        modelBuilder.Entity<Address>(address =>
+        {
+            address.ToTable("Addresses");
+
+            address.HasKey(e => e.AddressId)
+                .HasName("pk_address");
+
+            address.Property(e => e.AddressId)
+                .HasColumnName("address_id");
+
+            address.Property(e => e.Street)
+                .HasColumnName("street")
+                .HasColumnType("varchar(100)")
+                .IsRequired();
+
+            address.Property(e => e.Number)
+                .HasColumnName("number")
+                .HasColumnType("varchar(15)")
+                .IsRequired();
+
+            address.Property(e => e.Complement)
+                .HasColumnName("complement")
+                .HasColumnType("varchar(50)");
+
+            address.Property(e => e.Neighborhood)
+                .HasColumnName("neighborhood")
+                .HasColumnType("varchar(50)")
+                .IsRequired();
+
+            address.Property(e => e.ZipCode)
+                .HasColumnName("zip_code")
+                .HasColumnType("varchar(8)");
+
+            address.Property(e => e.City)
+                .HasColumnName("city")
+                .HasColumnType("varchar(100)")
+                .IsRequired();
+
+            address.Property(e => e.State)
+                .HasColumnName("state")
+                .HasColumnType("varchar(50)")
+                .IsRequired();
+
+            address.Property(e => e.Country)
+                .HasColumnName("country")
+                .HasColumnType("varchar(50)")
+                .IsRequired();
+
+            address.Property(e => e.Latitude)
+                .HasColumnName("latitude")
+                .HasColumnType("varchar");
+
+            address.Property(e => e.Longitude)
+               .HasColumnName("longitude")
+               .HasColumnType("varchar");
+        });
 
         modelBuilder.Entity<LegalPerson>(legalPerson =>
         {
-            legalPerson.ToTable("LegalPeople");            
+            legalPerson.ToTable("LegalPeople")
+                .HasBaseType<User>();   
 
             legalPerson.HasOne<User>()
                 .WithOne()
@@ -171,55 +233,6 @@ public class EcocellDbContext : DbContext
             legalPerson.HasOne(e => e.Address)
                 .WithOne(e => e.LegalPerson)
                 .HasForeignKey<LegalPerson>(e => e.AddressId);
-        });        
-
-        modelBuilder.Entity<Address>(address =>
-        {
-            address.ToTable("Addresses");
-
-            address.HasKey(e => e.AddressId)
-                .HasName("pk_address");
-
-            address.Property(e => e.AddressId)
-                .HasColumnName("address_id");
-
-            address.Property(e => e.Street)
-                .HasColumnName("street")
-                .HasColumnType("varchar(100)")
-                .IsRequired();
-
-            address.Property(e => e.Number)
-                .HasColumnName("number")
-                .HasColumnType("varchar(15)")
-                .IsRequired();
-
-            address.Property(e => e.Complement)
-                .HasColumnName("complement")
-                .HasColumnType("varchar(50)");
-
-            address.Property(e => e.Neighborhood)
-                .HasColumnName("neighborhood")
-                .HasColumnType("varchar(50)")
-                .IsRequired();
-
-            address.Property(e => e.ZipCode)
-                .HasColumnName("zip_code")
-                .HasColumnType("varchar(8)");
-
-            address.Property(e => e.City)
-                .HasColumnName("city")
-                .HasColumnType("varchar(100)")
-                .IsRequired();
-
-            address.Property(e => e.State)
-                .HasColumnName("state")
-                .HasColumnType("varchar(50)")
-                .IsRequired();
-
-            address.Property(e => e.Country)
-                .HasColumnName("country")
-                .HasColumnType("varchar(50)")
-                .IsRequired();
-        });
+        });                
     }
 }
