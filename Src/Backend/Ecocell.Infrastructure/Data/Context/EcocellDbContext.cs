@@ -1,6 +1,5 @@
 ﻿using Ecocell.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
 
 namespace Ecocell.Infrastructure.Data.Context;
 
