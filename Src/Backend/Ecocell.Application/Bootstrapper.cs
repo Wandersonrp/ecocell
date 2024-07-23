@@ -1,4 +1,6 @@
-﻿using Ecocell.Application.UseCases.Users.NaturalPerson.RegisterNaturalPerson;
+﻿using AutoMapper;
+using Ecocell.Application.Services.AutoMapper;
+using Ecocell.Application.UseCases.Users.NaturalPerson.RegisterNaturalPerson;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,11 +15,20 @@ public static class Bootstrapper
             .InitializeInfra(services, configuration);
 
         AddUseCases(services);
+        AddAutoMapper(services);
     }
 
     private static void AddUseCases(IServiceCollection services)
     {
         services
             .AddScoped<IRegisterNaturalPerson, RegisterNaturalPersonUseCase>();
+    }
+
+    private static void AddAutoMapper(IServiceCollection services)
+    {
+        services.AddScoped(options => new MapperConfiguration(options =>
+        {
+            options.AddProfile(new AutoMapping());
+        }).CreateMapper());
     }
 }

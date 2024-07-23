@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Ecocell.Communication.Requests.Document;
+using System.Text.Json.Serialization;
 
 namespace Ecocell.Communication.Requests.Users.NaturalPerson;
 
@@ -12,6 +13,9 @@ public record RequestRegisterNaturalPersonJson
 
     [JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
+
+    [JsonPropertyName("document")]
+    public RequestDocumentJson Document { get; set; } = null!;
 
     [JsonPropertyName("password_confirmation")]
     public string PasswordConfirmation { get; set; } = string.Empty;

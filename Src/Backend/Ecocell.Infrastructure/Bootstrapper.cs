@@ -1,4 +1,8 @@
-﻿using Ecocell.Infrastructure.Data.Context;
+﻿using Ecocell.Domain.Repositories;
+using Ecocell.Domain.Repositories.Users.NaturalPerson;
+using Ecocell.Infrastructure.Data;
+using Ecocell.Infrastructure.Data.Context;
+using Ecocell.Infrastructure.Data.Repositories.Users.NaturalPerson;
 using Ecocell.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +15,8 @@ public static class Bootstrapper
     public static void InitializeInfra(this IServiceCollection services, IConfiguration configuration)
     {
         AddDbContext(services, configuration);
+        AddRepositories(services);
+        AddUnitOfWork(services);
     }
 
     private static void AddDbContext(IServiceCollection services, IConfiguration configuration)
@@ -19,5 +25,17 @@ public static class Bootstrapper
         {
             options.UseNpgsql(services.GetConnectionString(configuration));
         });
+    }
+
+    private static void AddRepositories(IServiceCollection services)
+    {
+        services
+            .AddScoped<INaturalPersonReadOnlyRepository, NaturalPersonRepository>()
+            .AddScoped<INaturalPersonWriteOnlyRepository, NaturalPersonRepository>();
+    }
+
+    private static void AddUnitOfWork(IServiceCollection services)
+    {
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
     }
 }
