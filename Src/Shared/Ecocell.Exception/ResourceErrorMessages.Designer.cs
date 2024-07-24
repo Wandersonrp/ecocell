@@ -79,11 +79,29 @@ namespace Ecocell.Exception {
         }
         
         /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Document type must be CPF.
+        /// </summary>
+        public static string DOCUMENT_TYPE_CPF_ERROR {
+            get {
+                return ResourceManager.GetString("DOCUMENT_TYPE_CPF_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Consulta uma cadeia de caracteres localizada semelhante a Invalid email.
         /// </summary>
         public static string INVALID_EMAIL {
             get {
                 return ResourceManager.GetString("INVALID_EMAIL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Invalid enum value. Accepted properties: .
+        /// </summary>
+        public static string INVALID_ENUM_VALUE {
+            get {
+                return ResourceManager.GetString("INVALID_ENUM_VALUE", resourceCulture);
             }
         }
         

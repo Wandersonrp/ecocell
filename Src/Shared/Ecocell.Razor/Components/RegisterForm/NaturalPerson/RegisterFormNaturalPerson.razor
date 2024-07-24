@@ -1,10 +1,11 @@
 ﻿@using System.ComponentModel.DataAnnotations
 
 <div class="form">
-    <MudForm Class="ma-0 pa-0" @ref="form" @bind-IsValid="@success" @bind-Errors="@errors" Style="width: 100%; gap: 1.25rem;">
+    <MudForm Class="ma-0 pa-0" Model="_model" @ref="_form" @bind-Errors="@errors" Validation="@(_validator.ValidateValue)" Style="width: 100%; gap: 1.25rem;">
         <MudTextField 
             Class="ma-0 pa-0"
             T="string" 
+            @bind-Value="_model.Name"
             Required="true" 
             RequiredError="Nome é obrigatório!" 
             Placeholder="Nome" 
@@ -12,7 +13,8 @@
         />
         <MudTextField 
             Class="ma-0 pa-0"
-            T="string"  
+            T="string"
+            @bind-Value="_model.Email"
             Required="true" 
             Placeholder="E-mail"
             Variant="Variant.Outlined"
@@ -21,20 +23,28 @@
         />
         <MudTextField 
             Class="ma-0 pa-0"
-            T="string" 
-            @ref="pwField1"
-            InputType="InputType.Password"
-            Placeholder="Senha" 
-            Variant="Variant.Outlined"
-            Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" 
+            T="string"
+            @bind-Value="_documentText"
+            Required="true"
+            RequiredError="CPF é obrigatório!"
+            Placeholder="___.___.___-__"
+            Variant="Variant.Outlined" 
         />
         <MudTextField 
             Class="ma-0 pa-0"
             T="string"
+            @bind-Value="_model.Password"
+            InputType="InputType.Password"
+            Placeholder="Senha" 
+            Variant="Variant.Outlined"            
+        />
+        <MudTextField 
+            Class="ma-0 pa-0"
+            T="string"
+            @bind-Value="_model.PasswordConfirmation"
             InputType="InputType.Password"
             Placeholder="Confirmar senha"
-            Variant="Variant.Outlined" 
-            Validation="@(new Func<string, string>(PasswordMatch))"
+            Variant="Variant.Outlined"             
         />
         <div class="d-flex align-center gap-"> 
             <MudButton 
@@ -42,6 +52,7 @@
                 Color="Color.Primary"
                 Class="pa-3"
                 FullWidth
+                OnClick="@(async () => await Submit())"
             >
             Cadastrar
             </MudButton>

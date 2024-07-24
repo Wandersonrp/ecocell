@@ -26,4 +26,10 @@ public record RequestRegisterUserJson
 
     [JsonPropertyName("is_discarding")]
     public bool IsDiscarding { get; set; }
+
+    [JsonPropertyName("is_collector")]
+    public bool IsCollector { get; set; }
+
+    [JsonPropertyName("is_discarding_point")]
+    public bool IsDiscardingPoint { get; set; }
 }

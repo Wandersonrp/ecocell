@@ -123,8 +123,14 @@
   <data name="CONNECTION_STRING_NOT_FOUND" xml:space="preserve">
     <value>Connection string not found</value>
   </data>
+  <data name="DOCUMENT_TYPE_CPF_ERROR" xml:space="preserve">
+    <value>Document type must be CPF</value>
+  </data>
   <data name="INVALID_EMAIL" xml:space="preserve">
     <value>Invalid email</value>
+  </data>
+  <data name="INVALID_ENUM_VALUE" xml:space="preserve">
+    <value>Invalid enum value. Accepted properties: </value>
   </data>
   <data name="NOT_FOUND_ERROR" xml:space="preserve">
     <value>Resource not found:</value>
