@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # appsettings
 appsettings*
+
+# network seucrity configs
+network_security_config.xml
