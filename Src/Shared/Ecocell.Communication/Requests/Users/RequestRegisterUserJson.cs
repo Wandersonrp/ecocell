@@ -15,7 +15,7 @@ public record RequestRegisterUserJson
     [JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
 
-    [JsonPropertyName("document")]
+    [JsonPropertyName("document_text")]
     public RequestDocumentJson Document { get; set; } = null!;
 
     [JsonPropertyName("password_confirmation")]

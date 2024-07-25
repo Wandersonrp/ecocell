@@ -1,11 +1,13 @@
 ﻿@using System.ComponentModel.DataAnnotations
 
 <div class="form">
-    <MudForm Class="ma-0 pa-0" Model="_model" @ref="_form" @bind-Errors="@errors" Validation="@(_validator.ValidateValue)" Style="width: 100%; gap: 1.25rem;">
+    <MudForm Class="ma-0 pa-0" Model="_model" @ref="_form" @bind-Errors="@errors" Validation="@(_validator.ValidateValue)" Style="width: 100%; gap: 1.25rem;" ValidationDelay="0">
         <MudTextField 
             Class="ma-0 pa-0"
             T="string" 
             @bind-Value="_model.Name"
+            For="@(() => _model.Name)"
+            Immediate="true"
             Required="true" 
             RequiredError="Nome é obrigatório!" 
             Placeholder="Nome" 
@@ -15,26 +17,30 @@
             Class="ma-0 pa-0"
             T="string"
             @bind-Value="_model.Email"
+            For="@(() => _model.Email)"
+            Immediate="true"
             Required="true" 
             Placeholder="E-mail"
-            Variant="Variant.Outlined"
-            RequiredError="E-mail é obrigatório!"
-            Validation="@(new EmailAddressAttribute() { ErrorMessage = "O endereço de e-mail é inválido!" })" 
+            Variant="Variant.Outlined"                   
         />
         <MudTextField 
             Class="ma-0 pa-0"
             T="string"
-            @bind-Value="_documentText"
+            @bind-Value="_document.Text"            
             Required="true"
+            Immediate="true"
             RequiredError="CPF é obrigatório!"
-            Placeholder="___.___.___-__"
+            Placeholder="CPF"
+            Mask="@_cpfMask"
             Variant="Variant.Outlined" 
         />
         <MudTextField 
             Class="ma-0 pa-0"
             T="string"
             @bind-Value="_model.Password"
-            InputType="InputType.Password"
+            For="@(() => _model.Password)"
+            Immediate="true"
+            InputType="InputType.Password"            
             Placeholder="Senha" 
             Variant="Variant.Outlined"            
         />
@@ -42,8 +48,10 @@
             Class="ma-0 pa-0"
             T="string"
             @bind-Value="_model.PasswordConfirmation"
+            For="@(() => _model.PasswordConfirmation)"
+            Immediate="true"
             InputType="InputType.Password"
-            Placeholder="Confirmar senha"
+            Placeholder="Confirmar senha"            
             Variant="Variant.Outlined"             
         />
         <div class="d-flex align-center gap-"> 
@@ -52,9 +60,17 @@
                 Color="Color.Primary"
                 Class="pa-3"
                 FullWidth
+                Disabled="@_isLoading"
                 OnClick="@(async () => await Submit())"
             >
-            Cadastrar
+                @if(_isLoading)
+                {
+                    <MudProgressCircular Color="Color.Default" Size="Size.Small" Indeterminate="true" />
+                }
+                else
+                {
+                    <span>Cadastrar</span>
+                }
             </MudButton>
         </div>
     </MudForm>
