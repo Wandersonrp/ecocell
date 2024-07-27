@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Ecocell.Application.Services.AutoMapper;
+using Ecocell.Application.UseCases.Users.LegalPerson.RegisterLegalPerson;
 using Ecocell.Application.UseCases.Users.NaturalPerson.RegisterNaturalPerson;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,8 @@ public static class Bootstrapper
     private static void AddUseCases(IServiceCollection services)
     {
         services
-            .AddScoped<IRegisterNaturalPerson, RegisterNaturalPersonUseCase>();
+            .AddScoped<IRegisterNaturalPerson, RegisterNaturalPersonUseCase>()
+            .AddScoped<IRegisterLegalPerson, RegisterLegalPersonUseCase>();
     }
 
     private static void AddAutoMapper(IServiceCollection services)

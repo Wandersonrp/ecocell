@@ -61,6 +61,15 @@ namespace Ecocell.Exception {
         }
         
         /// <summary>
+        ///   Consulta uma cadeia de caracteres localizada semelhante a Company status must be active to register.
+        /// </summary>
+        public static string COMPANY_IS_NOT_ACTIVE_ERROR {
+            get {
+                return ResourceManager.GetString("COMPANY_IS_NOT_ACTIVE_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Consulta uma cadeia de caracteres localizada semelhante a Resource already exists:.
         /// </summary>
         public static string CONFLICT_ERROR {

@@ -1,11 +1,19 @@
-﻿using Ecocell.Domain.Repositories;
+﻿using Ecocell.Communication.Responses.BrazilApiCompanyData;
+using Ecocell.Communication.Responses.Nominatim;
+using Ecocell.Domain.Repositories;
+using Ecocell.Domain.Repositories.Users.LegalPerson;
 using Ecocell.Domain.Repositories.Users.NaturalPerson;
 using Ecocell.Domain.Services.Cryptography;
+using Ecocell.Domain.Services.Geocoding;
+using Ecocell.Domain.Services.LegalPersonChecker;
 using Ecocell.Infrastructure.Data;
 using Ecocell.Infrastructure.Data.Context;
+using Ecocell.Infrastructure.Data.Repositories.Users.LegalPerson;
 using Ecocell.Infrastructure.Data.Repositories.Users.NaturalPerson;
 using Ecocell.Infrastructure.Extensions;
 using Ecocell.Infrastructure.Services.Cryptography;
+using Ecocell.Infrastructure.Services.Geocoding;
+using Ecocell.Infrastructure.Services.LegalPersonChecker;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,7 +42,9 @@ public static class Bootstrapper
     {
         services
             .AddScoped<INaturalPersonReadOnlyRepository, NaturalPersonRepository>()
-            .AddScoped<INaturalPersonWriteOnlyRepository, NaturalPersonRepository>();
+            .AddScoped<INaturalPersonWriteOnlyRepository, NaturalPersonRepository>()
+            .AddScoped<ILegalPersonReadOnlyRepository, LegalPersonRepository>()
+            .AddScoped<ILegalPersonWriteOnlyRepository, LegalPersonRepository>();
     }
 
     private static void AddUnitOfWork(IServiceCollection services)
@@ -46,6 +56,8 @@ public static class Bootstrapper
     {
         services
             .AddScoped<IHashGenerator, HashService>()
-            .AddScoped<IHashComparer, HashService>();
+            .AddScoped<IHashComparer, HashService>()
+            .AddScoped<ILegalPersonChecker<ResponseBrazilApiCompanyDataJson>, BrazilApiCompanyChecker>()
+            .AddScoped<IGeocoding<ResponseNominatimGeocodingJson>, NominatimGeocoding>();
     }
 }
