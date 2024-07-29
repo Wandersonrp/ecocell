@@ -28,20 +28,20 @@ public record RequestRegisterLegalPersonJson
     [JsonPropertyName("company_description")]
     public string CompanyDescription { get; set; } = string.Empty;
 
+    [JsonPropertyName("company_status")]
+    public CompanyStatus? CompanyStatus { get; set; } = null!;
+
     [JsonPropertyName("company_hierarchy")]
-    public CompanyHierarchy CompanyHierarchy { get; set; }
+    public CompanyHierarchy? CompanyHierarchy { get; set; } = null!;
 
     [JsonPropertyName("company_start_date")]
-    public DateOnly CompanyStartDate { get; set; }
+    public DateOnly? CompanyStartDate { get; set; }
 
     [JsonPropertyName("phone")]
     public string Phone { get; set; } = string.Empty;
 
     [JsonPropertyName("principal_cnae")]
     public string PrincipalCnae { get; set; } = string.Empty;
-
-    [JsonPropertyName("comapny_status")]
-    public CompanyStatus CompanyStatus { get; set; }
 
     [JsonPropertyName("is_discarding")]
     public bool IsDiscarding { get; set; }
@@ -50,6 +50,8 @@ public record RequestRegisterLegalPersonJson
     public bool IsCollector { get; set; }
 
     [JsonPropertyName("is_discarding_point")]
-    public bool IsDiscardingPoint { get; set; }    
+    public bool IsDiscardingPoint { get; set; }
+
+    [JsonPropertyName("address")]
     public RequestAddressJson Address { get; set; } = null!;
 }

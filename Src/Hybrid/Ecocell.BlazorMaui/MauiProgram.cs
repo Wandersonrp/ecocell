@@ -1,6 +1,11 @@
-﻿using Ecocell.Razor.Services.Users.Register;
+﻿using Ecocell.Communication.Responses.BrazilApiCompanyData;
+using Ecocell.Communication.Responses.Nominatim;
+using Ecocell.Razor.Services.Geocoding;
+using Ecocell.Razor.Services.LegalPersonChecker;
+using Ecocell.Razor.Services.Users.Register;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
+using MudExtensions.Services;
 
 namespace Ecocell.BlazorMaui;
 
@@ -20,12 +25,17 @@ public static class MauiProgram
             });
 
         builder.Services.AddMauiBlazorWebView();
+                
+        builder.Services.AddHttpClient();
 
-        var apiDevUrl = "http://localhost:5150";
+        builder.Services.AddScoped<ILegalPersonChecker<ResponseBrazilApiCompanyDataJson>, BrazilApiCompanyChecker>();
 
-        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiDevUrl) });
+        builder.Services.AddScoped<IGeocoding<ResponseNominatimGeocodingJson>, NominatimGeocoding>();
 
         builder.Services.AddScoped<IRegisterUserService, RegisterUserService>();
+
+        builder.Services.AddMudExtensions();
+
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();

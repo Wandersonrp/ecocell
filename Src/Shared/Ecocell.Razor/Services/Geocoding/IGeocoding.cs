@@ -1,4 +1,4 @@
-﻿namespace Ecocell.Domain.Services.Geocoding;
+﻿namespace Ecocell.Razor.Services.Geocoding;
 
 public interface IGeocoding<T>
 {

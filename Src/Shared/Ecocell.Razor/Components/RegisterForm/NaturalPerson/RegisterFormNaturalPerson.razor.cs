@@ -2,10 +2,8 @@
 using Ecocell.Communication.Enums.User;
 using Ecocell.Communication.Requests.Document;
 using Ecocell.Communication.Requests.Users;
-using Ecocell.Exception;
 using FluentValidation;
 using MudBlazor;
-using System.Globalization;
 
 namespace Ecocell.Razor.Components.RegisterForm.NaturalPerson;
 

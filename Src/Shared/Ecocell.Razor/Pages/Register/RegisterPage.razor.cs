@@ -1,5 +1,13 @@
-﻿namespace Ecocell.Razor.Pages.Login;
+﻿using Ecocell.Communication.Enums.User;
 
-public partial class LoginPage
+namespace Ecocell.Razor.Pages.Register;
+
+public partial class RegisterPage
 {
+    private UserType _userType { get; set; } = UserType.NaturalPerson;
+
+    private void OnUserTypeChanged(UserType userType)
+    {
+        _userType = userType;
+    }
 }

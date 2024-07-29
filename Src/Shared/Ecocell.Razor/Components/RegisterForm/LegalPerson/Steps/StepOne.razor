@@ -1,0 +1,74 @@
+﻿@using Ecocell.Communication.Enums.User
+@using Ecocell.Communication.Responses.BrazilApiCompanyData
+@using Ecocell.Razor.Services.LegalPersonChecker
+
+@inject ILegalPersonChecker<ResponseBrazilApiCompanyDataJson> _legalPersonChecker
+@inject ISnackbar Snackbar
+
+<MudForm @ref="_formStepOne" Model="_model" Style="width: 100%; gap: 1.25rem;" ValidationDelay="0">
+        <div class="d-flex gap-5 align-center" style="width: 100%;">
+            <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="_document.Text"
+                      For="@(() => _document.Text)"
+                      Immediate="true"
+                      Placeholder="CNPJ"
+                      Disabled="_disableCnpj"
+                      Mask="_cnpjMask"
+                      OnBlur="@(async () => await GetCompanyData())"
+                      Variant="Variant.Outlined" />
+
+            @if(_isLoading)
+            {
+                <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+            }
+        </div>
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="_model.Name"
+                      For="@(() => _model.Name)"
+                      Immediate="true"
+                      Required="true"
+                      RequiredError="Nome fanstasia é obrigatório!"
+                      Placeholder="Nome fantasia"
+                      Variant="Variant.Outlined" />
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="_model.CorporateName"
+                      For="@(() => _model.CorporateName)"
+                      Immediate="true"
+                      Required="true"
+                      RequiredError="Razão social é obrigatória!"
+                      Placeholder="Razão social"
+                      Variant="Variant.Outlined" />
+    <MudTextField Class="ma-0 pa-0"
+                  T="string"
+                  @bind-Value="_model.Email"
+                  For="@(() => _model.Email)"
+                  Immediate="true"
+                  Required="true"
+                  RequiredError="E-mail é obrigatório!"
+                  Placeholder="E-mail"
+                  Variant="Variant.Outlined" />
+    <MudTextField Class="ma-0 pa-0"
+                  T="string"
+                  @bind-Value="_model.PrincipalCnae"
+                  For="@(() => _model.PrincipalCnae)"
+                  Immediate="true"
+                  Required="true"
+                  RequiredError="CNAE principal é obrigatório!"
+                  Placeholder="CNAE principal"
+                  Variant="Variant.Outlined" />
+
+    <div class="d-flex w-full justify-center gap-1">
+        <MudRadioGroup @bind-Value="_companyHierarchy">
+            <MudRadio Value="CompanyHierarchy.Headquarter" Color="Color.Primary" Dense="true">Matriz</MudRadio>
+            <MudRadio Value="CompanyHierarchy.Branch" Color="Color.Primary" Dense="true">Filial</MudRadio>
+        </MudRadioGroup>
+    </div>
+</MudForm>
+
+@if(_error)
+{
+    <MudButton @onclick="@(() => ShowErrorSnackbar("Erro ao buscar dados do CNPJ", Defaults.Classes.Position.TopEnd))" Color="Color.Default">Bottom-End</MudButton>
+}

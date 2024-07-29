@@ -1,4 +1,4 @@
-﻿namespace Ecocell.Domain.Services.LegalPersonChecker;
+﻿namespace Ecocell.Razor.Services.LegalPersonChecker;
 
 public interface ILegalPersonChecker<T>
 {

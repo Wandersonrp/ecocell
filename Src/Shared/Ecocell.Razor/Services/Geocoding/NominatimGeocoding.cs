@@ -1,9 +1,8 @@
 ﻿using Ecocell.Communication.Responses.Nominatim;
-using Ecocell.Domain.Services.Geocoding;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 
-namespace Ecocell.Infrastructure.Services.Geocoding;
+namespace Ecocell.Razor.Services.Geocoding;
 
 public class NominatimGeocoding : IGeocoding<ResponseNominatimGeocodingJson>
 {
@@ -34,7 +33,7 @@ public class NominatimGeocoding : IGeocoding<ResponseNominatimGeocodingJson>
         }
         catch
         {
-            throw;
+            return null;
         }
     }    
 }
