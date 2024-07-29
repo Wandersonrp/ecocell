@@ -1,5 +1,7 @@
 ﻿@page "/register"
 
+@using Ecocell.Communication.Enums.User
+@using Ecocell.Razor.Components.RegisterForm.LegalPerson
 @using Ecocell.Razor.Components.RegisterForm.NaturalPerson
 @using Ecocell.Razor.Components.Switches
 
@@ -10,8 +12,16 @@
         </div>
 
         <div class="form">
-            <SwitchButtons ButtonLeftText="Pessoa física" ButtonRightText="Pessoa jurídica"/>
-            <RegisterFormNaturalPerson />
+            <SwitchButtons ButtonLeftText="Pessoa física" ButtonRightText="Pessoa jurídica" UserTypeChanged="@OnUserTypeChanged"/>
+
+            @if(_userType == UserType.NaturalPerson)
+            {
+                <RegisterFormNaturalPerson />
+            }
+            else if (_userType == UserType.LegalPerson)
+            {
+                <RegisterFormLegalPerson />
+            }
         </div>
     </div>    
 </div>

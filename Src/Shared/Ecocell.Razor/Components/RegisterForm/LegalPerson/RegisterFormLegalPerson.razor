@@ -1,0 +1,37 @@
+﻿@inject ISnackbar Snackbar
+
+@using Ecocell.Razor.Components.RegisterForm.LegalPerson.Steps
+@using MudBlazor.Extensions
+@using MudExtensions.Utilities
+
+<div class="" style="width: 100%;">
+    <MudStepperExtended @ref="_stepper" Class="mud-width-full" ContentStyle="min-height: 400px" Linear="_linear"
+                        PreventStepChangeAsync="new Func<StepChangeDirection, int, Task<bool>>(CheckChange)" Variant="Variant.Filled" Color="Color.Primary"
+                        MobileView="_mobileView" Loading="_loading" HeaderTextView="HeaderTextView.OnlyActiveText" ShowSkipButton="false" >
+        <ChildContent>
+            <MudStepExtended Icon="@Icons.Material.Filled.BusinessCenter" Title="Info Pessoa Jurídica" StatusChanged="StatusChanged" Order="_infoStepOrder">
+                <ChildContent>                   
+                    <StepOne AddressChanged="@OnAddressChanged" />
+                </ChildContent>
+            </MudStepExtended>
+            <MudStepExtended Title="Endereço" Icon="@Icons.Material.Filled.Apartment" Order="_optionsStepOrder">
+                <ChildContent>
+                    <StepTwo Address="_address" />
+                </ChildContent>
+            </MudStepExtended>
+
+            @* @if (_addResultStep)
+            {
+                <MudStepExtended Icon="@Icons.Material.Filled.Alarm" Title="Result Step" IsResultStep="true">
+                    <ChildContent>
+                        <div class="d-flex flex-column align-center justify-center" style="height: 200px">
+                            <MudIconButton Icon="@Icons.Material.Filled.DoneAll" Size="Size.Large" Variant="Variant.Filled" Color="Color.Success" />
+                            <MudText>Your reservation successfully completed.</MudText>
+                        </div>
+                    </ChildContent>
+                </MudStepExtended>
+            } *@
+        </ChildContent>
+    </MudStepperExtended>
+</div>
+    

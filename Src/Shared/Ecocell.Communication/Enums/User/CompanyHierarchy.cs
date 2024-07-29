@@ -3,11 +3,8 @@
 namespace Ecocell.Communication.Enums.User;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum CompanyStatus
+public enum CompanyHierarchy
 {
-    Active,
-    Supended,
-    Unfit,
-    Finished,
-    Failed,
+    Headquarter,
+    Branch
 }

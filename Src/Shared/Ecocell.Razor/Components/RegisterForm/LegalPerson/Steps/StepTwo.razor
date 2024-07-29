@@ -1,0 +1,80 @@
+﻿@using Ecocell.Communication.Responses.Nominatim
+@using Ecocell.Razor.Services.Geocoding
+
+@inject IGeocoding<ResponseNominatimGeocodingJson> _geocoding
+
+<MudForm @ref="_formStepTwo" Model="Address" Style="width: 100%; gap: 1.25rem;" ValidationDelay="0">
+    <MudStack>
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.ZipCode"
+                      For="@(() => Address.ZipCode)"
+                      Immediate="true"
+                      Required="true"
+                      RequiredError="CEP é obrigatório!"
+                      Placeholder="CEP"
+                      Mask="@_zipCodeMask"
+                      Variant="Variant.Outlined" />
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.Street"
+                      For="@(() => Address.Street)"
+                      Immediate="true"
+                      Required="true"
+                      RequiredError="Logradouro é obrigatório!"
+                      Placeholder="Logradouro"
+                      Variant="Variant.Outlined" />
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.Number"
+                      For="@(() => Address.Number)"
+                      Immediate="true"                                            
+                      Placeholder="Número"
+                      Variant="Variant.Outlined" />
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.Neighborhood"
+                      For="@(() => Address.Neighborhood)"
+                      Immediate="true"
+                      Required="true"
+                      RequiredError="Bairro é obrigatório!"
+                      Placeholder="Bairro"
+                      Variant="Variant.Outlined" />
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.Complement"
+                      For="@(() => Address.Complement)"
+                      Immediate="true"                                          
+                      Placeholder="Complemento"
+                      Variant="Variant.Outlined" />
+
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.City"
+                      For="@(() => Address.City)"
+                      Immediate="true"
+                      Required="true"
+                      Placeholder="Cidade"
+                      RequiredError="Cidade é obrigatória"
+                      Variant="Variant.Outlined" />
+
+        <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.State"
+                      For="@(() => Address.State)"
+                      Immediate="true"
+                      Required="true"
+                      RequiredError="Estado é obrigatório"
+                      Placeholder="Estado"
+                      Variant="Variant.Outlined" />
+        @* <MudTextField Class="ma-0 pa-0"
+                      T="string"
+                      @bind-Value="Address.Country"
+                      For="@(() => Address.Country)"
+                      Immediate="true"
+                      Required="true"
+                      RequiredError="País é obrigatório"
+                      Placeholder="País"
+                      Variant="Variant.Outlined" /> *@
+    </MudStack>
+</MudForm>

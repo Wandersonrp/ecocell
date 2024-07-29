@@ -21,5 +21,5 @@ public record RequestRegisterNaturalPersonJson
     public string PasswordConfirmation { get; set; } = string.Empty;
 
     [JsonPropertyName("is_discarding")]
-    public bool IsDiscarding { get; set; }
+    public bool IsDiscarding { get; set; }    
 }

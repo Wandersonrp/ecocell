@@ -7,6 +7,7 @@ public class LegalPerson : User
     public string CorporateName { get; set; } = string.Empty;
     public string CompanyDescription { get; set; } = string.Empty;
     public DateOnly CompanyStartDate { get; set; }
+    public CompanyHierarchy CompanyHierarchy { get; set; }
     public string Phone { get; set; } = string.Empty;
     public string PrincipalCnae { get; set; } = string.Empty;
     public CompanyStatus CompanyStatus { get; set; }   
