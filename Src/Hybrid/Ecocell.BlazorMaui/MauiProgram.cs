@@ -1,6 +1,4 @@
 ﻿using Ecocell.Communication.Responses.BrazilApiCompanyData;
-using Ecocell.Communication.Responses.Nominatim;
-using Ecocell.Razor.Services.Geocoding;
 using Ecocell.Razor.Services.LegalPersonChecker;
 using Ecocell.Razor.Services.Users.Register;
 using Microsoft.Extensions.Logging;
@@ -29,8 +27,6 @@ public static class MauiProgram
         builder.Services.AddHttpClient();
 
         builder.Services.AddScoped<ILegalPersonChecker<ResponseBrazilApiCompanyDataJson>, BrazilApiCompanyChecker>();
-
-        builder.Services.AddScoped<IGeocoding<ResponseNominatimGeocodingJson>, NominatimGeocoding>();
 
         builder.Services.AddScoped<IRegisterUserService, RegisterUserService>();
 

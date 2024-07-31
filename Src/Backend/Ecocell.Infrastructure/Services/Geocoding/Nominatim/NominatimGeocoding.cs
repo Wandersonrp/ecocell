@@ -1,8 +1,9 @@
 ﻿using Ecocell.Communication.Responses.Nominatim;
+using Ecocell.Domain.Services.Geocoding;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 
-namespace Ecocell.Razor.Services.Geocoding;
+namespace Ecocell.Infrastructure.Services.Geocoding.Nominatim;
 
 public class NominatimGeocoding : IGeocoding<ResponseNominatimGeocodingJson>
 {
@@ -24,7 +25,7 @@ public class NominatimGeocoding : IGeocoding<ResponseNominatimGeocodingJson>
         {
             var response = await httpClient.GetFromJsonAsync<object>($"/search.php?postalcode={postalCode}&format=json");
 
-            if(response is null)
+            if (response is null)
             {
                 return null;
             }
@@ -35,5 +36,5 @@ public class NominatimGeocoding : IGeocoding<ResponseNominatimGeocodingJson>
         {
             return null;
         }
-    }    
+    }
 }

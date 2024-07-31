@@ -1,4 +1,5 @@
-﻿using Ecocell.Communication.Enums.User;
+﻿using Ecocell.Communication.Enums.Document;
+using Ecocell.Communication.Enums.User;
 using Ecocell.Communication.Requests.Address;
 using Ecocell.Communication.Requests.Document;
 using Ecocell.Communication.Requests.Users;
@@ -9,8 +10,7 @@ namespace Ecocell.Razor.Components.RegisterForm.LegalPerson.Steps;
 
 public partial class StepOne
 {
-    private MudForm _formStepOne = new();   
-    private RequestRegisterUserJson _model = new();
+    private MudForm _formStepOne = new();       
     private RequestDocumentJson _document = new();
     private CompanyHierarchy _companyHierarchy { get; set; } = CompanyHierarchy.Headquarter;
     private bool _isLoading { get; set; } 
@@ -23,15 +23,31 @@ public partial class StepOne
     [Parameter]
     public EventCallback<RequestAddressJson> AddressChanged { get; set; }
 
-    private PatternMask _cnpjMask = new("XX.XXX.XXX/XXXX-XX")
-    {
-        MaskChars = new[] { new MaskChar('X', @"[0-9]") },
-        Placeholder = '_',
-        CleanDelimiters = true,
-    };
+    [Parameter]
+    public RequestRegisterUserJson User { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<RequestRegisterUserJson> UserChanged { get; set; }
+
+    //private PatternMask _cnpjMask = new("XX.XXX.XXX/XXXX-XX")
+    //{
+    //    MaskChars = new[] { new MaskChar('X', @"[0-9]") },
+    //    Placeholder = '_',
+    //    CleanDelimiters = true,
+    //};
 
     private async Task GetCompanyData()
     {
+        if(string.IsNullOrWhiteSpace(_document.Text))
+        {
+            return;
+        }
+        
+        if(!string.IsNullOrWhiteSpace(User.Email) || !string.IsNullOrWhiteSpace(User.CorporateName))
+        {
+            return;
+        }
+        
         _isLoading = true;
 
         var response = await _legalPersonChecker.GetCompanyData(_document.Text);
@@ -39,17 +55,31 @@ public partial class StepOne
         if(response is null)
         {
             _error = true;
+
+            ShowErrorSnackbar("Erro ao buscar dados do CNPJ");
+            
+            _isLoading = false;
+
             return;
         }
-
-        _model.Email = response?.Email?.ToLower() ?? string.Empty;
-        _model.Name = response?.Name ?? string.Empty;
-        _model.Phone = response?.Phone1 ?? string.Empty;
-        _model.CorporateName = response?.CorporateName ?? string.Empty;
-        _model.PrincipalCnae = response?.CnaeFiscalDescription ?? string.Empty;
-        _model.CompanyHierarchy = response?.CompanyHierarchyDescription is not null ? HandleCompanyHierarchy(response?.CompanyHierarchyDescription!) : CompanyHierarchy.Headquarter;
         
-        _companyHierarchy = _model.CompanyHierarchy;
+        User.Document = new RequestDocumentJson
+        {
+            Text = _document.Text,
+            DocumentType = DocumentType.CNPJ,
+        };
+
+        User.Email = response?.Email?.ToLower() ?? string.Empty;
+        User.UserType = UserType.LegalPerson;
+        User.Name = response?.Name ?? string.Empty;
+        User.Phone = response?.Phone1 ?? string.Empty;
+        User.CorporateName = response?.CorporateName ?? string.Empty;
+        User.PrincipalCnae = response?.CnaeFiscalDescription ?? string.Empty;
+        User.CompanyHierarchy = response?.CompanyHierarchyDescription is not null ? HandleCompanyHierarchy(response?.CompanyHierarchyDescription!) : CompanyHierarchy.Headquarter;
+        
+        _companyHierarchy = User.CompanyHierarchy;
+
+        await OnUserChanged(User);
 
         var address = new RequestAddressJson
         {
@@ -69,6 +99,13 @@ public partial class StepOne
         StateHasChanged();
     }
 
+    private async Task OnUserChanged(RequestRegisterUserJson user)
+    {
+        User = user;
+
+        await UserChanged.InvokeAsync(User);
+    }
+
     private async Task OnAddressChanged(RequestAddressJson address)
     {
         Address.Street = address.Street;
@@ -85,10 +122,11 @@ public partial class StepOne
         await AddressChanged.InvokeAsync(address);
     }
 
-    private void ShowErrorSnackbar(string message, string position)
+    private void ShowErrorSnackbar(string message)
     {
         Snackbar.Clear();
-        Snackbar.Configuration.PositionClass = position;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopEnd;
+        Snackbar.Configuration.VisibleStateDuration = 1000;
         Snackbar.Add(message, Severity.Error, c =>  c.SnackbarVariant = Variant.Text);
     }
 
@@ -103,5 +141,10 @@ public partial class StepOne
             default:
                 return CompanyHierarchy.Headquarter;
         }
+    }
+
+    private void SetUser()
+    {
+
     }
 }

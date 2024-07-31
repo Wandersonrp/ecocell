@@ -1,6 +1,11 @@
-﻿using Ecocell.Communication.Requests.Address;
+﻿using Ecocell.Communication.Enums.Document;
+using Ecocell.Communication.Enums.User;
+using Ecocell.Communication.Requests.Address;
+using Ecocell.Communication.Requests.Document;
+using Ecocell.Communication.Requests.Users;
 using MudBlazor;
 using MudExtensions;
+using ZXing.QrCode.Internal;
 
 namespace Ecocell.Razor.Components.RegisterForm.LegalPerson;
 
@@ -18,11 +23,42 @@ public partial class RegisterFormLegalPerson
     private int _infoStepOrder;
     private int _optionsStepOrder;
     private int _paymentStepOrder;
+    private bool _isSubmitLoading;
+    private RequestDocumentJson _document = new();
     private RequestAddressJson _address { get; set; } = new();
+    private RequestRegisterUserJson _user { get; set; } = new();
 
     private void OnAddressChanged(RequestAddressJson address)
     {
         _address = address;
+    }
+
+    private void OnUserChanged(RequestRegisterUserJson user)
+    {
+        _user = user;
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            _isSubmitLoading = true;                      
+
+            //await _form.Validate();
+
+            if (true)
+            {
+                await RegisterUserService.RegisterUser(_user);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Console.Out.WriteLine($"Ex.: {ex.Message}");
+        }
+
+        _isSubmitLoading = false;
+
+        StateHasChanged();
     }
 
     private async Task<bool> CheckChange(StepChangeDirection direction, int targetIndex)
@@ -38,17 +74,15 @@ public partial class RegisterFormLegalPerson
             {
                 _loading = true;
                 StateHasChanged();
-                await Task.Delay(100);
                 await _form.Validate();
                 _loading = false;
                 StateHasChanged();
                 return !_form.IsValid;
             }
-            else if (_stepper?.GetActiveIndex() == 2)
+            else if (_stepper?.GetActiveIndex() == 1)
             {
                 _loading = true;
                 StateHasChanged();
-                await Task.Delay(100);
                 await _form2.Validate();
                 _loading = false;
                 StateHasChanged();
@@ -63,10 +97,5 @@ public partial class RegisterFormLegalPerson
         {
             return false;
         }
-    }
-
-    private void StatusChanged(StepStatus status)
-    {
-        Snackbar.Add($"First step {status.ToDescriptionString()}.", Severity.Info);
-    }
+    }    
 }

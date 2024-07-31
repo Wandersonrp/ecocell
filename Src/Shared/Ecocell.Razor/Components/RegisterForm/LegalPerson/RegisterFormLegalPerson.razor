@@ -5,32 +5,48 @@
 @using MudExtensions.Utilities
 
 <div class="" style="width: 100%;">
-    <MudStepperExtended @ref="_stepper" Class="mud-width-full" ContentStyle="min-height: 400px" Linear="_linear"
-                        PreventStepChangeAsync="new Func<StepChangeDirection, int, Task<bool>>(CheckChange)" Variant="Variant.Filled" Color="Color.Primary"
-                        MobileView="_mobileView" Loading="_loading" HeaderTextView="HeaderTextView.OnlyActiveText" ShowSkipButton="false" >
+    <MudStepperExtended 
+                        @ref="_stepper" 
+                        ShowNextButton="false" 
+                        ShowPreviousButton="false" 
+                        Class="mud-width-full" 
+                        ContentStyle="min-height: 400px" 
+                        Linear="_linear"
+                        PreventStepChangeAsync="new Func<StepChangeDirection, int, Task<bool>>(CheckChange)" 
+                        Variant="Variant.Filled" 
+                        Color="Color.Primary"
+                        MobileView="_mobileView" 
+                        Loading="_loading" 
+                        HeaderTextView="HeaderTextView.OnlyActiveText" 
+                        ShowSkipButton="false" >
         <ChildContent>
-            <MudStepExtended Icon="@Icons.Material.Filled.BusinessCenter" Title="Info Pessoa Jurídica" StatusChanged="StatusChanged" Order="_infoStepOrder">
+            <MudStepExtended Icon="@Icons.Material.Filled.BusinessCenter" Title="Info Pessoa Jurídica">
                 <ChildContent>                   
-                    <StepOne AddressChanged="@OnAddressChanged" />
+                    <StepOne AddressChanged="@OnAddressChanged" UserChanged="@OnUserChanged" />
+                    <div class="w-full d-flex justify-end" style="margin-top: 1.25rem;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _stepper!.SetActiveIndex(1)">Próximo</MudButton>
+                    </div>
+                  
                 </ChildContent>
             </MudStepExtended>
-            <MudStepExtended Title="Endereço" Icon="@Icons.Material.Filled.Apartment" Order="_optionsStepOrder">
+            <MudStepExtended Title="Endereço" Icon="@Icons.Material.Filled.Apartment">
                 <ChildContent>
-                    <StepTwo Address="_address" />
+                    <StepTwo Address="_address" User="_user"/>
+                    <div class="w-full d-flex justify-space-between" style="margin-top: 1.25rem;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _stepper!.SetActiveIndex(-1)">Anterior</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="async () => await Submit()">
+                            @if (_isSubmitLoading)
+                            {
+                                <MudProgressCircular Color="Color.Default" Size="Size.Small" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <span>Cadastrar</span>
+                            }
+                        </MudButton>
+                    </div>
                 </ChildContent>
-            </MudStepExtended>
-
-            @* @if (_addResultStep)
-            {
-                <MudStepExtended Icon="@Icons.Material.Filled.Alarm" Title="Result Step" IsResultStep="true">
-                    <ChildContent>
-                        <div class="d-flex flex-column align-center justify-center" style="height: 200px">
-                            <MudIconButton Icon="@Icons.Material.Filled.DoneAll" Size="Size.Large" Variant="Variant.Filled" Color="Color.Success" />
-                            <MudText>Your reservation successfully completed.</MudText>
-                        </div>
-                    </ChildContent>
-                </MudStepExtended>
-            } *@
+            </MudStepExtended>           
         </ChildContent>
     </MudStepperExtended>
 </div>

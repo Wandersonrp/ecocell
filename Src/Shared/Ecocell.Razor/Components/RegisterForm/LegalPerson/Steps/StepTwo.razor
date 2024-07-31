@@ -1,10 +1,6 @@
 ﻿@using Ecocell.Communication.Responses.Nominatim
-@using Ecocell.Razor.Services.Geocoding
 
-@inject IGeocoding<ResponseNominatimGeocodingJson> _geocoding
-
-<MudForm @ref="_formStepTwo" Model="Address" Style="width: 100%; gap: 1.25rem;" ValidationDelay="0">
-    <MudStack>
+<MudForm @ref="_formStepTwo" Model="Address" Style="width: 100%; gap: 1.25rem;" ValidationDelay="0">    
         <MudTextField Class="ma-0 pa-0"
                       T="string"
                       @bind-Value="Address.ZipCode"
@@ -66,15 +62,5 @@
                       Required="true"
                       RequiredError="Estado é obrigatório"
                       Placeholder="Estado"
-                      Variant="Variant.Outlined" />
-        @* <MudTextField Class="ma-0 pa-0"
-                      T="string"
-                      @bind-Value="Address.Country"
-                      For="@(() => Address.Country)"
-                      Immediate="true"
-                      Required="true"
-                      RequiredError="País é obrigatório"
-                      Placeholder="País"
-                      Variant="Variant.Outlined" /> *@
-    </MudStack>
+                      Variant="Variant.Outlined" />    
 </MudForm>

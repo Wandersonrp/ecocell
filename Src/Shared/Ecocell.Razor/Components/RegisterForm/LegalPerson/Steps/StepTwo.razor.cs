@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Components;
-using Ecocell.Communication.Requests.Address;
+﻿using Ecocell.Communication.Requests.Address;
+using Ecocell.Communication.Requests.Users;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Ecocell.Razor.Components.RegisterForm.LegalPerson.Steps;
@@ -10,15 +11,10 @@ public partial class StepTwo
     private bool _error;
 
     [Parameter]
-    public RequestAddressJson Address { get; set; } = new();
+    public RequestRegisterUserJson User { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        if(!string.IsNullOrEmpty(Address.ZipCode))
-        {
-            await GetGeolocation(Address.ZipCode);
-        }
-    }
+    [Parameter]
+    public RequestAddressJson Address { get; set; } = new();
 
     private PatternMask _zipCodeMask = new PatternMask("XXXXX-XXX")
     {
@@ -26,23 +22,4 @@ public partial class StepTwo
         Placeholder = '_',
         CleanDelimiters = true,
     };
-
-    private async Task GetGeolocation(string zipCode)
-    {
-        var response = await _geocoding.GetGeocodingByPostalCode(zipCode);
-
-        if(response is null)
-        {
-            _error = true;
-            return;
-        }
-
-        var latitude = response.Roots.FirstOrDefault()?.Latitude;
-
-        var longitude = response.Roots.FirstOrDefault()?.Longitude;
-
-        Address.Latitude = latitude ?? string.Empty;
-
-        Address.Longitude = longitude ?? string.Empty;
-    }
 }
