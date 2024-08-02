@@ -26,7 +26,7 @@ public record RequestAddressJson
     public string State { get; set; } = string.Empty;
 
     [JsonPropertyName("country")]
-    public string Country { get; set; } = string.Empty;
+    public string? Country { get; set; } = null!;
 
     [JsonPropertyName("latitude")]
     public string Latitude { get; set; } = string.Empty;

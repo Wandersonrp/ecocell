@@ -16,7 +16,12 @@ public class RegisterUserService : IRegisterUserService
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("/api/register", request);
+            var handler = new ModernHttpClient.NativeMessageHandler();
+            using var httpClient = new HttpClient(handler);
+
+            var url = "http://localhost:5150";
+
+            var response = await _httpClient.PostAsJsonAsync($"{url}/api/register", request);
 
             if(!response.IsSuccessStatusCode)
             {
@@ -26,7 +31,7 @@ public class RegisterUserService : IRegisterUserService
         }
         catch(System.Exception ex)
         {
-            await Console.Out.WriteLineAsync(ex.Message);
+            await Console.Out.WriteLineAsync(ex.Message); 
         }        
     }
 }

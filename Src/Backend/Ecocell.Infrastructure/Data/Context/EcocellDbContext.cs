@@ -162,8 +162,7 @@ public class EcocellDbContext : DbContext
 
             address.Property(e => e.Country)
                 .HasColumnName("country")
-                .HasColumnType("varchar(50)")
-                .IsRequired();
+                .HasColumnType("varchar(50)");                
 
             address.Property(e => e.Latitude)
                 .HasColumnName("latitude")
@@ -203,11 +202,16 @@ public class EcocellDbContext : DbContext
 
             legalPerson.Property(e => e.PrincipalCnae)
                 .HasColumnName("principal_cnae")
-                .HasColumnType("varchar(10)")
+                .HasColumnType("varchar")
                 .IsRequired();
 
             legalPerson.Property(e => e.CompanyStatus)
                 .HasColumnName("company_status")
+                .HasConversion<string>()
+                .IsRequired();
+
+            legalPerson.Property(e => e.CompanyHierarchy)
+                .HasColumnName("company_hierarchy")
                 .HasConversion<string>()
                 .IsRequired();
 

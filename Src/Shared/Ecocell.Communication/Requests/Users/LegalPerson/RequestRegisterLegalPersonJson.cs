@@ -26,7 +26,7 @@ public record RequestRegisterLegalPersonJson
     public string CorporateName { get; set; } = string.Empty;
 
     [JsonPropertyName("company_description")]
-    public string CompanyDescription { get; set; } = string.Empty;
+    public string? CompanyDescription { get; set; } = string.Empty;
 
     [JsonPropertyName("company_status")]
     public CompanyStatus? CompanyStatus { get; set; } = null!;
@@ -38,7 +38,7 @@ public record RequestRegisterLegalPersonJson
     public DateOnly? CompanyStartDate { get; set; }
 
     [JsonPropertyName("phone")]
-    public string Phone { get; set; } = string.Empty;
+    public string? Phone { get; set; } = string.Empty;
 
     [JsonPropertyName("principal_cnae")]
     public string PrincipalCnae { get; set; } = string.Empty;

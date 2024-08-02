@@ -12,6 +12,8 @@
                       @bind-Value="_document.Text"
                       For="@(() => _document.Text)"
                       Immediate="true"
+                      Required="true"
+                      RequiredError="CNPJ é obrigatório!"
                       Placeholder="CNPJ"
                       Disabled="_disableCnpj"                      
                       OnBlur="@(async () => await GetCompanyData())"
@@ -58,6 +60,23 @@
                   RequiredError="CNAE principal é obrigatório!"
                   Placeholder="CNAE principal"
                   Variant="Variant.Outlined" />
+    <MudTextField Class="ma-0 pa-0"
+                  T="string"
+                  @bind-Value="User.Password"
+                  For="@(() => User.Password)"
+                  Immediate="true"
+                  InputType="InputType.Password"
+                  Placeholder="Senha"
+                  Variant="Variant.Outlined" />
+    <MudTextField Class="ma-0 pa-0"
+                  T="string"
+                  @bind-Value="User.PasswordConfirmation"
+                  For="@(() => User.PasswordConfirmation)"
+                  Immediate="true"
+                  InputType="InputType.Password"
+                  Placeholder="Confirmar senha"
+                  Variant="Variant.Outlined" />
+
 
     <div class="d-flex w-full justify-center gap-1">
         <MudRadioGroup @bind-Value="_companyHierarchy">

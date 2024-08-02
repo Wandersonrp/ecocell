@@ -22,7 +22,7 @@ public record RequestRegisterUserJson
     [JsonPropertyName("company_description")]
     public string? CompanyDescription { get; set; } = null!;
 
-    [JsonPropertyName("company_start_date")]
+    [JsonPropertyName("company_start_date")] 
     public DateOnly? CompanyStartDate { get; set; }
 
     [JsonPropertyName("company_hierarchy")]
@@ -40,7 +40,7 @@ public record RequestRegisterUserJson
     [JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
 
-    [JsonPropertyName("document_text")]
+    [JsonPropertyName("document")]
     public RequestDocumentJson Document { get; set; } = null!;
 
     [JsonPropertyName("password_confirmation")]

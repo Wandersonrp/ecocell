@@ -10,7 +10,7 @@ public class Address
     public string ZipCode { get; set; } = string.Empty;
     public string City { get; set; } = string.Empty;
     public string State { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
+    public string? Country { get; set; } = null!;
     public string Latitude { get; set; } = string.Empty;
     public string Longitude { get; set; } = string.Empty;
     public LegalPerson? LegalPerson { get; set; } = null!;

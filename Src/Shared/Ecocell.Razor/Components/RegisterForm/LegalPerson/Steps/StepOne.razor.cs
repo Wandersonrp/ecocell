@@ -72,12 +72,13 @@ public partial class StepOne
         User.Email = response?.Email?.ToLower() ?? string.Empty;
         User.UserType = UserType.LegalPerson;
         User.Name = response?.Name ?? string.Empty;
-        User.Phone = response?.Phone1 ?? string.Empty;
+        User.Phone = response?.Phone1 ?? string.Empty;        
         User.CorporateName = response?.CorporateName ?? string.Empty;
         User.PrincipalCnae = response?.CnaeFiscalDescription ?? string.Empty;
         User.CompanyHierarchy = response?.CompanyHierarchyDescription is not null ? HandleCompanyHierarchy(response?.CompanyHierarchyDescription!) : CompanyHierarchy.Headquarter;
-        
-        _companyHierarchy = User.CompanyHierarchy;
+        User.CompanyStartDate = response?.CompanyStatusDate;
+        User.CompanyStatus = response?.CompanyStatus is not null ? HandleCompanyStatus(response.CompanyStatus.ToString()!) : null;
+
 
         await OnUserChanged(User);
 
@@ -143,8 +144,16 @@ public partial class StepOne
         }
     }
 
-    private void SetUser()
+    private CompanyStatus HandleCompanyStatus(string companyStatus)
     {
+        switch(companyStatus)
+        {
+            case "Ativa":
+                return CompanyStatus.Active;
 
+            default:
+                return CompanyStatus.Active;
+
+        }
     }
 }
