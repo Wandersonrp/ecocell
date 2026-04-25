@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Ecocell.Api/Ecocell.Api.csproj" />
+    <Project Path="src/Ecocell.Shared/Ecocell.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>
