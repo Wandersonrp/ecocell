@@ -165,6 +165,52 @@ public class RegisterNaturalPersonTests : TestBase
     }
 
     [Fact]
+    public async Task Handle_ShouldPersistInDatabase_WhenPersonTurns16Today()
+    {
+        // Arrange — fronteira exata: completa 16 anos hoje
+        _command.BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-16));
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var exists = await DbContext.NaturalPeople.AnyAsync(np => np.Cpf == _command.Cpf);
+        exists.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldNotPersistInDatabase_WhenPersonTurns16Tomorrow()
+    {
+        // Arrange — um dia antes da fronteira: ainda não completou 16 anos
+        _command.BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-16).AddDays(1));
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Messages.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldPersistInDatabase_WhenPersonTurned16Yesterday()
+    {
+        // Arrange — um dia após a fronteira: completou 16 anos ontem
+        _command.BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-16).AddDays(-1));
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var exists = await DbContext.NaturalPeople.AnyAsync(np => np.Cpf == _command.Cpf);
+        exists.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Handle_ShouldReturnConflict_WhenCpfAlreadyExists()
     {
         // Arrange
