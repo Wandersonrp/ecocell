@@ -21,7 +21,7 @@ public class ExceptionHandlerMiddleware
         }
         catch (Exception ex) 
         {
-            _logger.LogError(ex, "Ocorreu um erro ao fazer a solicitação: {@Erro}", ex);
+            _logger.LogError(ex, "Ocorreu um erro ao fazer a solicitação: {@Error}", ex);
             await HandleException(httpContext, ex);
         }
     }

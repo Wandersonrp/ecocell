@@ -1,16 +1,12 @@
-﻿namespace Ecocell.Api.Entities;
+﻿using Ecocell.Api.Enums;
 
-public class Person
+namespace Ecocell.Api.Entities;
+
+public abstract class Person : BaseEntity
 {
-    public string FullName { get; private set; } = string.Empty;
-    public string? Email { get; private set; } = string.Empty;
-    public string? Phone { get; private set; }
-
-    public string GetFirstName()
-    {
-        if (!string.IsNullOrWhiteSpace(FullName))
-            return FullName.Split(' ')[0];
-
-        return string.Empty;
-    }
+    public Role Role { get; protected set; } = Role.User;
+    public string Email { get; protected set; } = string.Empty;
+    public Journey Journey { get; protected set; }
+    public PersonType PersonType { get; protected set; }
+    public PersonStatus PersonStatus { get; protected set; } = PersonStatus.Active;
 }

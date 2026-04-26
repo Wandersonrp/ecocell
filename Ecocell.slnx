@@ -3,5 +3,7 @@
     <Project Path="src/Ecocell.Api/Ecocell.Api.csproj" />
     <Project Path="src/Ecocell.Shared/Ecocell.Shared.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Ecocell.UnitTests/Ecocell.UnitTests.csproj" Id="47b63991-b304-4340-b033-7394f72a0552" />
+  </Folder>
 </Solution>
