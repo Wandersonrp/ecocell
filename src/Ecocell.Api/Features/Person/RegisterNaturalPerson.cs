@@ -2,6 +2,7 @@
 using Ecocell.Api.Database;
 using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Events;
 using Ecocell.Api.Extensions;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Requests;
@@ -51,12 +52,14 @@ public static class RegisterNaturalPerson
         private readonly AppDbContext _dbContext;
         private readonly ILogger<Handler> _logger;
         private readonly IValidator<Command> _validator;
+        private readonly IPublisher _publisher;
 
-        public Handler(AppDbContext dbContext, ILogger<Handler> logger, IValidator<Command> validator)
+        public Handler(AppDbContext dbContext, ILogger<Handler> logger, IValidator<Command> validator, IPublisher publisher)
         {
             _dbContext = dbContext;
             _logger = logger;
             _validator = validator;
+            _publisher = publisher;
         }
 
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
@@ -101,6 +104,8 @@ public static class RegisterNaturalPerson
             _dbContext.People.Add(person);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+
+            await _publisher.Publish(new PersonRegistered(person.Id, person.Email), cancellationToken);
 
             _logger.LogInformation("Pessoa física cadastrada com sucesso {@NaturalPerson}", person);
             return Result.Success();
