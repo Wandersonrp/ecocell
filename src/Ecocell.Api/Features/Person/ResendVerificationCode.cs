@@ -127,6 +127,7 @@ public class ResendVerificationCodeEndpoint : ICarterModule
             var result = await sender.Send(command);
             return result.ToProcessResult(StatusCodes.Status202Accepted);
         })
+        .WithTags("Person")
         .WithName("ResendVerificationCode")
         .WithSummary("Reenvia o código OTP de confirmação de conta.")
         .WithDescription("Gera novo código OTP, sobrescreve o anterior e envia ao e-mail cadastrado.")

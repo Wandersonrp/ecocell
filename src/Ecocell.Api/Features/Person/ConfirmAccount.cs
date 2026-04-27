@@ -156,6 +156,7 @@ public class ConfirmAccountEndpoint : ICarterModule
             var result = await sender.Send(command);
             return result.ToProcessResult(StatusCodes.Status200OK);
         })
+        .WithTags("Person")
         .WithName("ConfirmAccount")
         .WithSummary("Confirma o cadastro da pessoa via código OTP.")
         .WithDescription("Valida o código OTP enviado ao e-mail e ativa a conta (AwaitingConfirmation → Active).")

@@ -30,11 +30,14 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseMiddleware<ExceptionHandlerMiddleware>();
+app.UseMiddleware<CorrelationIdMiddleware>();
+
 app.UseHttpsRedirection();
 
-app.MapCarter();
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.UseMiddleware<CorrelationIdMiddleware>();
-app.UseMiddleware<ExceptionHandlerMiddleware>();
+app.MapCarter();
 
 app.Run();

@@ -1,10 +1,14 @@
+using System.Text;
 using Carter;
 using Ecocell.Api.Configurations;
 using Ecocell.Api.Database;
+using Ecocell.Api.Services.Authentication;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.VerificationCodes;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using StackExchange.Redis;
 
@@ -29,6 +33,7 @@ public static class DependencyInjectionExtensions
         AddSettings(services, configuration);
         AddRedis(services, configuration);
         AddServices(services);
+        AddJwtAuthentication(services, configuration);
 
         var assembly = typeof(Program).Assembly;
         services.AddValidatorsFromAssembly(assembly);
@@ -75,6 +80,11 @@ public static class DependencyInjectionExtensions
             .Bind(configuration.GetSection(RedisSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        services.AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection(JwtSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
     }
 
     /// <summary>
@@ -100,5 +110,37 @@ public static class DependencyInjectionExtensions
     private static void AddServices(IServiceCollection services)
     {
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+    }
+
+    /// <summary>
+    /// Registra autenticação JWT Bearer e autorização.
+    /// Requer a chave "Jwt:SigningKey" em User Secrets ou variável de ambiente.
+    /// </summary>
+    private static void AddJwtAuthentication(IServiceCollection services, IConfiguration configuration)
+    {
+        var jwtSettings = configuration
+            .GetSection(JwtSettings.SectionName)
+            .Get<JwtSettings>()
+            ?? throw new InvalidOperationException("Seção 'Jwt' não encontrada em appsettings.");
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings!.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings.Audience,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtSettings.SigningKey)),
+                    ClockSkew = TimeSpan.FromSeconds(30)
+                };
+            });
+
+        services.AddAuthorization();
     }
 }

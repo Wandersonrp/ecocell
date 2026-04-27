@@ -5,9 +5,8 @@ O **EcoCell** é uma plataforma mobile focada em sustentabilidade e economia cir
 
 ### 1.1 Perfis de Usuário (Personas)
 
-- **Depositante:** Pessoa Física ou Jurídica que gera o resíduo. Busca conveniência e recompensas.
-- **Ponto de Coleta:** Empresas ou ONGs que servem como "hubs" intermediários. Buscam visibilidade e selos de sustentabilidade (ESG).
-- **Coletor:** Empresas de reciclagem/logística. Buscam matéria-prima e eficiência na coleta de grandes volumes.
+- **Pessoa Física (PF):** Usuário individual que se cadastra diretamente na plataforma. Assume o papel de **Depositante** (gerador de resíduo) e, opcionalmente, pode ser **Gestor** de uma Pessoa Jurídica — nesse caso cadastra a PJ após o login, mantendo o papel de Depositante.
+- **Pessoa Jurídica (PJ):** Entidade cadastrada por um Gestor PF autenticado. Assume exclusivamente o papel de **Ponto de Coleta** (hub intermediário) ou **Coletor** (empresa de reciclagem/logística). Não possui acesso autônomo à plataforma — todas as ações são realizadas pelo Gestor PF vinculado.
 
 ## 2. Fluxos Principais e Gamificação
 
@@ -31,7 +30,7 @@ Os rankings são segregados para garantir competitividade justa:
 
 | **ID**      | **Descrição (User Story)**                                                                                                              | **Prioridade** |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| **[RF001]** | Como usuário, quero poder me cadastrar no Ecocell selecionando meu perfil (Depositante, Ponto de Coleta ou Coletor).                    | Essencial      |
+| **[RF001]** | Como usuário, quero me cadastrar no Ecocell como Pessoa Física (tornando-me Depositante) ou, após logado, cadastrar uma Pessoa Jurídica (Ponto de Coleta ou Coletor) vinculada à minha conta. | Essencial      |
 | **[RF002]** | Como usuário pessoa jurídica, quero me cadastrar informando o CNPJ e e-mail para que o sistema recupere meus dados automaticamente.     | Desejável      |
 | **[RF003]** | Como sistema, devo enviar um e-mail de confirmação para cada nova Pessoa Jurídica cadastrada.                                           | Essencial      |
 | **[RF004]** | Como usuário, quero realizar login via código de verificação enviado ao e-mail cadastrado.                                              | Essencial      |
@@ -51,25 +50,27 @@ Os rankings são segregados para garantir competitividade justa:
 
 ### Epic 1: Gestão de Identidade e Acesso
 
-#### US001 – Cadastro Multiperfil
+#### US001 – Cadastro de Pessoa Física e Pessoa Jurídica
 
-**Como** um novo usuário, **quero** me cadastrar escolhendo entre Depositante, Ponto de Coleta ou Coletor, **para que** eu possa acessar as funcionalidades específicas do meu perfil.
+**Como** novo usuário, **quero** me cadastrar como Pessoa Física para acessar o Ecocell como Depositante e, se necessário, cadastrar uma Pessoa Jurídica (Ponto de Coleta ou Coletor) vinculada à minha conta após o login.
 
 - **Critérios de Aceite:**
-    
-    - Deve permitir escolha de perfil no início do fluxo.
-        
-    - Se PJ, deve exigir CNPJ e e-mail e validar via API (RN002).
-        
-    - Se PF, deve exigir CPF e e-mail e validar unicidade (RN001).
-        
+
+    - O fluxo de registro inicial é exclusivo para Pessoa Física (CPF + e-mail obrigatórios; unicidade validada — RN001).
+
+    - Após autenticado, um PF Gestor pode cadastrar uma PJ (CNPJ + e-mail; validação de unicidade — RN001) e atribuir o papel de Ponto de Coleta ou Coletor (RN003).
+
+    - Uma PJ só existe vinculada a um Gestor PF; não possui credenciais próprias de login.
+
+    - A conta PF e a conta PJ são entidades separadas — papéis não se misturam (RN005).
+
 - **Tasks Técnicas:**
-    
-    - [ ] Criar Entidade `Usuario` com Enum de `TipoUsuario`.
-        
-    - [ ] Implementar Service para consulta de API de CNPJ (BrasilAPI ou ReceitaWS).
-        
-    - [ ] Criar tela de cadastro em Blazor Hybrid.
+
+    - [ ] Slice `RegisterNaturalPerson` (PF → Depositante) — já parcialmente implementado.
+
+    - [ ] Slice `RegisterLegalPerson` (PJ → PC ou Coletor), acessível apenas por PF autenticado.
+
+    - [ ] Telas de cadastro PF e cadastro PJ no Mobile (Blazor Hybrid).
 
 #### **US002 – Login Passwordless (OTP)**
 
@@ -336,9 +337,9 @@ A plataforma foca em duas categorias principais:
 | ----------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | **[RN001]** | **Unicidade de Identificador** | Não deve ser permitido o cadastro de múltiplos usuários com o mesmo CPF (Pessoa Física) ou CNPJ (Pessoa Jurídica).                        |
 | **[RN002]** | **Validação de PJ**            | Todo cadastro de Pessoa Jurídica deve passar por validação de status "Ativo" na Receita Federal via API.                                  |
-| **[RN003]** | **Restrição de Perfil (PJ)**   | Os perfis de **Ponto de Coleta** e **Coletor** são exclusivos para Pessoas Jurídicas.                                                     |
-| **[RN004]** | **Acúmulo de Papéis**          | Um usuário **Coletor** pode atuar simultaneamente como **Ponto de Coleta**, mas o inverso não é permitido.                                |
-| **[RN005]** | **Exclusividade Depositante**  | O usuário **Depositante** não pode possuir perfis de Ponto de Coleta ou Coletor na mesma conta.                                           |
+| **[RN003]** | **Restrição de Perfil (PJ)**   | Os papéis de **Ponto de Coleta** e **Coletor** são exclusivos de Pessoas Jurídicas. Uma PF não pode assumir esses papéis diretamente.     |
+| **[RN004]** | **Acúmulo de Papéis PJ**       | *(Standby — fora do escopo do MVP)* Uma PJ Coletor poderá atuar simultaneamente como Ponto de Coleta, mas o inverso não será permitido.   |
+| **[RN005]** | **Separação PF/PJ**            | A conta PF (Depositante/Gestor) e a conta PJ (PC/Coletor) são entidades distintas. O Gestor PF acessa e opera a PJ após autenticação, mas os papéis não se misturam na mesma entidade. |
 | **[RN006]** | **Hierarquia Corporativa**     | Unidades filiais podem se cadastrar individualmente, mas devem possuir a opção de associação a um CNPJ Matriz para consolidação de dados. |
 
 ## 2. Processos de Cadastro e Acesso
