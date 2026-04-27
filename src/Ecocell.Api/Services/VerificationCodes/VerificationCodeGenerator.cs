@@ -25,4 +25,19 @@ public static class VerificationCodeGenerator
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(code));
         return Convert.ToHexStringLower(bytes);
     }
+
+    /// <summary>
+    /// Calcula o HMAC-SHA256 do código usando a chave informada e retorna a representação hexadecimal em lowercase.
+    /// Impede ataques de dicionário sobre o store mesmo em caso de comprometimento, pois sem a chave
+    /// as 10⁶ combinações possíveis do OTP de 6 dígitos não podem ser pré-computadas.
+    /// </summary>
+    /// <param name="code">Código OTP em texto plano.</param>
+    /// <param name="key">Chave secreta de assinatura (ex.: JwtSettings.SigningKey).</param>
+    /// <returns>HMAC-SHA256 em hexadecimal lowercase (64 caracteres).</returns>
+    public static string HashHmac(string code, string key)
+    {
+        var keyBytes = Encoding.UTF8.GetBytes(key);
+        var codeBytes = Encoding.UTF8.GetBytes(code);
+        return Convert.ToHexStringLower(HMACSHA256.HashData(keyBytes, codeBytes));
+    }
 }

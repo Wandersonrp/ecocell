@@ -131,6 +131,7 @@ public class RegisterNaturalPersonEndpoint : ICarterModule
             var result = await sender.Send(command);
             return result.ToProcessResult(StatusCodes.Status201Created);
         })
+        .WithTags("Person")
         .WithName("RegisterNaturalPerson")
         .WithSummary("Registra uma nova pessoa física no sistema.")
         .WithDescription("Cria um registro de NaturalPerson vinculado à jornada de descarte selecionada.")
