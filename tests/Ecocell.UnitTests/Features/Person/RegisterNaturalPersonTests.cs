@@ -1,10 +1,13 @@
 using Bogus;
+using Bogus.Extensions.Brazil;
 using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Events;
 using Ecocell.Api.Features.Person;
 using Ecocell.Api.Shared;
-using Bogus.Extensions.Brazil;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using Shouldly;
 
 namespace Ecocell.UnitTests.Features.Person;
@@ -14,13 +17,15 @@ public class RegisterNaturalPersonTests : TestBase
     private readonly RegisterNaturalPerson.Handler _handler;
     private readonly RegisterNaturalPerson.Validator _validator;
     private readonly RegisterNaturalPerson.Command _command;
+    private readonly Mock<IPublisher> _publisherMock;
 
     public RegisterNaturalPersonTests()
     {
         _validator = new RegisterNaturalPerson.Validator();
         var loggerMock = CreateLoggerMock<RegisterNaturalPerson.Handler>();
+        _publisherMock = new Mock<IPublisher>();
 
-        _handler = new RegisterNaturalPerson.Handler(DbContext, loggerMock.Object, _validator);
+        _handler = new RegisterNaturalPerson.Handler(DbContext, loggerMock.Object, _validator, _publisherMock.Object);
 
         _command = new Faker<RegisterNaturalPerson.Command>()
             .RuleFor(x => x.FullName, f => f.Name.FullName())
@@ -40,8 +45,25 @@ public class RegisterNaturalPersonTests : TestBase
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        var exists = await DbContext.NaturalPeople.AnyAsync(np => np.Cpf == _command.Cpf);
-        exists.ShouldBeTrue();
+        var person = await DbContext.NaturalPeople.FirstOrDefaultAsync(np => np.Cpf == _command.Cpf);
+        person.ShouldNotBeNull();
+        person.PersonStatus.ShouldBe(PersonStatus.AwaitingConfirmation);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldPublishPersonRegisteredEvent_WhenRequestIsValid()
+    {
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        _publisherMock.Verify(
+            p => p.Publish(
+                It.Is<PersonRegistered>(e => e.Email == _command.Email),
+                CancellationToken.None),
+            Times.Once);
     }
 
     [Theory]
@@ -176,8 +198,9 @@ public class RegisterNaturalPersonTests : TestBase
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        var exists = await DbContext.NaturalPeople.AnyAsync(np => np.Cpf == _command.Cpf);
-        exists.ShouldBeTrue();
+        var person = await DbContext.NaturalPeople.FirstOrDefaultAsync(np => np.Cpf == _command.Cpf);
+        person.ShouldNotBeNull();
+        person.PersonStatus.ShouldBe(PersonStatus.AwaitingConfirmation);
     }
 
     [Fact]
@@ -206,8 +229,9 @@ public class RegisterNaturalPersonTests : TestBase
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        var exists = await DbContext.NaturalPeople.AnyAsync(np => np.Cpf == _command.Cpf);
-        exists.ShouldBeTrue();
+        var person = await DbContext.NaturalPeople.FirstOrDefaultAsync(np => np.Cpf == _command.Cpf);
+        person.ShouldNotBeNull();
+        person.PersonStatus.ShouldBe(PersonStatus.AwaitingConfirmation);
     }
 
     [Fact]
