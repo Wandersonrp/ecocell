@@ -1,14 +1,25 @@
-﻿using Carter;
+using Carter;
 using Ecocell.Api.Configurations;
 using Ecocell.Api.Database;
+using Ecocell.Api.Services.Email;
+using Ecocell.Api.Services.VerificationCodes;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using StackExchange.Redis;
 
 namespace Ecocell.Api.Extensions;
 
+/// <summary>
+/// Extensões de composição da injeção de dependência da API EcoCell.
+/// </summary>
 public static class DependencyInjectionExtensions
 {
+    /// <summary>
+    /// Registra todos os serviços necessários para a execução da API.
+    /// </summary>
+    /// <param name="services">Coleção de serviços da aplicação.</param>
+    /// <param name="configuration">Configurações da aplicação.</param>
     public static void AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         ConfigLog();
@@ -16,15 +27,16 @@ public static class DependencyInjectionExtensions
         AddDbContext(services, configuration);
         AddCarter(services);
         AddSettings(services, configuration);
+        AddRedis(services, configuration);
+        AddServices(services);
 
         var assembly = typeof(Program).Assembly;
-
         services.AddValidatorsFromAssembly(assembly);
     }
 
     private static void ConfigLog()
     {
-        Log.Logger = new LoggerConfiguration() 
+        Log.Logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
             .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{Exception}{NewLine}")
             .CreateLogger();
@@ -36,7 +48,7 @@ public static class DependencyInjectionExtensions
         {
             options.ServiceLifetime = ServiceLifetime.Scoped;
         });
-    } 
+    }
 
     private static void AddDbContext(IServiceCollection services, IConfiguration configuration)
     {
@@ -53,10 +65,40 @@ public static class DependencyInjectionExtensions
     private static void AddCarter(IServiceCollection services) => services.AddCarter();
 
     private static void AddSettings(IServiceCollection services, IConfiguration configuration)
-    {        
+    {
         services.AddOptions<DatabaseSettings>()
             .Bind(configuration.GetSection(DatabaseSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        services.AddOptions<RedisSettings>()
+            .Bind(configuration.GetSection(RedisSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+    }
+
+    /// <summary>
+    /// Registra a conexão Redis e o store de códigos OTP.
+    /// Requer a chave "Redis:ConnectionString" em appsettings ou User Secrets.
+    /// Em desenvolvimento local: docker run -d -p 6379:6379 redis:7-alpine
+    /// </summary>
+    private static void AddRedis(IServiceCollection services, IConfiguration configuration)
+    {
+        var settings = configuration
+            .GetSection(RedisSettings.SectionName)
+            .Get<RedisSettings>();
+
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(settings!.ConnectionString));
+
+        services.AddSingleton<IVerificationCodeStore, RedisVerificationCodeStore>();
+    }
+
+    /// <summary>
+    /// Registra os serviços transversais da API (e-mail, integrações externas).
+    /// </summary>
+    private static void AddServices(IServiceCollection services)
+    {
+        services.AddSingleton<IEmailSender, LoggingEmailSender>();
     }
 }
