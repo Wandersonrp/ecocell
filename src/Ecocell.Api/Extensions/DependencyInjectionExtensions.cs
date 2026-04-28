@@ -1,6 +1,7 @@
 using System.Text;
 using Carter;
 using Ecocell.Api.Configurations;
+using Ecocell.Api.Shared;
 using Ecocell.Api.Database;
 using Ecocell.Api.Services.Authentication;
 using Ecocell.Api.Services.Email;
@@ -141,6 +142,10 @@ public static class DependencyInjectionExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(AuthorizationPolicies.Authenticated, policy =>
+                policy.RequireAuthenticatedUser());
+        });
     }
 }
