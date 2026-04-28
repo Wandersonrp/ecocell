@@ -40,7 +40,7 @@ public sealed class JwtTokenService : IJwtTokenService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, person.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sid, person.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, person.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat, now.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
