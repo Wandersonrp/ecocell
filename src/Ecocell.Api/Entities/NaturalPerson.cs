@@ -2,6 +2,9 @@
 
 namespace Ecocell.Api.Entities;
 
+/// <summary>
+/// Entidade que representa uma pessoa física cadastrada na plataforma, assumindo o papel de Depositante.
+/// </summary>
 public class NaturalPerson : Person
 {
     public string FullName { get; private set; } = string.Empty;

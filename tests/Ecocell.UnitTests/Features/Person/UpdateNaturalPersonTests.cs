@@ -15,15 +15,16 @@ namespace Ecocell.UnitTests.Features.Person;
 public class UpdateNaturalPersonTests : TestBase
 {
     private readonly UpdateNaturalPerson.Handler _handler;
+    private readonly UpdateNaturalPerson.Validator _validator;
     private readonly UpdateNaturalPerson.Command _command;
     private readonly NaturalPerson _existingPerson;
 
     public UpdateNaturalPersonTests()
     {
-        var validator = new UpdateNaturalPerson.Validator();
+        _validator = new UpdateNaturalPerson.Validator();
         var loggerMock = CreateLoggerMock<UpdateNaturalPerson.Handler>();
 
-        _handler = new UpdateNaturalPerson.Handler(DbContext, loggerMock.Object, validator);
+        _handler = new UpdateNaturalPerson.Handler(DbContext, loggerMock.Object, _validator);
 
         var faker = new Faker("pt_BR");
 
@@ -120,5 +121,20 @@ public class UpdateNaturalPersonTests : TestBase
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(ErrorCodes.NotFound);
         result.Error.Message.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldReturnValidationError_WhenPersonIdIsEmpty()
+    {
+        // Arrange
+        _command.PersonId = Guid.Empty;
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ErrorCodes.ErrorOnValidation);
+        result.Error.Messages.ShouldHaveSingleItem();
     }
 }

@@ -138,7 +138,8 @@ public class UpdateNaturalPersonEndpoint : ICarterModule
         {
             var sub = user.FindFirstValue(JwtRegisteredClaimNames.Sid);
             if (!Guid.TryParse(sub, out var personId))
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Unauthorized");
+                return ResultT<ResponseNaturalPersonProfile>.Failure(Error.Unauthorized())
+                    .ToProcessResult(StatusCodes.Status200OK);
 
             var result = await sender.Send(new UpdateNaturalPerson.Command
             {
