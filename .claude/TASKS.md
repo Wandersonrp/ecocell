@@ -124,22 +124,30 @@ flowchart LR
 ### US001-PJ — Cadastro de Pessoa Jurídica (pelo Gestor PF logado) · RF001 · Essencial
 
 **Dependências:** US002 (autenticação do Gestor PF).
-**Estado atual:** inexistente.
+**Estado atual:** ✅ Backend concluído.
 
 **US001-PJ.A — Backend**
 
-- [ ] Criar `RequestRegisterLegalPersonJson` em `Ecocell.Shared/Requests/Person/` (CNPJ, razão social, e-mail, endereço, papel: `CollectorPoint` ou `Collector`).
-- [ ] Criar slice `Features/Person/RegisterLegalPerson.cs` com `Command`, `Validator`, `Handler` e `RegisterLegalPersonEndpoint : ICarterModule`.
-- [ ] `Validator`: CNPJ obrigatório e válido (via `FluentValidationExtensions.IsValidCnpj`); razão social e endereço obrigatórios; papel deve ser `CollectorPoint` ou `Collector` — **RN003** (PF não pode assumir esses papéis diretamente).
-- [ ] Testes em `tests/Ecocell.UnitTests/Features/Person/RegisterLegalPersonTests.cs`:
-  - [ ] `Handle_ShouldPersistInDatabase_WhenRequestIsValid_AsCollectorPoint`
-  - [ ] `Handle_ShouldPersistInDatabase_WhenRequestIsValid_AsCollector`
-  - [ ] `[Theory]` por campo inválido: CNPJ, e-mail, razão social, endereço
-  - [ ] `Handle_ShouldReturnConflict_WhenCnpjAlreadyExists`
-  - [ ] `Handle_ShouldReturnConflict_WhenEmailAlreadyExists`
-  - [ ] `Handle_ShouldReturnValidationError_WhenRoleIsInvalid` **(RN003)**
-- [ ] `Handler`: injeta `AppDbContext`; vincula a PJ ao `GestorId` extraído do JWT; seta `IsCollectorPoint` ou `IsCollector = true`; status inicial `AwaitingConfirmation`.
-- [ ] Endpoint `POST /api/v1/legal-person` (requer autenticação).
+- [x] Criar entidade `Address` + `AddressTypeConfiguration` + migration `AddAddressTable`.
+- [x] Criar extensão `IsValidEmail` em `FluentValidationExtensions` + refatorar `RegisterNaturalPerson.Validator`.
+- [x] Criar `RequestRegisterLegalPerson` + `RequestRegisterLegalPersonAddress` em `Ecocell.Shared/Requests/`.
+- [x] Criar slice `Features/Person/RegisterLegalPerson.cs` com `Command`, `Validator`, `Handler` e `RegisterLegalPersonEndpoint : ICarterModule`.
+- [x] `Validator`: CNPJ obrigatório e válido; razão social, nome fantasia e endereço obrigatórios; `Journey` deve ser `CollectPoint` ou `Collector` — **RN003**.
+- [x] Testes em `tests/Ecocell.UnitTests/Features/Person/RegisterLegalPersonTests.cs` (20 testes, todos passando):
+  - [x] `Handle_ShouldPersistInDatabase_WhenRequestIsValidAsCollectPoint`
+  - [x] `Handle_ShouldPersistInDatabase_WhenRequestIsValidAsCollector`
+  - [x] `Handle_ShouldPersistAddressInDatabase_WhenRequestIsValid`
+  - [x] `Handle_ShouldSetStatusPendingApproval_WhenRequestIsValid`
+  - [x] `Handle_ShouldPublishLegalPersonRegistered_WhenSuccess`
+  - [x] `Handle_ShouldReturnConflict_WhenCnpjAlreadyExists`
+  - [x] `Handle_ShouldReturnConflict_WhenEmailAlreadyExists`
+  - [x] `Handle_ShouldReturnValidationError_WhenJourneyIsDepositor` **(RN003)**
+  - [x] `[Theory]` por campo inválido: CNPJ, e-mail, razão social, State, ZipCode
+  - [x] `Handle_ShouldReturnNotFound_WhenResponsiblePersonDoesNotExist`
+  - [x] `Handle_ShouldReturnForbidden_WhenResponsiblePersonIsNotActive`
+- [x] `Handler`: injeta `AppDbContext`, `IPublisher`; vincula a PJ ao `ResponsiblePersonId` extraído do JWT; status inicial `PendingApproval` **(RN007)**.
+- [x] Evento `LegalPersonRegistered` + `SendRegistrationEmailOnLegalPersonRegistered` (NotificationHandler fire-and-forget).
+- [x] Endpoint `POST /api/legal-person` (requer `AuthorizationPolicies.Authenticated`).
 
 **US001-PJ.B — Mobile**
 
@@ -600,8 +608,8 @@ flowchart LR
 
 **US007.A — Máquina de estados**
 
-- [ ] Revisar `PersonStatus` (aplicável à PJ): `AwaitingConfirmation → AwaitingApproval → Active | Rejected`; `Active → Blocked`.
-- [ ] Atualizar `ConfirmAccount.Handler` (US009): PF (Depositante) ativa direto; PJ vai para `AwaitingApproval` — **RN007**.
+- [ ] Revisar `PersonStatus` (aplicável à PJ): `PendingApproval → Active | Rejected`; `Active → Blocked`. ⚠️ PJ entra diretamente em `PendingApproval` no cadastro (sem `AwaitingConfirmation`); fluxo `AwaitingConfirmation → AwaitingApproval` não se aplica à PJ.
+- [ ] Atualizar `ConfirmAccount.Handler` (US009): PF (Depositante) ativa direto; PJ **já está em `PendingApproval`**, aguarda aprovação do admin — **RN007**.
 - [ ] Migration se houver novos valores. Testes de transição.
 
 **US007.B — Slices administrativos**
