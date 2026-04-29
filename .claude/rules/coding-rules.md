@@ -64,6 +64,8 @@ public class RegisterNaturalPersonEndpoint : ICarterModule
 }
 ```
 
+> Neste template: nomes auto-explicativos dispensam summary. Adicione summary **apenas** se lógica de `Validator` ou `Handler` tiver regra de negócio sutil, efeito colateral não-óbvio, ou comportamento que não está claro pelo código.
+
 ### Convenções obrigatórias do slice
 
 - **Um slice = um arquivo** sob `Features/<Agregado>/<NomeDaFeature>.cs` contendo `Command`, `Validator`, `Handler` e o `ICarterModule` correspondente.
@@ -83,17 +85,30 @@ public class RegisterNaturalPersonEndpoint : ICarterModule
 
 ## 2. Summaries em PT-BR
 
-**Toda classe e todo método público** (incluindo `Command`, `Validator`, `Handler`, `ICarterModule`, entidades, configurações de DI, extensões) deve ter um `/// <summary>` em **português do Brasil**, descrevendo objetivo e, quando útil, parâmetros e retorno com `<param>` / `<returns>`. O código é lido por equipe lusófona — clareza em PT-BR é requisito, não estilo.
+Adicione `/// <summary>` em **português do Brasil** apenas para **classes, métodos e propriedades complexos** cujo propósito **não é óbvio** a partir do nome. Nomes claros dispensa summary — `ValidateCpf()`, `PersonStatus`, `SendEmail()` falam por si. Summary é para lógica não-óbvia, comportamentos sutis ou efeitos colaterais não esperados.
+
+Quando necessário, use `<param>` / `<returns>` pra clarear entrada/saída:
 
 ```csharp
+// ✅ Óbvio — sem summary
+public bool IsValidCpf(string cpf) => ...
+
+// ✅ Óbvio — sem summary
+public decimal CalculateScore(User user) => ...
+
+// ❌ Complexo — precisa summary
 /// <summary>
-/// Executa o cadastro de uma nova pessoa física, validando CPF e e-mail únicos
-/// antes de persistir o registro.
+/// Aplica desconto progressivo + bonus por tempo (RN015). Ordem importa:
+/// desconto antes de bonus. Retorna sem aplicar desconto se usuário é admin (RN013).
 /// </summary>
-/// <param name="request">Comando com os dados do cadastro.</param>
-/// <param name="cancellationToken">Token de cancelamento da operação.</param>
-/// <returns><see cref="Result"/> indicando sucesso ou o erro encontrado.</returns>
-public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken) { ... }
+public decimal CalculateRankingScore(User user, DateTime registeredAt) => ...
+
+// ❌ Efeito colateral não-óbvio — precisa summary
+/// <summary>
+/// Persiste entidade E dispara evento Mediator que pode ter side-effects em outro agregado.
+/// Trate exception de INotificationHandler se payment falhar.
+/// </summary>
+public async Task Save(Entity entity, CancellationToken ct) => ...
 ```
 
 ---
