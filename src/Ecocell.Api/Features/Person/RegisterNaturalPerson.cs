@@ -29,14 +29,12 @@ public static class RegisterNaturalPerson
     {
         public Validator()
         {
-            RuleFor(x => x.Email)                
-                .EmailAddress().WithMessage("E-mail inválido.")
-                .MaximumLength(255).WithMessage("E-mail deve conter no máximo 255 caracteres.");
+            RuleFor(x => x.Email).IsValidEmail();
 
             RuleFor(x => x.FullName)
                 .NotEmpty().WithMessage("Nome completo é obrigatório.")
                 .MinimumLength(3).WithMessage("Nome completo deve conter no mínimo 3 caracteres;")
-                .MaximumLength(100).WithMessage("Nome completo deve conter no máximo 10 caracteres.");
+                .MaximumLength(100).WithMessage("Nome completo deve conter no máximo 100 caracteres.");
 
             RuleFor(x => x.Journey).IsInEnum().WithMessage("Valor inválido para Journey.");            
             RuleFor(x => x.Cpf).IsValidCpf();
@@ -87,7 +85,7 @@ public static class RegisterNaturalPerson
             var emailExists = await _dbContext.People
                 .AnyAsync(p => p.Email == request.Email, cancellationToken);
 
-            if(emailExists)
+            if (emailExists)
             {
                 _logger.LogError("Já existe uma pessoa cadastrada com o email {Email}", request.Email);
                 return Result.Failure(Error.Conflict($"Já existe uma pessoa cadastrada com o Email {request.Email}"));

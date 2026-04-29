@@ -9,9 +9,10 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<Person> People { get; set; } 
+    public DbSet<Person> People { get; set; }
     public DbSet<NaturalPerson> NaturalPeople { get; set; }
     public DbSet<LegalPerson> LegalPeople { get; set; }
+    public DbSet<Address> Addresses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -484,3 +484,5 @@ docker-compose.yml
 
 # Superpowers specs e plans (artefatos locais de brainstorming/planejamento)
 docs/superpowers/*
+
+.claude/plans/*
