@@ -10,9 +10,9 @@ using FluentValidation;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static Ecocell.Api.Features.Person.ResendVerificationCode;
+using static Ecocell.Api.Features.Account.ResendVerificationCode;
 
-namespace Ecocell.Api.Features.Person;
+namespace Ecocell.Api.Features.Account;
 
 /// <summary>
 /// Slice responsável por reenviar o código OTP de confirmação de conta ao e-mail cadastrado.
@@ -127,7 +127,7 @@ public class ResendVerificationCodeEndpoint : ICarterModule
             var result = await sender.Send(command);
             return result.ToProcessResult(StatusCodes.Status202Accepted);
         })
-        .WithTags("Person")
+        .WithTags("Account")
         .WithName("ResendVerificationCode")
         .WithSummary("Reenvia o código OTP de confirmação de conta.")
         .WithDescription("Gera novo código OTP, sobrescreve o anterior e envia ao e-mail cadastrado.")

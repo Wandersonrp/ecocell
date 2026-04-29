@@ -3,7 +3,7 @@ using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.VerificationCodes;
 using Mediator;
 
-namespace Ecocell.Api.Features.Person;
+namespace Ecocell.Api.Features.Account;
 
 /// <summary>
 /// Handler de notificação que reage ao evento <see cref="PersonRegistered"/> gerando e enviando
