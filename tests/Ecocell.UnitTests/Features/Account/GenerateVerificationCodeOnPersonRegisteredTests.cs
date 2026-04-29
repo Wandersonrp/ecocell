@@ -1,13 +1,13 @@
 using Bogus;
 using Ecocell.Api.Events;
-using Ecocell.Api.Features.Person;
+using Ecocell.Api.Features.Account;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.VerificationCodes;
 using Ecocell.UnitTests.Helpers;
 using Moq;
 using Shouldly;
 
-namespace Ecocell.UnitTests.Features.Person;
+namespace Ecocell.UnitTests.Features.Account;
 
 public class GenerateVerificationCodeOnPersonRegisteredTests : TestBase
 {

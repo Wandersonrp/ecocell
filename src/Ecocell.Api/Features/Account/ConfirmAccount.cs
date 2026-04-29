@@ -10,9 +10,9 @@ using FluentValidation;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static Ecocell.Api.Features.Person.ConfirmAccount;
+using static Ecocell.Api.Features.Account.ConfirmAccount;
 
-namespace Ecocell.Api.Features.Person;
+namespace Ecocell.Api.Features.Account;
 
 /// <summary>
 /// Slice responsável por confirmar o cadastro de uma pessoa via código OTP enviado ao e-mail.
@@ -156,7 +156,7 @@ public class ConfirmAccountEndpoint : ICarterModule
             var result = await sender.Send(command);
             return result.ToProcessResult(StatusCodes.Status200OK);
         })
-        .WithTags("Person")
+        .WithTags("Account")
         .WithName("ConfirmAccount")
         .WithSummary("Confirma o cadastro da pessoa via código OTP.")
         .WithDescription("Valida o código OTP enviado ao e-mail e ativa a conta (AwaitingConfirmation → Active).")

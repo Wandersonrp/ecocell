@@ -2,14 +2,14 @@ using Bogus;
 using Bogus.Extensions.Brazil;
 using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
-using Ecocell.Api.Features.Person;
+using Ecocell.Api.Features.Account;
 using Ecocell.Api.Services.VerificationCodes;
 using Ecocell.Api.Shared;
 using Ecocell.UnitTests.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
-namespace Ecocell.UnitTests.Features.Person;
+namespace Ecocell.UnitTests.Features.Account;
 
 public class ConfirmAccountTests : TestBase
 {
