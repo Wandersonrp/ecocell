@@ -222,7 +222,7 @@ public class RegisterLegalPersonEndpoint : ICarterModule
         {
             var sub = user.FindFirstValue(JwtRegisteredClaimNames.Sid);
             if (!Guid.TryParse(sub, out var responsiblePersonId))
-                return Result.Failure(Error.Unauthorized()).ToProcessResult(StatusCodes.Status201Created);
+                return Result.Failure(Error.Unauthorized()).ToProcessResult(StatusCodes.Status401Unauthorized);
 
             var command = new Command
             {
