@@ -5,6 +5,9 @@ namespace Ecocell.Api.Extensions;
 
 public static class FluentValidationExtensions
 {
+    /// <summary>
+    /// Valida se uma string contém um CPF válido (sem máscara).
+    /// </summary>
     public static IRuleBuilderOptions<T, string> IsValidCpf<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder.Must(cpf =>
@@ -15,6 +18,9 @@ public static class FluentValidationExtensions
         }).WithMessage("CPF inválido.");
     }
 
+    /// <summary>
+    /// Valida se uma string contém um CNPJ válido (sem máscara).
+    /// </summary>
     public static IRuleBuilderOptions<T, string> IsValidCnpj<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder.Must(cnpj =>
@@ -25,6 +31,9 @@ public static class FluentValidationExtensions
         }).WithMessage("CNPJ inválido.");
     }
 
+    /// <summary>
+    /// Valida se uma string contém um e-mail válido com no máximo 255 caracteres.
+    /// </summary>
     public static IRuleBuilderOptions<T, string> IsValidEmail<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder
