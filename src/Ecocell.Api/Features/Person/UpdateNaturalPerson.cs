@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Carter;
 using Ecocell.Api.Database;
+using Ecocell.Api.Enums;
 using Ecocell.Api.Extensions;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Requests;
@@ -96,6 +97,12 @@ public static class UpdateNaturalPerson
                 _logger.LogWarning("Pessoa física {PersonId} não encontrada para atualização.", request.PersonId);
                 return ResultT<ResponseNaturalPersonProfile>.Failure(
                     Error.NotFound($"Pessoa física {request.PersonId} não encontrada."));
+            }
+
+            if (person.PersonStatus != PersonStatus.Active)
+            {
+                _logger.LogWarning("Tentativa de atualização de perfil de pessoa física inativa {PersonId}. Status: {Status}", request.PersonId, person.PersonStatus);
+                return ResultT<ResponseNaturalPersonProfile>.Failure(Error.Forbidden());
             }
 
             person.Update(request.FullName);

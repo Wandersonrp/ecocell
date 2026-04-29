@@ -36,6 +36,7 @@ public class UpdateNaturalPersonTests : TestBase
             faker.Internet.Email(),
             Journey.Depositor);
 
+        _existingPerson.Confirm();
         DbContext.People.Add(_existingPerson);
         DbContext.SaveChanges();
 
@@ -136,5 +137,31 @@ public class UpdateNaturalPersonTests : TestBase
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(ErrorCodes.ErrorOnValidation);
         result.Error.Messages.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldReturnForbidden_WhenPersonIsNotActive()
+    {
+        // Arrange
+        var faker = new Faker("pt_BR");
+        var inactivePerson = new NaturalPerson(
+            faker.Name.FullName(),
+            faker.Person.Cpf(includeFormatSymbols: false),
+            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20)),
+            Role.User,
+            faker.Internet.Email(),
+            Journey.Depositor);
+
+        DbContext.People.Add(inactivePerson);
+        await DbContext.SaveChangesAsync();
+
+        _command.PersonId = inactivePerson.Id;
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ErrorCodes.ForbiddenCodeError);
     }
 }
