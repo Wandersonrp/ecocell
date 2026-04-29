@@ -29,9 +29,7 @@ public static class RegisterNaturalPerson
     {
         public Validator()
         {
-            RuleFor(x => x.Email)                
-                .EmailAddress().WithMessage("E-mail inválido.")
-                .MaximumLength(255).WithMessage("E-mail deve conter no máximo 255 caracteres.");
+            RuleFor(x => x.Email).IsValidEmail();
 
             RuleFor(x => x.FullName)
                 .NotEmpty().WithMessage("Nome completo é obrigatório.")

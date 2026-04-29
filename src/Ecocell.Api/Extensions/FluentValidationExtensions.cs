@@ -24,4 +24,11 @@ public static class FluentValidationExtensions
             return DocumentValidator.IsCnpj(cnpj);
         }).WithMessage("CNPJ inválido.");
     }
+
+    public static IRuleBuilderOptions<T, string> IsValidEmail<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .EmailAddress().WithMessage("E-mail inválido.")
+            .MaximumLength(255).WithMessage("E-mail deve conter no máximo 255 caracteres.");
+    }
 }
