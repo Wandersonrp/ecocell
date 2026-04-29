@@ -59,12 +59,21 @@ public static class DocumentValidator
 
         if (position != 14) return false;
 
+        // Rejeita CNPJs onde todos os 14 dígitos são iguais (ex: 00000000000000).
+        var allSame = true;
         for (var i = 1; i < 14; i++)
-            if (digits[i] != digits[0]) goto checkDigits;
+            if (digits[i] != digits[0]) { allSame = false; break; }
 
-        return false;
+        if (allSame) return false;
 
-        checkDigits:
+        // Rejeita CNPJs onde os 8 primeiros dígitos (base) são todos iguais,
+        // por exemplo 11111111/0001-XX é inválido pela Receita Federal.
+        var allBaseEqual = true;
+        for (var i = 1; i < 8; i++)
+            if (digits[i] != digits[0]) { allBaseEqual = false; break; }
+
+        if (allBaseEqual) return false;
+
         ReadOnlySpan<int> weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
 
         var sum = 0;
