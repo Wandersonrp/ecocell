@@ -139,7 +139,7 @@ flowchart LR
   - [ ] `Handle_ShouldReturnConflict_WhenEmailAlreadyExists`
   - [ ] `Handle_ShouldReturnValidationError_WhenRoleIsInvalid` **(RN003)**
 - [ ] `Handler`: injeta `AppDbContext`; vincula a PJ ao `GestorId` extraído do JWT; seta `IsCollectorPoint` ou `IsCollector = true`; status inicial `AwaitingConfirmation`.
-- [ ] Endpoint `POST /api/v1/legal-persons` (requer autenticação).
+- [ ] Endpoint `POST /api/v1/legal-person` (requer autenticação).
 
 **US001-PJ.B — Mobile**
 
