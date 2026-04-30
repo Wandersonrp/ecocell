@@ -194,7 +194,7 @@ flowchart LR
 - [x] Interface `Ecocell.Api/Services/Email/IEmailSender` + implementação `MailKitEmailSender` (pacote `MailKit` adicionado). Contrato unificado via `EmailType` enum — `SendAsync(email, EmailType, variables?, ct)`.
 - [x] `MailSettings` (Host, Port, User, Pass, From) em `Ecocell.Api/Configurations/`. Registrado em `AddApi` para todos os ambientes (Prod/Staging/Dev).
 - [x] Credenciais em User Secrets.
-- [ ] Documentar em `appsettings.Example.json`.
+- [x] Documentar em `appsettings.Example.json`.
 
 **US009.B — Jobs de expiração/reenvio**
 
