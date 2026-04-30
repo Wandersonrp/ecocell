@@ -3,6 +3,7 @@ using Ecocell.Api.Database;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Extensions;
 using Ecocell.Api.Services.CurrentUser;
+using Ecocell.Api.Services.Email;
 using Ecocell.Api.Shared;
 using FluentValidation;
 using Mediator;
@@ -32,17 +33,20 @@ public static class BlockPartner
         private readonly ILogger<Handler> _logger;
         private readonly IValidator<Command> _validator;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IEmailSender _emailSender;
 
         public Handler(
             AppDbContext dbContext,
             ILogger<Handler> logger,
             IValidator<Command> validator,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IEmailSender emailSender)
         {
             _dbContext = dbContext;
             _logger = logger;
             _validator = validator;
             _currentUserService = currentUserService;
+            _emailSender = emailSender;
         }
 
         public async ValueTask<Result> Handle(Command request, CancellationToken ct)
@@ -86,6 +90,8 @@ public static class BlockPartner
 
             partner.Block(currentUser.Role);
             await _dbContext.SaveChangesAsync(ct);
+
+            await _emailSender.SendAsync(partner.Email, EmailType.PartnerBlock, ct: ct);
 
             _logger.LogInformation("Parceiro {PartnerId} bloqueado pelo admin {AdminId}.", request.PartnerId, currentUser.Id);
             return Result.Success();

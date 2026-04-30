@@ -68,7 +68,11 @@ public class RequestLoginCodeTests : TestBase
         result.IsSuccess.ShouldBeTrue();
         _store.HasActiveEntry(_key).ShouldBeTrue();
         _emailSenderMock.Verify(
-            s => s.SendVerificationCodeAsync(_command.Email, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.SendAsync(
+                _command.Email,
+                EmailType.VerificationCode,
+                It.IsAny<IReadOnlyDictionary<string, string>>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -84,7 +88,7 @@ public class RequestLoginCodeTests : TestBase
         // Assert
         result.IsSuccess.ShouldBeTrue();
         _emailSenderMock.Verify(
-            s => s.SendVerificationCodeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.SendAsync(It.IsAny<string>(), It.IsAny<EmailType>(), It.IsAny<IReadOnlyDictionary<string, string>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -112,7 +116,7 @@ public class RequestLoginCodeTests : TestBase
         // Assert
         result.IsSuccess.ShouldBeTrue();
         _emailSenderMock.Verify(
-            s => s.SendVerificationCodeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.SendAsync(It.IsAny<string>(), It.IsAny<EmailType>(), It.IsAny<IReadOnlyDictionary<string, string>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -121,7 +125,7 @@ public class RequestLoginCodeTests : TestBase
     {
         // Arrange
         _emailSenderMock
-            .Setup(s => s.SendVerificationCodeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.SendAsync(It.IsAny<string>(), It.IsAny<EmailType>(), It.IsAny<IReadOnlyDictionary<string, string>>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("SMTP indisponível"));
 
         // Act
@@ -147,7 +151,7 @@ public class RequestLoginCodeTests : TestBase
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(ErrorCodes.ErrorOnValidation);
         _emailSenderMock.Verify(
-            s => s.SendVerificationCodeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.SendAsync(It.IsAny<string>(), It.IsAny<EmailType>(), It.IsAny<IReadOnlyDictionary<string, string>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

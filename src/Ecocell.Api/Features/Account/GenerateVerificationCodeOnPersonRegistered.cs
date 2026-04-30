@@ -1,3 +1,4 @@
+using Ecocell.Api.Enums;
 using Ecocell.Api.Events;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.VerificationCodes;
@@ -45,7 +46,11 @@ public static class GenerateVerificationCodeOnPersonRegistered
             try
             {
                 await _store.SaveAsync(key, codeHash, CodeTtl, cancellationToken);
-                await _emailSender.SendVerificationCodeAsync(notification.Email, code, cancellationToken);
+                await _emailSender.SendAsync(
+                    notification.Email,
+                    EmailType.VerificationCode,
+                    new Dictionary<string, string> { ["code"] = code },
+                    cancellationToken);
 
                 _logger.LogInformation("Código OTP gerado e enviado para {Email}", notification.Email);
             }

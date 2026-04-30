@@ -4,6 +4,7 @@ using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Features.Admin;
 using Ecocell.Api.Services.CurrentUser;
+using Ecocell.Api.Services.Email;
 using Ecocell.Api.Shared;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -16,6 +17,7 @@ public class BlockPartnerTests : TestBase
     private readonly BlockPartner.Handler _handler;
     private readonly BlockPartner.Validator _validator;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
+    private readonly Mock<IEmailSender> _emailSenderMock;
     private readonly LegalPerson _partner;
 
     public BlockPartnerTests()
@@ -23,7 +25,10 @@ public class BlockPartnerTests : TestBase
         _validator = new BlockPartner.Validator();
         var loggerMock = CreateLoggerMock<BlockPartner.Handler>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _handler = new BlockPartner.Handler(DbContext, loggerMock.Object, _validator, _currentUserServiceMock.Object);
+        _emailSenderMock = new Mock<IEmailSender>();
+        _handler = new BlockPartner.Handler(
+            DbContext, loggerMock.Object, _validator,
+            _currentUserServiceMock.Object, _emailSenderMock.Object);
 
         _partner = new LegalPerson(
             new Faker().Company.CompanyName(),
@@ -62,6 +67,21 @@ public class BlockPartnerTests : TestBase
         result.IsSuccess.ShouldBeTrue();
         var updated = await DbContext.LegalPeople.FirstAsync(lp => lp.Id == _partner.Id);
         updated.PersonStatus.ShouldBe(PersonStatus.Suspended);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldSendBlockEmail_WhenPartnerIsSuspended()
+    {
+        await _handler.Handle(
+            new BlockPartner.Command { PartnerId = _partner.Id }, CancellationToken.None);
+
+        _emailSenderMock.Verify(
+            s => s.SendAsync(
+                _partner.Email,
+                EmailType.PartnerBlock,
+                It.IsAny<IReadOnlyDictionary<string, string>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

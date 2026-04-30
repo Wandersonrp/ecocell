@@ -80,7 +80,11 @@ public class RejectPartnerTests : TestBase
         await _handler.Handle(command, CancellationToken.None);
 
         _emailSenderMock.Verify(
-            s => s.SendPartnerRejectionAsync(_partner.Email, command.Reason, It.IsAny<CancellationToken>()),
+            s => s.SendAsync(
+                _partner.Email,
+                EmailType.PartnerRejection,
+                It.Is<IReadOnlyDictionary<string, string>>(d => d["reason"] == command.Reason),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

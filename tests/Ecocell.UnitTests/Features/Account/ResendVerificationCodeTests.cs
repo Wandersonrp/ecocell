@@ -67,7 +67,11 @@ public class ResendVerificationCodeTests : TestBase
 
         // Assert
         _emailSenderMock.Verify(
-            s => s.SendVerificationCodeAsync(_command.Email, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.SendAsync(
+                _command.Email,
+                EmailType.VerificationCode,
+                It.IsAny<IReadOnlyDictionary<string, string>>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

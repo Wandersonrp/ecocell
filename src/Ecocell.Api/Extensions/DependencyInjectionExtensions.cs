@@ -118,11 +118,11 @@ public static class DependencyInjectionExtensions
     /// </summary>
     private static void AddServices(IServiceCollection services, IHostEnvironment environment)
     {
-        if (environment.IsProduction() || environment.IsStaging())
+        if (environment.IsProduction() || environment.IsStaging() || environment.IsDevelopment())
             services.AddScoped<IEmailSender, MailKitEmailSender>();
         else
             services.AddSingleton<IEmailSender, LoggingEmailSender>();
-
+        
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
     }
 

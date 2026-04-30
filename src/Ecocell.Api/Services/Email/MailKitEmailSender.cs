@@ -1,4 +1,5 @@
 using Ecocell.Api.Configurations;
+using Ecocell.Api.Enums;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -21,38 +22,42 @@ public sealed class MailKitEmailSender : IEmailSender
         _logger = logger;
     }
 
-    public async Task SendVerificationCodeAsync(string email, string code, CancellationToken ct = default)
+    public async Task SendAsync(
+        string email,
+        EmailType type,
+        IReadOnlyDictionary<string, string>? variables = null,
+        CancellationToken ct = default)
     {
-        var message = BuildMessage(
-            to: email,
-            subject: "EcoCell — Seu código de verificação",
-            body: $"<p>Seu código de verificação é: <strong>{code}</strong></p><p>Válido por 10 minutos.</p>");
-
+        var (subject, body) = BuildContent(type, variables);
+        var message = BuildMessage(email, subject, body);
         await SendAsync(message, ct);
-        _logger.LogInformation("Código OTP enviado para {Email}", email);
+        _logger.LogInformation("E-mail {Type} enviado para {Email}", type, email);
     }
 
-    public async Task SendLegalPersonRegistrationNotificationAsync(string email, CancellationToken ct = default)
+    private static (string Subject, string Body) BuildContent(EmailType type, IReadOnlyDictionary<string, string>? vars) => type switch
     {
-        var message = BuildMessage(
-            to: email,
-            subject: "EcoCell — Cadastro recebido",
-            body: "<p>Seu cadastro foi recebido e está em análise. Em breve entraremos em contato.</p>");
+        EmailType.VerificationCode => (
+            "EcoCell — Seu código de verificação",
+            $"<p>Seu código de verificação é: <strong>{vars?["code"]}</strong></p><p>Válido por 10 minutos.</p>"),
 
-        await SendAsync(message, ct);
-        _logger.LogInformation("Notificação de cadastro PJ enviada para {Email}", email);
-    }
+        EmailType.LegalPersonRegistration => (
+            "EcoCell — Cadastro recebido",
+            "<p>Seu cadastro foi recebido e está em análise. Em breve entraremos em contato.</p>"),
 
-    public async Task SendPartnerRejectionAsync(string email, string reason, CancellationToken ct = default)
-    {
-        var message = BuildMessage(
-            to: email,
-            subject: "EcoCell — Cadastro não aprovado",
-            body: $"<p>Infelizmente seu cadastro não foi aprovado.</p><p><strong>Motivo:</strong> {reason}</p>");
+        EmailType.PartnerRejection => (
+            "EcoCell — Cadastro não aprovado",
+            $"<p>Infelizmente seu cadastro não foi aprovado.</p><p><strong>Motivo:</strong> {vars?["reason"]}</p>"),
 
-        await SendAsync(message, ct);
-        _logger.LogInformation("E-mail de rejeição enviado para {Email}", email);
-    }
+        EmailType.PartnerApproval => (
+            "EcoCell — Cadastro aprovado",
+            "<p>Parabéns! Seu cadastro foi aprovado. Bem-vindo ao EcoCell.</p>"),
+
+        EmailType.PartnerBlock => (
+            "EcoCell — Conta suspensa",
+            "<p>Sua conta foi suspensa. Entre em contato com o suporte para mais informações.</p>"),
+
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+    };
 
     private MimeMessage BuildMessage(string to, string subject, string body)
     {

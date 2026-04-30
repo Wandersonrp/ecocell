@@ -1,3 +1,4 @@
+using Ecocell.Api.Enums;
 using Ecocell.Api.Events;
 using Ecocell.Api.Services.Email;
 using Mediator;
@@ -34,8 +35,8 @@ public static class SendRegistrationEmailOnLegalPersonRegistered
         {
             try
             {
-                await _emailSender.SendLegalPersonRegistrationNotificationAsync(notification.LegalPersonEmail, cancellationToken);
-                await _emailSender.SendLegalPersonRegistrationNotificationAsync(notification.ResponsiblePersonEmail, cancellationToken);
+                await _emailSender.SendAsync(notification.LegalPersonEmail, EmailType.LegalPersonRegistration, ct: cancellationToken);
+                await _emailSender.SendAsync(notification.ResponsiblePersonEmail, EmailType.LegalPersonRegistration, ct: cancellationToken);
 
                 _logger.LogInformation(
                     "Notificação de cadastro de PJ enviada para {LegalPersonEmail} e {ResponsiblePersonEmail}",

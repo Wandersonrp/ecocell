@@ -97,7 +97,11 @@ public static class RejectPartner
             partner.Reject(currentUser.Role);
             await _dbContext.SaveChangesAsync(ct);
 
-            await _emailSender.SendPartnerRejectionAsync(partner.Email, request.Reason, ct);
+            await _emailSender.SendAsync(
+                partner.Email,
+                EmailType.PartnerRejection,
+                new Dictionary<string, string> { ["reason"] = request.Reason },
+                ct);
 
             _logger.LogInformation("Parceiro {PartnerId} rejeitado pelo admin {AdminId}. Motivo: {Reason}",
                 request.PartnerId, currentUser.Id, request.Reason);

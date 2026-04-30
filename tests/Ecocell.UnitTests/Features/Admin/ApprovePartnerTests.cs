@@ -4,6 +4,7 @@ using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Features.Admin;
 using Ecocell.Api.Services.CurrentUser;
+using Ecocell.Api.Services.Email;
 using Ecocell.Api.Shared;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -16,6 +17,7 @@ public class ApprovePartnerTests : TestBase
     private readonly ApprovePartner.Handler _handler;
     private readonly ApprovePartner.Validator _validator;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
+    private readonly Mock<IEmailSender> _emailSenderMock;
     private readonly LegalPerson _partner;
 
     public ApprovePartnerTests()
@@ -23,7 +25,10 @@ public class ApprovePartnerTests : TestBase
         _validator = new ApprovePartner.Validator();
         var loggerMock = CreateLoggerMock<ApprovePartner.Handler>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _handler = new ApprovePartner.Handler(DbContext, loggerMock.Object, _validator, _currentUserServiceMock.Object);
+        _emailSenderMock = new Mock<IEmailSender>();
+        _handler = new ApprovePartner.Handler(
+            DbContext, loggerMock.Object, _validator,
+            _currentUserServiceMock.Object, _emailSenderMock.Object);
 
         _partner = new LegalPerson(
             new Faker().Company.CompanyName(),
@@ -56,6 +61,21 @@ public class ApprovePartnerTests : TestBase
         result.IsSuccess.ShouldBeTrue();
         var updated = await DbContext.LegalPeople.FirstAsync(lp => lp.Id == _partner.Id);
         updated.PersonStatus.ShouldBe(PersonStatus.Active);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldSendApprovalEmail_WhenPartnerIsApproved()
+    {
+        await _handler.Handle(
+            new ApprovePartner.Command { PartnerId = _partner.Id }, CancellationToken.None);
+
+        _emailSenderMock.Verify(
+            s => s.SendAsync(
+                _partner.Email,
+                EmailType.PartnerApproval,
+                It.IsAny<IReadOnlyDictionary<string, string>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
