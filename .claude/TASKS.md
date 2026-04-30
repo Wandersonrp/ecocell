@@ -191,9 +191,10 @@ flowchart LR
 
 **US009.A — Serviço de e-mail**
 
-- [ ] Criar interface `Ecocell.Api/Services/Notifications/IMailService`; implementação `MailKitMailService`. Adicionar pacote `MailKit` em `Ecocell.Api.csproj`.
-- [ ] Criar `MailSettings` (Host, Port, User, Pass, From) em `Ecocell.Api/Configurations/`.
-- [ ] Registrar em `AddApi` com `IOptions<MailSettings>`; mover credenciais para User Secrets; documentar em `appsettings.Example.json`.
+- [x] Interface `Ecocell.Api/Services/Email/IEmailSender` + implementação `MailKitEmailSender` (pacote `MailKit` adicionado). Contrato unificado via `EmailType` enum — `SendAsync(email, EmailType, variables?, ct)`.
+- [x] `MailSettings` (Host, Port, User, Pass, From) em `Ecocell.Api/Configurations/`. Registrado em `AddApi` para todos os ambientes (Prod/Staging/Dev).
+- [x] Credenciais em User Secrets.
+- [ ] Documentar em `appsettings.Example.json`.
 
 **US009.B — Jobs de expiração/reenvio**
 
@@ -604,21 +605,21 @@ flowchart LR
 ### US007 — Aprovação de parceiros · RF013 · Crítico
 
 **Dependências:** US001-PJ.
-**Estado atual:** `PersonStatus.AwaitingConfirmation` existe (✓). Falta expansão da máquina de estados.
+**Estado atual:** ✅ Slices `ListPartners`, `ApprovePartner`, `RejectPartner` e `BlockPartner` implementados com e-mails transacionais via `IEmailSender`. Máquina de estados `PersonStatus` expandida. Policy Admin (depende de US002.A) e dashboard (US007.C) pendentes.
 
 **US007.A — Máquina de estados**
 
-- [ ] Revisar `PersonStatus` (aplicável à PJ): `PendingApproval → Active | Rejected`; `Active → Blocked`. ⚠️ PJ entra diretamente em `PendingApproval` no cadastro (sem `AwaitingConfirmation`); fluxo `AwaitingConfirmation → AwaitingApproval` não se aplica à PJ.
+- [x] Revisar `PersonStatus` (aplicável à PJ): `PendingApproval → Active | Rejected`; `Active → Blocked`. ⚠️ PJ entra diretamente em `PendingApproval` no cadastro (sem `AwaitingConfirmation`); fluxo `AwaitingConfirmation → AwaitingApproval` não se aplica à PJ.
 - [ ] Atualizar `ConfirmAccount.Handler` (US009): PF (Depositante) ativa direto; PJ **já está em `PendingApproval`**, aguarda aprovação do admin — **RN007**.
-- [ ] Migration se houver novos valores. Testes de transição.
+- [x] Migration se houver novos valores. Testes de transição.
 
 **US007.B — Slices administrativos**
 
-- [ ] Criar slices `Features/Admin/ListPendingPartners.cs`, `ApprovePartner.cs`, `RejectPartner.cs`, `BlockPartner.cs`.
-- [ ] Testes por slice; `RejectPartner`: `Handle_ShouldSendRejectionEmail_WhenPartnerIsRejected` **(RN008)**.
-- [ ] `RejectPartner.Handler` injeta `IMailService` (≥ 2 consumidores — KISS atendido).
+- [x] Criar slices `Features/Admin/ListPartners.cs` (paginação por cursor + filtros), `ApprovePartner.cs`, `RejectPartner.cs`, `BlockPartner.cs`.
+- [x] Testes por slice; `RejectPartner`: `Handle_ShouldSendRejectionEmail_WhenPartnerIsRejected` **(RN008)**. `ApprovePartner` e `BlockPartner` também enviam e-mail (`EmailType.PartnerApproval` / `EmailType.PartnerBlock`).
+- [x] Handlers de `RejectPartner`, `ApprovePartner` e `BlockPartner` injetam `IEmailSender` (≥ 2 consumidores — KISS atendido).
 - [ ] Policy `Admin` baseada em `Role` (claim emitida em US002.A).
-- [ ] Endpoints `GET /api/v1/admin/partners?status=pending`, `POST .../{id}/approve|reject|block`.
+- [x] Endpoints `GET /api/v1/admin/partners`, `POST .../{id}/approve|reject|block`.
 
 **US007.C — Interface**
 
