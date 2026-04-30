@@ -4,7 +4,8 @@
       "Bash(dotnet test *)",
       "Bash(dotnet build *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "mcp__claude_ai_Linear__save_issue"
     ]
   }
 }
