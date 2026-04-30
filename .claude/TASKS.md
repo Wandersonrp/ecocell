@@ -111,14 +111,14 @@ flowchart LR
 ### US001-PF — Cadastro de Pessoa Física · RF001 · Essencial
 
 **Dependências:** nenhuma.
-**Estado atual:** Slice `RegisterNaturalPerson` parcial — validação e persistência prontas, envio de e-mail comentado.
+**Estado atual:** ✅ Backend concluído — envio de código via `GenerateVerificationCodeOnPersonRegistered` (NotificationHandler, event-driven). Mobile pendente.
 
-- [ ] Remover TODO e descomentar bloco de envio em `RegisterNaturalPerson.Handler` (`Task.WhenAll` com `IMailService` + agendamento de expiração via Hangfire).
-- [ ] Testes em `tests/Ecocell.UnitTests/Features/Person/RegisterNaturalPersonTests.cs` (já existentes — verificar cobertura):
-  - [ ] `Handle_ShouldPersistInDatabase_WhenRequestIsValid`
-  - [ ] `[Theory]` por campo inválido: CPF, e-mail, nome
-  - [ ] `Handle_ShouldReturnConflict_WhenCpfAlreadyExists`
-  - [ ] `Handle_ShouldReturnConflict_WhenEmailAlreadyExists`
+- [x] Envio de código de verificação implementado via evento `PersonRegistered` → `GenerateVerificationCodeOnPersonRegistered` (NotificationHandler fire-and-forget).
+- [x] Testes em `tests/Ecocell.UnitTests/Features/Person/RegisterNaturalPersonTests.cs`:
+  - [x] `Handle_ShouldPersistInDatabase_WhenRequestIsValid`
+  - [x] `[Theory]` por campo inválido: CPF, e-mail, nome
+  - [x] `Handle_ShouldReturnConflict_WhenCpfAlreadyExists`
+  - [x] `Handle_ShouldReturnConflict_WhenEmailAlreadyExists`
 - [ ] **Mobile:** tela `Components/Pages/Person/RegisterNaturalPerson.razor` — formulário com máscara de CPF de `wwwroot/js/masks.js`.
 
 ### US001-PJ — Cadastro de Pessoa Jurídica (pelo Gestor PF logado) · RF001 · Essencial
@@ -187,7 +187,7 @@ flowchart LR
 ### US009 — Confirmação de conta por e-mail · RF003 · Essencial
 
 **Dependências:** US001-PF.
-**Estado atual:** `Person.VerificationCode` + `ExpirationDateVerificationCode` existem (✓). Envio comentado no `RegisterNaturalPerson.Handler`.
+**Estado atual:** US009.A ✅, US009.D ✅, US009.E ✅ (via eventos). US009.B/C/F pendentes. Códigos armazenados em Redis com TTL (sem Hangfire para expiração).
 
 **US009.A — Serviço de e-mail**
 
@@ -196,35 +196,32 @@ flowchart LR
 - [x] Credenciais em User Secrets.
 - [x] Documentar em `appsettings.Example.json`.
 
-**US009.B — Jobs de expiração/reenvio**
+**US009.B — Jobs de expiração/reenvio ~~cancelado~~**
 
-- [ ] Criar `VerificationCodeJobs` em `Ecocell.Api/Jobs/` com `Delete(personId, minutes)` e `Resend(personId)` via Hangfire; `Resend` injeta `IMailService`.
-- [ ] Testes em `tests/Ecocell.UnitTests/Jobs/VerificationCodeJobsTests.cs`:
-  - [ ] `Delete_ShouldClearCode_WhenPersonExists`
-  - [ ] `Resend_ShouldGenerateNewCodeAndSendEmail`
+> ~~Substituído por Redis TTL~~ — expiração gerida automaticamente pelo `RedisVerificationCodeStore` (TTL configurável). Hangfire não necessário para este fluxo.
 
 **US009.C — Contador de tentativas**
 
 - [ ] Adicionar `Person.VerificationAttempts` (int, default 0). Migration `AddVerificationAttempts`.
 
-**US009.D — Slice de confirmação**
+**US009.D — Slice de confirmação ✅**
 
-- [ ] Criar `RequestConfirmAccountJson` em `Ecocell.Shared/Requests/Account/`.
-- [ ] Criar slice `Features/Account/ConfirmAccount.cs` com `Command`, `Validator`, `Handler` e `ConfirmAccountEndpoint : ICarterModule`.
-- [ ] Testes em `tests/Ecocell.UnitTests/Features/Account/ConfirmAccountTests.cs`:
-  - [ ] `Handle_ShouldActivateAccount_WhenCodeIsValid`
-  - [ ] `Handle_ShouldReturnError_WhenCodeExpired`
-  - [ ] `Handle_ShouldIncrementAttempts_WhenCodeIsInvalid`
-  - [ ] `Handle_ShouldBlockAccount_WhenMaxAttemptsReached`
-  - [ ] `Handle_ShouldReturnError_WhenAccountAlreadyActive`
-- [ ] Endpoint `POST /api/v1/account/confirm`.
-- [ ] Criar slice `Features/Account/ResendVerificationCode.cs` + endpoint `POST /api/v1/account/resend-code`.
+- [x] Criar `RequestConfirmAccountJson` em `Ecocell.Shared/Requests/Account/`.
+- [x] Criar slice `Features/Account/ConfirmAccount.cs` com `Command`, `Validator`, `Handler` e `ConfirmAccountEndpoint : ICarterModule`.
+- [x] Testes em `tests/Ecocell.UnitTests/Features/Account/ConfirmAccountTests.cs`:
+  - [x] `Handle_ShouldActivateAccount_WhenCodeIsValid`
+  - [x] `Handle_ShouldReturnError_WhenCodeExpired`
+  - [x] `Handle_ShouldIncrementAttempts_WhenCodeIsInvalid`
+  - [x] `Handle_ShouldBlockAccount_WhenMaxAttemptsReached`
+  - [x] `Handle_ShouldReturnError_WhenAccountAlreadyActive`
+- [x] Endpoint `POST /api/v1/account/confirm`.
+- [x] Criar slice `Features/Account/ResendVerificationCode.cs` + endpoint `POST /api/v1/account/resend-code`.
 
-**US009.E — Religar envio no cadastro**
+**US009.E — Religar envio no cadastro ✅**
 
-- [ ] Descomentar bloco de envio em `RegisterNaturalPerson.Handler` (`Task.WhenAll` com `IMailService` + `VerificationCodeJobs.Delete`).
-- [ ] Replicar o mesmo bloco em `RegisterLegalPerson.Handler`.
-- [ ] Se o bloco aparecer em ≥ 3 Handlers, extrair método estático em `Ecocell.Api/Shared/` (KISS: 3 consumidores).
+- [x] Envio em `RegisterNaturalPerson.Handler` implementado via evento `PersonRegistered` → `GenerateVerificationCodeOnPersonRegistered`.
+- [x] Envio em `RegisterLegalPerson.Handler` implementado via evento `LegalPersonRegistered` → `SendRegistrationEmailOnLegalPersonRegistered`.
+- [x] Apenas 2 handlers — extração de método estático não necessária (KISS: < 3 consumidores).
 
 **US009.F — Mobile**
 
@@ -236,36 +233,36 @@ flowchart LR
 ### US002 — Login Passwordless (OTP) · RF004 · Essencial
 
 **Dependências:** US009.
-**Estado atual:** inexistente.
+**Estado atual:** ✅ Backend (US002.A–C) concluído. Slices em `Features/Account/` (não `Features/Auth/`). Mobile pendente.
 
-**US002.A — Emissão de JWT**
+**US002.A — Emissão de JWT ✅**
 
-- [ ] Criar interface `Ecocell.Api/Services/Security/ITokenService` (`Generate(person) → string`); implementação `JwtTokenService` com claims `sub` (ExternalId), `role`, `person_type`.
-- [ ] Criar `JwtSettings` (Issuer, Audience, SigningKey, ExpirationMinutes) em `Ecocell.Api/Configurations/`.
-- [ ] Registrar em `AddApi`; configurar `AddAuthentication().AddJwtBearer()` em `Program.cs`.
+- [x] Interface `Ecocell.Api/Services/Authentication/IJwtTokenService` + implementação `JwtTokenService` com claims `sub` (ExternalId), `role`, `person_type`.
+- [x] `JwtSettings` (Issuer, Audience, SigningKey, ExpirationMinutes) em `Ecocell.Api/Configurations/`.
+- [x] Registrar em `AddApi`; configurar `AddAuthentication().AddJwtBearer()` em `Program.cs`.
 
-**US002.B — Slice: solicitar código**
+**US002.B — Slice: solicitar código ✅**
 
-- [ ] Criar `RequestLoginCodeJson` em `Ecocell.Shared/Requests/Auth/` com campo `Identifier` (CPF ou e-mail).
-- [ ] Criar slice `Features/Auth/RequestLoginCode.cs`; `Validator` detecta e valida CPF ou e-mail — **RN010**.
-- [ ] Testes em `tests/Ecocell.UnitTests/Features/Auth/RequestLoginCodeTests.cs`:
-  - [ ] `Handle_ShouldSendCode_WhenIdentifierIsEmail` **(RN010)**
-  - [ ] `Handle_ShouldSendCode_WhenIdentifierIsCpf` **(RN010)**
-  - [ ] `Handle_ShouldReturnSuccess_WhenAccountNotFound` (silencioso — evitar enumeração)
-  - [ ] `Handle_ShouldReturnError_WhenAccountPendingConfirmation`
-  - [ ] `Handle_ShouldReturnError_WhenAccountBlocked`
-- [ ] Endpoint `POST /api/v1/auth/request-code` com rate limit via `AddRateLimiter` (5 req/min por IP).
+- [x] `RequestRequestLoginCode` em `Ecocell.Shared/Requests/`.
+- [x] Slice `Features/Account/RequestLoginCode.cs`; `Validator` detecta e valida CPF ou e-mail — **RN010**.
+- [x] Testes em `tests/Ecocell.UnitTests/Features/Account/RequestLoginCodeTests.cs`:
+  - [x] `Handle_ShouldSendCode_WhenIdentifierIsEmail` **(RN010)**
+  - [x] `Handle_ShouldSendCode_WhenIdentifierIsCpf` **(RN010)**
+  - [x] `Handle_ShouldReturnSuccess_WhenAccountNotFound` (silencioso — evitar enumeração)
+  - [x] `Handle_ShouldReturnError_WhenAccountPendingConfirmation`
+  - [x] `Handle_ShouldReturnError_WhenAccountBlocked`
+- [ ] Rate limit via `AddRateLimiter` (5 req/min por IP) — verificar se implementado.
 
-**US002.C — Slice: verificar código e emitir token**
+**US002.C — Slice: verificar código e emitir token ✅**
 
-- [ ] Criar `RequestVerifyLoginJson` e `ResponseLoginJson` (token + expiresAt) em `Ecocell.Shared/`.
-- [ ] Criar slice `Features/Auth/VerifyLoginCode.cs`; `Handler` injeta `ITokenService`.
-- [ ] Testes em `tests/Ecocell.UnitTests/Features/Auth/VerifyLoginCodeTests.cs`:
-  - [ ] `Handle_ShouldReturnToken_WhenCodeIsValid`
-  - [ ] `Handle_ShouldReturnError_WhenCodeIsInvalid`
-  - [ ] `Handle_ShouldReturnError_WhenCodeIsExpired`
-  - [ ] `Handle_ShouldBlockAccount_WhenMaxAttemptsReached`
-- [ ] Endpoint `POST /api/v1/auth/verify`.
+- [x] `RequestVerifyLoginCode` + `ResponseLogin` (AccessToken, ExpiresAtUtc) em `Ecocell.Shared/`.
+- [x] Slice `Features/Account/VerifyLoginCode.cs`; `Handler` injeta `IJwtTokenService`.
+- [x] Testes em `tests/Ecocell.UnitTests/Features/Account/VerifyLoginCodeTests.cs`:
+  - [x] `Handle_ShouldReturnToken_WhenCodeIsValid`
+  - [x] `Handle_ShouldReturnError_WhenCodeIsInvalid`
+  - [x] `Handle_ShouldReturnError_WhenCodeIsExpired`
+  - [x] `Handle_ShouldBlockAccount_WhenMaxAttemptsReached`
+- [x] Endpoint `POST /api/v1/auth/verify`.
 
 **US002.D — Mobile**
 
@@ -275,6 +272,20 @@ flowchart LR
 - [ ] Armazenar token via `SecureStorage.Default` do MAUI.
 - [ ] Criar `AuthStateService` para controlar login/logout e expiração.
 - [ ] Ajustar `App.xaml.cs` para redirecionar conforme estado.
+
+**US002.E — Refresh Token ([WND-179](https://linear.app/wnd-dev/issue/WND-179))**
+
+- [ ] Estender `IJwtTokenService` + `JwtTokenService` com `GenerateRefreshToken()` — token opaco (GUID/random bytes), sem claims JWT.
+- [ ] Armazenar refresh token no Redis com TTL 7 dias: chave `refresh:{token}`, valor `personId`.
+- [ ] Atualizar `ResponseLogin` em `Ecocell.Shared/Responses/` — adicionar `RefreshToken` (string) e `RefreshTokenExpiresAtUtc` (DateTime).
+- [ ] Atualizar `VerifyLoginCode.Handler` para gerar e retornar refresh token junto com access token.
+- [ ] Criar slice `Features/Account/RefreshToken.cs` — `Command`, `Validator`, `Handler` (one-time use: invalida token antigo antes de emitir novo par), `Endpoint POST /api/v1/auth/refresh` → 200 com novo `ResponseLogin`; 401 se token não encontrado/expirado.
+- [ ] Testes em `tests/Ecocell.UnitTests/Features/Account/RefreshTokenTests.cs`:
+  - [ ] `Handle_ShouldReturnNewTokenPair_WhenRefreshTokenIsValid`
+  - [ ] `Handle_ShouldInvalidateOldToken_WhenRefreshTokenIsUsed`
+  - [ ] `Handle_ShouldReturnError_WhenRefreshTokenDoesNotExist`
+  - [ ] `Handle_ShouldReturnError_WhenRefreshTokenIsExpired`
+  - [ ] `Handle_ShouldReturnValidationError_WhenRefreshTokenIsEmpty`
 
 ---
 
@@ -294,13 +305,13 @@ flowchart LR
 ### US003 — Mapa do Depositante · RF005 · Essencial
 
 **Dependências:** US001-PJ (PCs/Coletores ativos).
-**Estado atual:** `Address` existe, sem lat/lng. Sem endpoint espacial e sem UI de mapa.
+**Estado atual:** `Address` existe com `Latitude`/`Longitude` (opcional, sem migration separada). Sem geocoding service e sem endpoint espacial.
 
 **US003.A — Geolocalização no endereço**
 
 > **RN009**: PCs e Coletores devem obrigatoriamente ter endereço geocodificado — não é opcional.
 
-- [ ] Adicionar `Address.Latitude` e `Address.Longitude` (`decimal`, obrigatórios para PC/Coletor; opcionais para Depositante). Migration `AddGeolocationToAddress`. Atualizar `AddressConfiguration` (precision 9,6).
+- [x] `Address.Latitude` e `Address.Longitude` (`decimal?`) já existem na entidade. Atualizar `AddressConfiguration` para tornar obrigatório para PC/Coletor (precision 9,6) quando geocoding for integrado.
 - [ ] Criar interface `Ecocell.Api/Services/External/IGeocodingService`; implementação `NominatimGeocodingService` usando `IHttpClientFactory`. Registrar em `AddApi`. Documentar escolha Nominatim vs Google no repo.
 - [ ] Testes em `tests/Ecocell.UnitTests/Services/GeocodingServiceTests.cs`:
   - [ ] `Geocode_ShouldReturnCoordinates_WhenAddressIsValid`
@@ -631,13 +642,42 @@ flowchart LR
 ## Transversal — Infra, qualidade e DX
 
 - [ ] Externalizar `BaseAddress` do Mobile de `MauiProgram.cs` para `wwwroot/config.json`.
-- [ ] Remover `appsettings.Development.json` do versionamento; criar `appsettings.Example.json`.
+- [x] Remover `appsettings.Development.json` do versionamento; criar `appsettings.Example.json`.
 - [ ] Padronizar retorno `ProblemDetails` no `ExceptionHandlerMiddleware` (já existe em `Ecocell.Api/Middlewares/`).
 - [ ] Configurar Hangfire com PostgreSQL em `Production` e in-memory em `Development` em `AddApi`.
 - [ ] Pipeline CI com `dotnet build Ecocell.slnx` + `dotnet test Ecocell.slnx`.
 - [ ] Limpar pastas `obj/Debug/net9.0` órfãs (migração para net10 incompleta).
 - [ ] Definir estratégia para iOS no Mobile (hoje só `net10.0-android`).
 - [ ] Logs estruturados com Serilog + sink console/arquivo (Serilog já configurado via `AddApi`).
+
+### Docker — Infraestrutura local de desenvolvimento
+
+- [ ] Criar `docker-compose.yml` na raiz com serviços:
+  - `postgres` (image `postgres:16`, porta `5432`, volume persistente `pgdata`)
+  - `redis` (image `redis:7-alpine`, porta `6379`)
+  - `api` (build do `src/Ecocell.Api/Dockerfile`, porta `5207`/`7284`, depende de `postgres` + `redis`)
+- [ ] Criar `.env.example` na raiz com todas as variáveis necessárias (sem valores reais):
+  ```
+  POSTGRES_USER=
+  POSTGRES_PASSWORD=
+  POSTGRES_DB=ecocell
+  REDIS_PASSWORD=
+  JWT_SIGNING_KEY=
+  MAIL_HOST=
+  MAIL_PORT=587
+  MAIL_USERNAME=
+  MAIL_PASSWORD=
+  MAIL_FROM=
+  ```
+- [ ] Criar `.env` (não versionado — adicionar ao `.gitignore`) com os valores reais do ambiente local.
+- [ ] `docker-compose.yml` deve referenciar variáveis via `${VAR}` lendo do `.env` automaticamente.
+- [ ] Criar `src/Ecocell.Api/Dockerfile` (multi-stage: `sdk:10.0` para build, `aspnet:10.0` para runtime).
+- [ ] Garantir que `.env` está no `.gitignore` e `.env.example` está versionado.
+- [ ] Documentar uso no `README.md`:
+  ```bash
+  cp .env.example .env   # preencher .env com valores reais
+  docker compose up -d
+  ```
 
 ### Fluxo transversal sugerido
 

@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Ecocell.Api/Dockerfile
+    ports:
+      - "5207:8080"
+      - "7284:8081"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Redis__ConnectionString: redis:6379
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__Issuer: ecocell-api
+      Jwt__Audience: ecocell-clients
+      Jwt__AccessTokenLifetimeMinutes: 60
+      Mail__Host: ${MAIL_HOST}
+      Mail__Port: ${MAIL_PORT}
+      Mail__Username: ${MAIL_USERNAME}
+      Mail__Password: ${MAIL_PASSWORD}
+      Mail__From: ${MAIL_FROM}
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+volumes:
+  pgdata:

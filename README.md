@@ -1,55 +1,197 @@
-![Logo](/public/ecocell_banner.png)
+<div align="center">
 
-<hr>
+![EcoCell Banner](/public/ecocell_banner.png)
 
-## 1 - OBJETIVO DO PROJETO
+<br/>
 
-O Ecocell é um projeto para cumprir o disposto na Atividade Extensionista do Bacharelado em Engenharia de Software da Uninter.
+**Ecossistema de logística reversa para descarte inteligente de resíduos eletrônicos.**
 
-O objetivo é desenvolver uma aplicação que esteja dentro do escopo das ODS - Objetivo de Desenvolvimento Sustentável da ONU.
+<br/>
 
-O Ecocell contempla as seguintes ODS:
-- Cidades e comunidades sustentáveis;
-- Ação contra a mudança global do clima; e,
-- Vida terrestre.
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet)
+![EF Core](https://img.shields.io/badge/EF_Core-10.0-512BD4?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
-## 2 - DESCRIÇÃO DO PROJETO
+</div>
 
-<b>EcoCell</b> é um aplicativo mobile (celular) que tem o objetivo de unir pessoas, órgãos públicos, organizações não governamentais e empresas para a realização e controle de descarte inteligente e sustentável de materiais(lixo) eletrônicos estragados e/ou obsoletos.
+---
 
-O projeto, na prática, possui três atores principais, sendo eles: o <b>Depositante</b>, <b>Ponto de Coleta</b> e o <b>Coletor</b>.
+## Sobre
 
-O Depositante é a pessoa física ou jurídica que possui materiais eletrônicos que não têm mais utilidade e precisa fazer o descarte sustentável desse lixo.
+O **EcoCell** é um aplicativo mobile que conecta pessoas, empresas e organizações para o descarte sustentável de resíduos eletrônicos. O projeto integra a **Atividade Extensionista do Bacharelado em Engenharia de Software da Uninter** e está alinhado às seguintes ODS da ONU:
 
-O Ponto de Coleta é uma pessoa jurídica, sendo empresa, ONGs ou órgão público, que se cadastra no EcoCell para receber os materiais eletrônicos sem utilidade.
+- 🏙️ **ODS 11** — Cidades e comunidades sustentáveis
+- 🌡️ **ODS 13** — Ação contra a mudança global do clima
+- 🌿 **ODS 15** — Vida terrestre
 
-O Coletor é uma pessoa jurídica que se cadastra no EcoCell para fazer a coleta dos materiais eletrônicos descartados.
+### Atores
 
-<hr>
+| Ator | Tipo | Papel |
+|---|---|---|
+| **Depositante** | Pessoa Física | Descarta resíduos eletrônicos em Pontos de Coleta ou via coleta a domicílio |
+| **Ponto de Coleta** | Pessoa Jurídica | Recebe resíduos dos Depositantes e os repassa para Coletores |
+| **Coletor** | Pessoa Jurídica | Coleta os materiais dos Pontos de Coleta para destinação final |
 
-## 2.1 - SISTEMA DE PONTOS
+### Gamificação
 
-O sistema de pontos é uma solução gameficada que atribui pontos para o Depositante, Ponto de Coleta e o Coletor.
+Cada ação de descarte ou coleta gera **pontos** para os participantes, exibidos em três modalidades de ranking:
 
-Ao descartar um material eletrônico, o Depositante ganhará uma pontuação que será somada a outras pontuações já existente. No entanto, os pontos ganhos na modalidade depositante somente poderão ser utilizados e aparecerão no ranqueamento destinado ao “Ranqueamento de Depositante”.
+- **Ranking Depositante** — pontuação individual por descarte
+- **Ranking Ponto de Coleta** — modalidade **Nacional** (Matriz + Filiais) e **Municipal**
+- **Ranking Coletor** — pontuação por volume coletado
 
-Ao receber o descarte de materiais eletrônicos pelo Depositante, o Ponto de Coleta deverá marcar no aplicativo EcoCell o recebimento desses materiais. Após a marcação e efetivação do recebimento, o Depositante receberá a sua pontuação na modalidade depositante.
+---
 
-O Ponto de Coleta receberá pontos da seguinte maneira: efetivar o recebimento de material eletrônico pelo Depositante; oferecer benefícios aos Depositantes pelo descarte de material; ter o material coletado e/ou vendido para o Coletor.
+## Arquitetura
 
-O Coletor receberá pontos ao coletar material  - mediante compra ou não - nos estabelecimentos cadastrados como Ponto de Coleta. Ao coletar o material descartado, o Coletor deverá marcar como efetivada a coleta, assim como o Ponto de Coleta deverá marcar como efetivada. Assim, ambas coletas efetivadas, o Coletor receberá seus pontos referentes a essa coleta e, como mencionado acima, o Ponto de Descarte também receberá seus pontos.
+O backend segue **Vertical Slice Architecture (VSA)**: cada caso de uso é um _slice_ autossuficiente contendo `Command/Query`, `Validator`, `Handler` e `Endpoint` em um único arquivo.
 
+```
+src/
+├── Ecocell.Api/          # Host + Features + Persistência + Entidades
+│   ├── Features/         # Slices por agregado (Account, Person, Admin…)
+│   ├── Entities/         # Entidades EF Core (TPT/herança)
+│   ├── Services/         # Email, Auth, VerificationCodes, CurrentUser
+│   ├── Database/         # AppDbContext + TypeConfigurations
+│   ├── Migrations/       # Migrations EF Core
+│   ├── Configurations/   # Settings bindings (JWT, Mail, Redis, DB)
+│   ├── Extensions/       # DI, Result, FluentValidation
+│   └── Middlewares/      # CorrelationId, ExceptionHandler
+└── Ecocell.Shared/       # Contratos HTTP (Requests / Responses / Enums)
 
-## 2.2 - RANQUEAMENTO
+tests/
+└── Ecocell.UnitTests/    # xUnit + Shouldly + Moq + Bogus + SQLite in-memory
+```
 
-Haverá três modalidades de ranqueamento, que são elas: Ranqueamento Depositante, Ranqueamento Ponto de Coleta e Ranqueamento Coletor.
+---
 
-O ranqueamento do Ponto de Coleta será dividido em duas modalidades: Nacional e Municipal.
+## Stack
 
-A modalidade Nacional é para as empresas cujo CNPJ se refere como Matriz. Para o cálculo da pontuação da Matriz serão levados em consideração os pontos da Matriz e das Filiais associadas a ela.
+### API
 
-A Matriz também entrará no ranqueamento municipal da cidade de sua sede. 
+| Tecnologia | Versão | Uso |
+|---|---|---|
+| .NET | 10.0 | Runtime |
+| ASP.NET Core | 10.0 | Host HTTP |
+| Entity Framework Core | 10.0 | ORM |
+| Npgsql EF Core Provider | 10.0 | PostgreSQL |
+| Carter | 10.0 | Endpoints mínimos |
+| Mediator (Source Generator) | 3.0 | CQRS in-process |
+| FluentValidation | 12.1 | Validação de entrada |
+| MailKit | 4.16 | Envio de e-mail (SMTP) |
+| StackExchange.Redis | 2.12 | Armazenamento de códigos OTP |
+| JWT Bearer | 10.0 | Autenticação stateless |
+| Serilog | 4.3 | Logs estruturados |
+| Scalar | 2.14 | Documentação interativa da API |
 
-A modalidade Municipal contará com as empresas que tiverem sede no município, sendo elas Matrizes ou Filiais. 
+### Testes
 
-Na modalidade Municipal, os pontos da Matriz serão somente da Matriz, pois nesse tipo de ranqueamento todas as empresas, tanto a Matriz quanto as Filiais concorrem entre si.
+| Tecnologia | Versão | Uso |
+|---|---|---|
+| xUnit | 2.9 | Framework de testes |
+| Shouldly | 4.3 | Asserções fluentes |
+| Moq | 4.20 | Mocks |
+| Bogus + Bogus.Extensions.Brazil | 35.6 | Geração de dados falsos (CPF, CNPJ) |
+| EF Core SQLite In-Memory | 10.0 | Banco de testes isolado |
+
+---
+
+## Pré-requisitos
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [PostgreSQL 16+](https://www.postgresql.org/)
+- [Redis 7+](https://redis.io/)
+
+---
+
+## Configuração
+
+### 1. Clone
+
+```bash
+git clone https://github.com/Wandersonrp/ecocell.git
+cd ecocell
+```
+
+### 2. User Secrets
+
+Copie `src/Ecocell.Api/appsettings.Example.json` como referência e configure via **User Secrets** (nunca commite credenciais):
+
+```bash
+cd src/Ecocell.Api
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=ecocell;Username=<user>;Password=<senha>"
+dotnet user-secrets set "Redis:ConnectionString" "localhost:6379"
+dotnet user-secrets set "Jwt:SigningKey" "<chave-secreta-minimo-32-chars>"
+dotnet user-secrets set "Mail:Host" "smtp.exemplo.com"
+dotnet user-secrets set "Mail:Username" "noreply@exemplo.com"
+dotnet user-secrets set "Mail:Password" "<senha-smtp>"
+```
+
+Estrutura completa de configuração em [`src/Ecocell.Api/appsettings.Example.json`](src/Ecocell.Api/appsettings.Example.json).
+
+### 3. Migrations
+
+```bash
+dotnet ef database update --project src/Ecocell.Api --startup-project src/Ecocell.Api
+```
+
+### 4. Executar
+
+```bash
+dotnet run --project src/Ecocell.Api/Ecocell.Api.csproj
+```
+
+| Perfil | URL |
+|---|---|
+| HTTPS | https://localhost:7284 |
+| HTTP | http://localhost:5207 |
+
+---
+
+## Documentação da API
+
+Em ambiente de desenvolvimento, a documentação interativa está disponível via **Scalar**:
+
+```
+https://localhost:7284/scalar/v1
+```
+
+O esquema OpenAPI fica em `/openapi/v1.json`.
+
+---
+
+## Testes
+
+```bash
+# Todos os testes
+dotnet test Ecocell.slnx
+
+# Apenas a suíte de unidade
+dotnet test tests/Ecocell.UnitTests/Ecocell.UnitTests.csproj
+
+# Filtro por nome
+dotnet test --filter "FullyQualifiedName~RegisterNaturalPersonTests"
+```
+
+Os testes de unidade usam **SQLite in-memory** — nenhuma infraestrutura externa necessária.
+
+---
+
+## Comandos úteis
+
+| Objetivo | Comando |
+|---|---|
+| Restaurar dependências | `dotnet restore Ecocell.slnx` |
+| Build da solução | `dotnet build Ecocell.slnx` |
+| Rodar a API | `dotnet run --project src/Ecocell.Api/Ecocell.Api.csproj` |
+| Rodar todos os testes | `dotnet test Ecocell.slnx` |
+| Nova migration | `dotnet ef migrations add <Nome> --project src/Ecocell.Api --startup-project src/Ecocell.Api` |
+| Aplicar migrations | `dotnet ef database update --project src/Ecocell.Api --startup-project src/Ecocell.Api` |
+
+---
+
+## Licença
+
+Distribuído sob a licença **MIT**. Veja [`LICENSE`](LICENSE) para detalhes.
