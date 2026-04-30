@@ -1,6 +1,7 @@
 using System.Text;
 using Carter;
 using Ecocell.Api.Configurations;
+using Ecocell.Api.Enums;
 using Ecocell.Api.Shared;
 using Ecocell.Api.Database;
 using Ecocell.Api.Services.Authentication;
@@ -9,6 +10,7 @@ using Ecocell.Api.Services.VerificationCodes;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using StackExchange.Redis;
@@ -25,7 +27,7 @@ public static class DependencyInjectionExtensions
     /// </summary>
     /// <param name="services">Coleção de serviços da aplicação.</param>
     /// <param name="configuration">Configurações da aplicação.</param>
-    public static void AddApi(this IServiceCollection services, IConfiguration configuration)
+    public static void AddApi(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         ConfigLog();
         AddMediator(services);
@@ -33,7 +35,7 @@ public static class DependencyInjectionExtensions
         AddCarter(services);
         AddSettings(services, configuration);
         AddRedis(services, configuration);
-        AddServices(services);
+        AddServices(services, environment);
         AddJwtAuthentication(services, configuration);
 
         var assembly = typeof(Program).Assembly;
@@ -86,6 +88,8 @@ public static class DependencyInjectionExtensions
             .Bind(configuration.GetSection(JwtSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        services.Configure<MailSettings>(configuration.GetSection(MailSettings.SectionName));
     }
 
     /// <summary>
@@ -108,9 +112,13 @@ public static class DependencyInjectionExtensions
     /// <summary>
     /// Registra os serviços transversais da API (e-mail, integrações externas).
     /// </summary>
-    private static void AddServices(IServiceCollection services)
+    private static void AddServices(IServiceCollection services, IHostEnvironment environment)
     {
-        services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        if (environment.IsProduction() || environment.IsStaging())
+            services.AddScoped<IEmailSender, MailKitEmailSender>();
+        else
+            services.AddSingleton<IEmailSender, LoggingEmailSender>();
+
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
     }
 

@@ -50,7 +50,7 @@ builder.Services.AddOpenApi(options =>
 
 builder.Host.UseSerilog();
 
-builder.Services.AddApi(builder.Configuration);
+builder.Services.AddApi(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 

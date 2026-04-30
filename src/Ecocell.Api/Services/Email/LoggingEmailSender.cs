@@ -35,4 +35,10 @@ public sealed class LoggingEmailSender : IEmailSender
         _logger.LogInformation("[EMAIL] Notificação de cadastro de pessoa jurídica enviada para {Email}", email);
         return Task.CompletedTask;
     }
+
+    public Task SendPartnerRejectionAsync(string email, string reason, CancellationToken ct = default)
+    {
+        _logger.LogInformation("[EMAIL] Rejeição de parceiro enviada para {Email}. Motivo: {Reason}", email, reason);
+        return Task.CompletedTask;
+    }
 }

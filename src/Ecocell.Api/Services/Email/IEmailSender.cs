@@ -19,4 +19,9 @@ public interface IEmailSender
     /// <param name="email">Destinatário da notificação.</param>
     /// <param name="ct">Token de cancelamento da operação.</param>
     Task SendLegalPersonRegistrationNotificationAsync(string email, CancellationToken ct = default);
+
+    /// <summary>
+    /// Envia e-mail de rejeição ao parceiro com o motivo informado pelo admin (RN008).
+    /// </summary>
+    Task SendPartnerRejectionAsync(string email, string reason, CancellationToken ct = default);
 }
