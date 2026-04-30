@@ -154,6 +154,10 @@ public static class DependencyInjectionExtensions
         {
             options.AddPolicy(AuthorizationPolicies.Authenticated, policy =>
                 policy.RequireAuthenticatedUser());
+
+            options.AddPolicy(AuthorizationPolicies.Admin, policy =>
+                policy.RequireAuthenticatedUser()
+                      .RequireClaim("role", Ecocell.Api.Enums.Role.Admin.ToString()));
         });
     }
 }
