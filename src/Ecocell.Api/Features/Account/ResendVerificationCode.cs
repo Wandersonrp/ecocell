@@ -105,7 +105,11 @@ public static class ResendVerificationCode
             var key = IVerificationCodeStore.BuildKey(VerificationCodePurpose.EmailConfirmation, request.Email);
 
             await _store.SaveAsync(key, codeHash, CodeTtl, cancellationToken);
-            await _emailSender.SendVerificationCodeAsync(request.Email, code, cancellationToken);
+            await _emailSender.SendAsync(
+                request.Email,
+                EmailType.VerificationCode,
+                new Dictionary<string, string> { ["code"] = code },
+                cancellationToken);
 
             _logger.LogInformation("Novo código OTP enviado para {Email}", request.Email);
             return Result.Success();

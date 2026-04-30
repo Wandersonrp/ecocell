@@ -1,4 +1,5 @@
 using Bogus;
+using Ecocell.Api.Enums;
 using Ecocell.Api.Events;
 using Ecocell.Api.Features.Account;
 using Ecocell.Api.Services.Email;
@@ -47,9 +48,10 @@ public class GenerateVerificationCodeOnPersonRegisteredTests : TestBase
 
         // Assert
         _emailSenderMock.Verify(
-            s => s.SendVerificationCodeAsync(
+            s => s.SendAsync(
                 _notification.Email,
-                It.IsAny<string>(),
+                EmailType.VerificationCode,
+                It.IsAny<IReadOnlyDictionary<string, string>>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -59,9 +61,10 @@ public class GenerateVerificationCodeOnPersonRegisteredTests : TestBase
     {
         // Arrange
         _emailSenderMock
-            .Setup(s => s.SendVerificationCodeAsync(
+            .Setup(s => s.SendAsync(
                 It.IsAny<string>(),
-                It.IsAny<string>(),
+                It.IsAny<EmailType>(),
+                It.IsAny<IReadOnlyDictionary<string, string>>(),
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("SMTP indisponível."));
 

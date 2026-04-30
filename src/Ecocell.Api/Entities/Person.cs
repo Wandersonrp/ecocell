@@ -29,4 +29,37 @@ public abstract class Person : BaseEntity
         PersonStatus = PersonStatus.Active;
         MarkAsUpdated();
     }
+
+    internal void Approve(Role callerRole)
+    {
+        if (callerRole != Role.Admin)
+            throw new UnauthorizedAccessException("Apenas administradores podem aprovar parceiros.");
+        if (PersonStatus != PersonStatus.PendingApproval)
+            throw new InvalidOperationException(
+                $"Não é possível aprovar uma conta com status '{PersonStatus}'.");
+        PersonStatus = PersonStatus.Active;
+        MarkAsUpdated();
+    }
+
+    internal void Reject(Role callerRole)
+    {
+        if (callerRole != Role.Admin)
+            throw new UnauthorizedAccessException("Apenas administradores podem rejeitar parceiros.");
+        if (PersonStatus != PersonStatus.PendingApproval)
+            throw new InvalidOperationException(
+                $"Não é possível rejeitar uma conta com status '{PersonStatus}'.");
+        PersonStatus = PersonStatus.Refused;
+        MarkAsUpdated();
+    }
+
+    internal void Block(Role callerRole)
+    {
+        if (callerRole != Role.Admin)
+            throw new UnauthorizedAccessException("Apenas administradores podem bloquear parceiros.");
+        if (PersonStatus != PersonStatus.Active)
+            throw new InvalidOperationException(
+                $"Não é possível bloquear uma conta com status '{PersonStatus}'.");
+        PersonStatus = PersonStatus.Suspended;
+        MarkAsUpdated();
+    }
 }
