@@ -5,6 +5,7 @@ using Ecocell.Api.Enums;
 using Ecocell.Api.Shared;
 using Ecocell.Api.Database;
 using Ecocell.Api.Services.Authentication;
+using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.VerificationCodes;
 using FluentValidation;
@@ -37,6 +38,9 @@ public static class DependencyInjectionExtensions
         AddRedis(services, configuration);
         AddServices(services, environment);
         AddJwtAuthentication(services, configuration);
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         var assembly = typeof(Program).Assembly;
         services.AddValidatorsFromAssembly(assembly);
