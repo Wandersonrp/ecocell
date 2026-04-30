@@ -123,7 +123,7 @@ public class ListPartnersEndpoint : ICarterModule
                     Status = req.Status.HasValue ? (PersonStatus?)req.Status.Value : null,
                     Journey = req.Journey.HasValue ? (Journey?)req.Journey.Value : null,
                     Cursor = req.Cursor,
-                    PageSize = req.PageSize
+                    PageSize = req.PageSize ?? 20
                 };
 
                 var result = await sender.Send(command);
