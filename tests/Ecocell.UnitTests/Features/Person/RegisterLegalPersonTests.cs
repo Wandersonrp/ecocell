@@ -119,6 +119,8 @@ public class RegisterLegalPersonTests : TestBase
         lp.Address.ShouldNotBeNull();
         lp.Address!.City.ShouldBe(_command.Address.City);
         lp.Address.State.ShouldBe(_command.Address.State);
+        lp.Address.Latitude.ShouldNotBeNull();
+        lp.Address.Longitude.ShouldNotBeNull();
     }
 
     [Fact]

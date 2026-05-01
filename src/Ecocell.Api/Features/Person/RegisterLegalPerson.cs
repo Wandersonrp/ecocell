@@ -134,6 +134,13 @@ public static class RegisterLegalPerson
             _geocodingService = geocodingService;
         }
 
+        /// <summary>
+        /// Executa o cadastro da Pessoa Jurídica seguindo a sequência: validação de input,
+        /// unicidade de CNPJ/e-mail, verificação do Gestor PF, geocodificação do endereço e persistência.
+        /// </summary>
+        /// <param name="request">Comando com os dados da PJ e do endereço.</param>
+        /// <param name="cancellationToken">Token de cancelamento da operação.</param>
+        /// <returns><see cref="Result"/> indicando sucesso ou o erro encontrado.</returns>
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Processando cadastro da pessoa jurídica {@LegalPerson}", request);
@@ -192,7 +199,7 @@ public static class RegisterLegalPerson
                 if (geoResult.Error.Code == ErrorCodes.GeocodingNotFound)
                     return Result.Failure(geoResult.Error);
 
-                _logger.LogWarning("Geocoding indisponível para endereço {@Address}", request.Address);
+                _logger.LogWarning("Geocoding indisponível para endereço {@Address}. Motivo: {Motivo}", request.Address, geoResult.Error.Message);
             }
             else
             {
