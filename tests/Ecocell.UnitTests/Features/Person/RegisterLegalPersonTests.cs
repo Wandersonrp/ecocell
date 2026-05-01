@@ -335,7 +335,7 @@ public class RegisterLegalPersonTests : TestBase
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenGeocodingNotFound()
+    public async Task Handle_ShouldPersistWithNullCoordinates_WhenGeocodingNotFound()
     {
         // Arrange
         _geocodingMock
@@ -347,8 +347,15 @@ public class RegisterLegalPersonTests : TestBase
         var result = await _handler.Handle(_command, CancellationToken.None);
 
         // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.Error.Code.ShouldBe(ErrorCodes.GeocodingNotFound);
+        result.IsSuccess.ShouldBeTrue();
+
+        var lp = await DbContext.LegalPeople
+            .Include(lp => lp.Address)
+            .FirstOrDefaultAsync(lp => lp.Cnpj == _command.Cnpj);
+        lp.ShouldNotBeNull();
+        lp.Address.ShouldNotBeNull();
+        lp.Address!.Latitude.ShouldBeNull();
+        lp.Address.Longitude.ShouldBeNull();
     }
 
     [Fact]

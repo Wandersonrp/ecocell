@@ -43,4 +43,11 @@ public class Address : BaseEntity
         Latitude = latitude;
         Longitude = longitude;
     }
+
+    public void UpdateCoordinates(decimal latitude, decimal longitude)
+    {
+        Latitude = latitude;
+        Longitude = longitude;
+        MarkAsUpdated();
+    }
 }

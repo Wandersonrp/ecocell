@@ -195,12 +195,7 @@ public static class RegisterLegalPerson
             var geoResult = await _geocodingService.GeocodeAsync(geoRequest, cancellationToken);
 
             if (geoResult.IsFailure)
-            {
-                if (geoResult.Error.Code == ErrorCodes.GeocodingNotFound)
-                    return Result.Failure(geoResult.Error);
-
-                _logger.LogWarning("Geocoding indisponível para endereço {@Address}. Motivo: {Motivo}", request.Address, geoResult.Error.Message);
-            }
+                _logger.LogWarning("Geocoding falhou para {@Address}. Motivo: {Motivo}", request.Address, geoResult.Error.Message);
             else
             {
                 lat = geoResult.Value.Latitude;
