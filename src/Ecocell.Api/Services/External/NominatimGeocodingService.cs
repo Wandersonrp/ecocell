@@ -39,10 +39,9 @@ public class NominatimGeocodingService : IGeocodingService
 
             return ResultT<GeocodingCoordinates>.Success(coords);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or FormatException)
         {
-            return ResultT<GeocodingCoordinates>.Failure(
-                new Error(ErrorCodes.GeocodingUnavailable, "Serviço de geocodificação indisponível"));
+            return ResultT<GeocodingCoordinates>.Failure(Error.GeocodingUnavailable());
         }
     }
 

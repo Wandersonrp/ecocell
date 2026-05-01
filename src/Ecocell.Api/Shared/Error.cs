@@ -10,6 +10,7 @@ public sealed record Error(string Code, string? Message = null, List<string>? Me
     private static readonly string InternalServerErrorCode = ErrorCodes.InternalServerError;
     private static readonly string ForbiddenCode = ErrorCodes.ForbiddenCodeError;
     private static readonly string GeocodingNotFoundCode = ErrorCodes.GeocodingNotFound;
+    private static readonly string GeocodingUnavailableCode = ErrorCodes.GeocodingUnavailable;
 
     public static readonly Error None = new(string.Empty, string.Empty, new List<string>());
 
@@ -29,5 +30,8 @@ public sealed record Error(string Code, string? Message = null, List<string>? Me
 
     public static Error GeocodingNotFound(string address) =>
         new Error(GeocodingNotFoundCode, $"Endereço não encontrado: {address}");
+
+    public static Error GeocodingUnavailable() =>
+        new Error(GeocodingUnavailableCode, "Serviço de geocodificação indisponível");
 
 }
