@@ -7,6 +7,7 @@ using Ecocell.Api.Database;
 using Ecocell.Api.Services.Authentication;
 using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Services.Email;
+using Ecocell.Api.Services.External;
 using Ecocell.Api.Services.VerificationCodes;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -37,6 +38,7 @@ public static class DependencyInjectionExtensions
         AddSettings(services, configuration);
         AddRedis(services, configuration);
         AddServices(services, environment);
+        AddGeocoding(services, configuration);
         AddJwtAuthentication(services, configuration);
 
         services.AddHttpContextAccessor();
@@ -94,6 +96,11 @@ public static class DependencyInjectionExtensions
             .ValidateOnStart();
 
         services.Configure<MailSettings>(configuration.GetSection(MailSettings.SectionName));
+
+        services.AddOptions<NominatimSettings>()
+            .Bind(configuration.GetSection(NominatimSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
     }
 
     /// <summary>
@@ -123,8 +130,27 @@ public static class DependencyInjectionExtensions
             services.AddScoped<IEmailSender, MailKitEmailSender>();
         else
             services.AddSingleton<IEmailSender, LoggingEmailSender>();
-        
+
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+    }
+
+    /// <summary>
+    /// Registra o serviço de geocodificação Nominatim com typed HttpClient.
+    /// Requer a seção "Nominatim" em appsettings com BaseUrl, UserAgent e TimeoutSeconds.
+    /// </summary>
+    private static void AddGeocoding(IServiceCollection services, IConfiguration configuration)
+    {
+        var settings = configuration
+            .GetSection(NominatimSettings.SectionName)
+            .Get<NominatimSettings>()
+            ?? throw new InvalidOperationException("Seção 'Nominatim' não encontrada em appsettings.");
+
+        services.AddHttpClient<IGeocodingService, NominatimGeocodingService>(client =>
+        {
+            client.BaseAddress = new Uri(settings.BaseUrl);
+            client.DefaultRequestHeaders.Add("User-Agent", settings.UserAgent);
+            client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
+        });
     }
 
     /// <summary>

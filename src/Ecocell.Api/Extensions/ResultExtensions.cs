@@ -45,6 +45,8 @@ public static class ResultExtensions
             ErrorCodes.Conflict => "Conflict",
             ErrorCodes.InvalidCredential => "Unauthorized",
             ErrorCodes.ForbiddenCodeError => "Forbidden",
+            ErrorCodes.GeocodingNotFound => "Unprocessable Entity",
+            ErrorCodes.GeocodingUnavailable => "Service Unavailable",
             _ => "Internal Server Error"
         };
 
@@ -57,6 +59,8 @@ public static class ResultExtensions
             ErrorCodes.InvalidCredential => StatusCodes.Status401Unauthorized,
             ErrorCodes.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorCodes.ForbiddenCodeError => StatusCodes.Status403Forbidden,
+            ErrorCodes.GeocodingNotFound => StatusCodes.Status422UnprocessableEntity,
+            ErrorCodes.GeocodingUnavailable => StatusCodes.Status503ServiceUnavailable,
             _ => StatusCodes.Status500InternalServerError
         };
 }

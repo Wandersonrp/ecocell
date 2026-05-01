@@ -4,6 +4,7 @@ using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Events;
 using Ecocell.Api.Features.Person;
+using Ecocell.Api.Services.External;
 using Ecocell.Api.Shared;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ public class RegisterLegalPersonTests : TestBase
     private readonly RegisterLegalPerson.Validator _validator;
     private readonly RegisterLegalPerson.Command _command;
     private readonly Mock<IPublisher> _publisherMock;
+    private readonly Mock<IGeocodingService> _geocodingMock;
     private readonly NaturalPerson _responsiblePerson;
 
     public RegisterLegalPersonTests()
@@ -25,8 +27,13 @@ public class RegisterLegalPersonTests : TestBase
         _validator = new RegisterLegalPerson.Validator();
         var loggerMock = CreateLoggerMock<RegisterLegalPerson.Handler>();
         _publisherMock = new Mock<IPublisher>();
+        _geocodingMock = new Mock<IGeocodingService>();
 
-        _handler = new RegisterLegalPerson.Handler(DbContext, loggerMock.Object, _validator, _publisherMock.Object);
+        _geocodingMock
+            .Setup(g => g.GeocodeAsync(It.IsAny<GeocodingRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ResultT<GeocodingCoordinates>.Success(new GeocodingCoordinates(-23.5505m, -46.6333m)));
+
+        _handler = new RegisterLegalPerson.Handler(DbContext, loggerMock.Object, _validator, _publisherMock.Object, _geocodingMock.Object);
 
         _responsiblePerson = new NaturalPerson(
             new Faker().Name.FullName(),
@@ -39,8 +46,6 @@ public class RegisterLegalPersonTests : TestBase
         DbContext.NaturalPeople.Add(_responsiblePerson);
         DbContext.SaveChanges();
 
-        // Ativar a conta do gestor diretamente via SQL (PersonStatus.Active = 1)
-        // Confirm() é internal; ExecuteUpdate contorna isso sem violar o isolamento do teste.
         DbContext.People
             .Where(p => p.Id == _responsiblePerson.Id)
             .ExecuteUpdate(s => s.SetProperty(p => p.PersonStatus, PersonStatus.Active));
@@ -114,6 +119,8 @@ public class RegisterLegalPersonTests : TestBase
         lp.Address.ShouldNotBeNull();
         lp.Address!.City.ShouldBe(_command.Address.City);
         lp.Address.State.ShouldBe(_command.Address.State);
+        lp.Address.Latitude.ShouldNotBeNull();
+        lp.Address.Longitude.ShouldNotBeNull();
     }
 
     [Fact]
@@ -325,5 +332,53 @@ public class RegisterLegalPersonTests : TestBase
         // Assert
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(ErrorCodes.ForbiddenCodeError);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldPersistWithNullCoordinates_WhenGeocodingNotFound()
+    {
+        // Arrange
+        _geocodingMock
+            .Setup(g => g.GeocodeAsync(It.IsAny<GeocodingRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ResultT<GeocodingCoordinates>.Failure(
+                Error.GeocodingNotFound("endereço inválido")));
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var lp = await DbContext.LegalPeople
+            .Include(lp => lp.Address)
+            .FirstOrDefaultAsync(lp => lp.Cnpj == _command.Cnpj);
+        lp.ShouldNotBeNull();
+        lp.Address.ShouldNotBeNull();
+        lp.Address!.Latitude.ShouldBeNull();
+        lp.Address.Longitude.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldPersistWithNullCoordinates_WhenGeocodingUnavailable()
+    {
+        // Arrange
+        _geocodingMock
+            .Setup(g => g.GeocodeAsync(It.IsAny<GeocodingRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ResultT<GeocodingCoordinates>.Failure(
+                new Error(ErrorCodes.GeocodingUnavailable, "Serviço de geocodificação indisponível")));
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var lp = await DbContext.LegalPeople
+            .Include(lp => lp.Address)
+            .FirstOrDefaultAsync(lp => lp.Cnpj == _command.Cnpj);
+        lp.ShouldNotBeNull();
+        lp.Address.ShouldNotBeNull();
+        lp.Address!.Latitude.ShouldBeNull();
+        lp.Address.Longitude.ShouldBeNull();
     }
 }
