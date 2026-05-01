@@ -55,6 +55,7 @@ public static class VerifyLoginCode
         private readonly AppDbContext _dbContext;
         private readonly IVerificationCodeStore _store;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly IRefreshTokenStore _refreshTokenStore;
         private readonly IValidator<Command> _validator;
         private readonly ILogger<Handler> _logger;
         private readonly JwtSettings _jwtSettings;
@@ -63,6 +64,7 @@ public static class VerifyLoginCode
             AppDbContext dbContext,
             IVerificationCodeStore store,
             IJwtTokenService jwtTokenService,
+            IRefreshTokenStore refreshTokenStore,
             IValidator<Command> validator,
             ILogger<Handler> logger,
             IOptions<JwtSettings> jwtSettings)
@@ -70,6 +72,7 @@ public static class VerifyLoginCode
             _dbContext = dbContext;
             _store = store;
             _jwtTokenService = jwtTokenService;
+            _refreshTokenStore = refreshTokenStore;
             _validator = validator;
             _logger = logger;
             _jwtSettings = jwtSettings.Value;
@@ -143,11 +146,17 @@ public static class VerifyLoginCode
 
             await _store.DeleteAsync(key, cancellationToken);
 
+            var refreshTokenResult = _jwtTokenService.GenerateRefreshToken();
+            var refreshTtl = TimeSpan.FromDays(_jwtSettings.RefreshTokenLifetimeDays);
+            await _refreshTokenStore.SaveAsync(refreshTokenResult.Token, person.Id, refreshTtl, cancellationToken);
+
             var jwtToken = _jwtTokenService.Generate(person);
             var response = new ResponseLogin
             {
                 AccessToken = jwtToken.AccessToken,
                 ExpiresAtUtc = jwtToken.ExpiresAtUtc,
+                RefreshToken = refreshTokenResult.Token,
+                RefreshTokenExpiresAtUtc = refreshTokenResult.ExpiresAtUtc,
             };
 
             _logger.LogInformation("Login realizado com sucesso para {Email}", request.Email);

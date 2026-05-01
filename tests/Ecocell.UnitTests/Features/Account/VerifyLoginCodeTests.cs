@@ -24,13 +24,15 @@ public class VerifyLoginCodeTests : TestBase
         SigningKey = "test-hmac-signing-key-ecocell-32chars!!",
         Issuer = "test",
         Audience = "test",
-        AccessTokenLifetimeMinutes = 60
+        AccessTokenLifetimeMinutes = 60,
+        RefreshTokenLifetimeDays = 7
     });
 
     private readonly VerifyLoginCode.Handler _handler;
     private readonly VerifyLoginCode.Command _command;
     private readonly InMemoryVerificationCodeStore _store;
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock;
+    private readonly Mock<IRefreshTokenStore> _refreshTokenStoreMock;
     private readonly string _key;
 
     public VerifyLoginCodeTests()
@@ -41,12 +43,32 @@ public class VerifyLoginCodeTests : TestBase
         _jwtTokenServiceMock
             .Setup(s => s.Generate(It.IsAny<PersonEntity>()))
             .Returns(new JwtToken("fake.jwt", DateTimeOffset.UtcNow.AddHours(1)));
+        _jwtTokenServiceMock
+            .Setup(s => s.GenerateRefreshToken())
+            .Returns(new RefreshTokenResult(
+                "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+                DateTimeOffset.UtcNow.AddDays(7)));
+
+        _refreshTokenStoreMock = new Mock<IRefreshTokenStore>();
+        _refreshTokenStoreMock
+            .Setup(s => s.SaveAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         var validator = new VerifyLoginCode.Validator();
         var loggerMock = CreateLoggerMock<VerifyLoginCode.Handler>();
 
         _handler = new VerifyLoginCode.Handler(
-            DbContext, _store, _jwtTokenServiceMock.Object, validator, loggerMock.Object, TestJwtOptions);
+            DbContext,
+            _store,
+            _jwtTokenServiceMock.Object,
+            _refreshTokenStoreMock.Object,
+            validator,
+            loggerMock.Object,
+            TestJwtOptions);
 
         var faker = new Faker();
         var person = new NaturalPerson(
@@ -85,8 +107,14 @@ public class VerifyLoginCodeTests : TestBase
         result.IsSuccess.ShouldBeTrue();
         result.Value.AccessToken.ShouldBe("fake.jwt");
         result.Value.TokenType.ShouldBe("Bearer");
+        result.Value.RefreshToken.ShouldNotBeNullOrEmpty();
+        result.Value.RefreshTokenExpiresAtUtc.ShouldBeGreaterThan(DateTimeOffset.UtcNow);
         _store.HasActiveEntry(_key).ShouldBeFalse();
         _jwtTokenServiceMock.Verify(s => s.Generate(It.IsAny<PersonEntity>()), Times.Once);
+        _jwtTokenServiceMock.Verify(s => s.GenerateRefreshToken(), Times.Once);
+        _refreshTokenStoreMock.Verify(
+            s => s.SaveAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
