@@ -56,10 +56,6 @@ public sealed class JwtTokenService : IJwtTokenService
         return new JwtToken(new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
     }
 
-    /// <summary>
-    /// Gera um token opaco de renovação via <see cref="RandomNumberGenerator"/> (32 bytes, hex-encoded).
-    /// Expiração calculada a partir de <c>JwtSettings.RefreshTokenLifetimeDays</c>.
-    /// </summary>
     public RefreshTokenResult GenerateRefreshToken()
     {
         var token = RandomNumberGenerator.GetHexString(64, lowercase: true);
