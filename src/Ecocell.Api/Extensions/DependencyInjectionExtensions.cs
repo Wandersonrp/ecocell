@@ -97,7 +97,7 @@ public static class DependencyInjectionExtensions
     }
 
     /// <summary>
-    /// Registra a conexão Redis e o store de códigos OTP.
+    /// Registra a conexão Redis e os stores de códigos OTP e refresh tokens.
     /// Requer a chave "Redis:ConnectionString" em appsettings ou User Secrets.
     /// Em desenvolvimento local: docker run -d -p 6379:6379 redis:7-alpine
     /// </summary>
@@ -111,6 +111,7 @@ public static class DependencyInjectionExtensions
             ConnectionMultiplexer.Connect(settings!.ConnectionString));
 
         services.AddSingleton<IVerificationCodeStore, RedisVerificationCodeStore>();
+        services.AddSingleton<IRefreshTokenStore, RedisRefreshTokenStore>();
     }
 
     /// <summary>

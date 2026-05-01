@@ -13,4 +13,10 @@ public sealed record ResponseLogin
 
     /// <summary>Tipo do token. Sempre "Bearer".</summary>
     public string TokenType { get; init; } = "Bearer";
+
+    /// <summary>Token opaco de renovação do access token.</summary>
+    public string RefreshToken { get; init; } = string.Empty;
+
+    /// <summary>Data e hora de expiração do refresh token em UTC.</summary>
+    public DateTimeOffset RefreshTokenExpiresAtUtc { get; init; }
 }
