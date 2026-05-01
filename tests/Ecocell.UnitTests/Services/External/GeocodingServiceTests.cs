@@ -1,9 +1,7 @@
 using System.Net;
 using System.Text;
-using Ecocell.Api.Configurations;
 using Ecocell.Api.Services.External;
 using Ecocell.Api.Shared;
-using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
 using Shouldly;
@@ -22,12 +20,7 @@ public class GeocodingServiceTests
         {
             BaseAddress = new Uri("https://nominatim.openstreetmap.org")
         };
-        var settings = Options.Create(new NominatimSettings
-        {
-            BaseUrl = "https://nominatim.openstreetmap.org",
-            UserAgent = "test/1.0"
-        });
-        _service = new NominatimGeocodingService(http, settings);
+        _service = new NominatimGeocodingService(http);
     }
 
     private void SetupHttpResponse(HttpStatusCode status, string content)

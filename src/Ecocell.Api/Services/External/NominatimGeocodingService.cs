@@ -1,9 +1,7 @@
 using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using Ecocell.Api.Configurations;
 using Ecocell.Api.Shared;
-using Microsoft.Extensions.Options;
 
 namespace Ecocell.Api.Services.External;
 
@@ -11,7 +9,7 @@ public class NominatimGeocodingService : IGeocodingService
 {
     private readonly HttpClient _http;
 
-    public NominatimGeocodingService(HttpClient http, IOptions<NominatimSettings> settings)
+    public NominatimGeocodingService(HttpClient http)
     {
         _http = http;
     }
