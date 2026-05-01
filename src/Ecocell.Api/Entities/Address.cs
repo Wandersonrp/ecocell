@@ -19,8 +19,8 @@ public class Address : BaseEntity
     public decimal? Longitude { get; private set; }
 
     /// <summary>
-    /// Cria um novo endereço com os campos obrigatórios. Lat/Lng ficam nulos até o
-    /// geocoding ser executado em US003.
+    /// Cria um novo endereço com os campos obrigatórios. Lat/Lng são preenchidos pelo
+    /// geocoding em US003; ficam nulos quando o serviço estiver indisponível.
     /// </summary>
     public Address(
         string street,
@@ -29,7 +29,9 @@ public class Address : BaseEntity
         string city,
         string state,
         string zipCode,
-        string? complement = null)
+        string? complement = null,
+        decimal? latitude = null,
+        decimal? longitude = null)
     {
         Street = street;
         Number = number;
@@ -38,5 +40,7 @@ public class Address : BaseEntity
         State = state;
         ZipCode = zipCode;
         Complement = complement;
+        Latitude = latitude;
+        Longitude = longitude;
     }
 }
