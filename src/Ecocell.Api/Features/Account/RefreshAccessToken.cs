@@ -67,6 +67,7 @@ public static class RefreshAccessToken
             await refreshTokenStore.DeleteAsync(request.RefreshToken, cancellationToken);
 
             var person = await dbContext.People
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == personId.Value, cancellationToken);
 
             if (person is null)

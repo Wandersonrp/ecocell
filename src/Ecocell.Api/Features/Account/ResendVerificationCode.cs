@@ -83,6 +83,7 @@ public static class ResendVerificationCode
             }
 
             var person = await _dbContext.People
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Email == request.Email, cancellationToken);
 
             if (person is null)
