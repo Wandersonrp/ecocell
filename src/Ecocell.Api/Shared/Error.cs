@@ -26,4 +26,7 @@ public sealed record Error(string Code, string? Message = null, List<string>? Me
 
     public static Error Forbidden() => new Error(ForbiddenCode, Message: "Forbidden");
 
+    public static Error GeocodingNotFound(string address) =>
+        new Error(ErrorCodes.GeocodingNotFound, $"Endereço não encontrado: {address}");
+
 }
