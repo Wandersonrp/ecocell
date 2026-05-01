@@ -6,6 +6,7 @@ using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Events;
 using Ecocell.Api.Extensions;
+using Ecocell.Api.Services.External;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Requests;
 using FluentValidation;
@@ -106,8 +107,10 @@ public static class RegisterLegalPerson
 
     /// <summary>
     /// Processa o cadastro da PJ: valida, verifica unicidade de CNPJ e e-mail, confirma
-    /// que o Gestor PF existe e está ativo, persiste PJ + Address e publica
-    /// <see cref="LegalPersonRegistered"/>.
+    /// que o Gestor PF existe e está ativo, geocodifica o endereço (RN009), persiste
+    /// PJ + Address e publica <see cref="LegalPersonRegistered"/>.
+    /// Geocoding indisponível (GEOCODING_UNAVAILABLE) não bloqueia o cadastro — coordenadas
+    /// ficam nulas. Endereço não encontrado (GEOCODING_NOT_FOUND) bloqueia o cadastro.
     /// </summary>
     public sealed class Handler : IRequestHandler<Command, Result>
     {
@@ -115,22 +118,22 @@ public static class RegisterLegalPerson
         private readonly ILogger<Handler> _logger;
         private readonly IValidator<Command> _validator;
         private readonly IPublisher _publisher;
+        private readonly IGeocodingService _geocodingService;
 
-        public Handler(AppDbContext dbContext, ILogger<Handler> logger, IValidator<Command> validator, IPublisher publisher)
+        public Handler(
+            AppDbContext dbContext,
+            ILogger<Handler> logger,
+            IValidator<Command> validator,
+            IPublisher publisher,
+            IGeocodingService geocodingService)
         {
             _dbContext = dbContext;
             _logger = logger;
             _validator = validator;
             _publisher = publisher;
+            _geocodingService = geocodingService;
         }
 
-        /// <summary>
-        /// Executa o cadastro da Pessoa Jurídica seguindo a sequência: validação de input,
-        /// unicidade de CNPJ/e-mail, verificação do Gestor PF e persistência.
-        /// </summary>
-        /// <param name="request">Comando com os dados da PJ e do endereço.</param>
-        /// <param name="cancellationToken">Token de cancelamento da operação.</param>
-        /// <returns><see cref="Result"/> indicando sucesso ou o erro encontrado.</returns>
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Processando cadastro da pessoa jurídica {@LegalPerson}", request);
@@ -174,6 +177,29 @@ public static class RegisterLegalPerson
                 return Result.Failure(Error.Forbidden());
             }
 
+            decimal? lat = null, lng = null;
+            var geoRequest = new GeocodingRequest(
+                request.Address.Street,
+                request.Address.Number,
+                request.Address.City,
+                request.Address.State,
+                request.Address.ZipCode);
+
+            var geoResult = await _geocodingService.GeocodeAsync(geoRequest, cancellationToken);
+
+            if (geoResult.IsFailure)
+            {
+                if (geoResult.Error.Code == ErrorCodes.GeocodingNotFound)
+                    return Result.Failure(geoResult.Error);
+
+                _logger.LogWarning("Geocoding indisponível para endereço {@Address}", request.Address);
+            }
+            else
+            {
+                lat = geoResult.Value.Latitude;
+                lng = geoResult.Value.Longitude;
+            }
+
             var address = new Address(
                 request.Address.Street,
                 request.Address.Number,
@@ -181,7 +207,9 @@ public static class RegisterLegalPerson
                 request.Address.City,
                 request.Address.State,
                 request.Address.ZipCode,
-                request.Address.Complement);
+                request.Address.Complement,
+                lat,
+                lng);
 
             var legalPerson = new LegalPerson(
                 request.LegalName,
