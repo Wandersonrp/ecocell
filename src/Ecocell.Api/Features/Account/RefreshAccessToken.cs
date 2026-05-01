@@ -64,7 +64,6 @@ public static class RefreshAccessToken
                 return ResultT<ResponseLogin>.Failure(Error.InvalidCredential());
             }
 
-            // Revoga token antigo antes de qualquer outra operação (one-time-use)
             await refreshTokenStore.DeleteAsync(request.RefreshToken, cancellationToken);
 
             var person = await dbContext.People

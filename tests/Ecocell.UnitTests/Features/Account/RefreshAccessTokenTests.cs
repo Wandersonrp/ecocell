@@ -20,7 +20,7 @@ public class RefreshAccessTokenTests : TestBase
     private readonly RefreshAccessToken.Command _command;
     private readonly Mock<IRefreshTokenStore> _refreshTokenStoreMock;
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock;
-    private Guid _personId;
+    private readonly Guid _personId;
 
     public RefreshAccessTokenTests()
     {
