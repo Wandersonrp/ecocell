@@ -26,4 +26,8 @@ public sealed class JwtSettings
     /// <summary>Duração do access token em minutos. Padrão: 60.</summary>
     [Range(1, 1440)]
     public int AccessTokenLifetimeMinutes { get; init; } = 60;
+
+    /// <summary>Duração do refresh token em dias. Padrão: 7.</summary>
+    [Range(1, 90)]
+    public int RefreshTokenLifetimeDays { get; init; } = 7;
 }
