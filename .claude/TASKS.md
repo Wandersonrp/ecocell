@@ -273,19 +273,19 @@ flowchart LR
 - [ ] Criar `AuthStateService` para controlar login/logout e expiração.
 - [ ] Ajustar `App.xaml.cs` para redirecionar conforme estado.
 
-**US002.E — Refresh Token ([WND-179](https://linear.app/wnd-dev/issue/WND-179))**
+**US002.E — Refresh Token ([WND-179](https://linear.app/wnd-dev/issue/WND-179))** ✅
 
-- [ ] Estender `IJwtTokenService` + `JwtTokenService` com `GenerateRefreshToken()` — token opaco (GUID/random bytes), sem claims JWT.
-- [ ] Armazenar refresh token no Redis com TTL 7 dias: chave `refresh:{token}`, valor `personId`.
-- [ ] Atualizar `ResponseLogin` em `Ecocell.Shared/Responses/` — adicionar `RefreshToken` (string) e `RefreshTokenExpiresAtUtc` (DateTime).
-- [ ] Atualizar `VerifyLoginCode.Handler` para gerar e retornar refresh token junto com access token.
-- [ ] Criar slice `Features/Account/RefreshToken.cs` — `Command`, `Validator`, `Handler` (one-time use: invalida token antigo antes de emitir novo par), `Endpoint POST /api/v1/auth/refresh` → 200 com novo `ResponseLogin`; 401 se token não encontrado/expirado.
-- [ ] Testes em `tests/Ecocell.UnitTests/Features/Account/RefreshTokenTests.cs`:
-  - [ ] `Handle_ShouldReturnNewTokenPair_WhenRefreshTokenIsValid`
-  - [ ] `Handle_ShouldInvalidateOldToken_WhenRefreshTokenIsUsed`
-  - [ ] `Handle_ShouldReturnError_WhenRefreshTokenDoesNotExist`
-  - [ ] `Handle_ShouldReturnError_WhenRefreshTokenIsExpired`
-  - [ ] `Handle_ShouldReturnValidationError_WhenRefreshTokenIsEmpty`
+- [x] Estender `IJwtTokenService` + `JwtTokenService` com `GenerateRefreshToken()` — token opaco (32 bytes hex via `RandomNumberGenerator`), sem claims JWT.
+- [x] Armazenar refresh token no Redis com TTL configurável (`JwtSettings.RefreshTokenLifetimeDays`, default 7): chave `refresh:{token}`, valor `personId`.
+- [x] Atualizar `ResponseLogin` em `Ecocell.Shared/Responses/` — adicionar `RefreshToken` (string) e `RefreshTokenExpiresAtUtc` (DateTimeOffset).
+- [x] Atualizar `VerifyLoginCode.Handler` para gerar e retornar refresh token junto com access token.
+- [x] Criar slice `Features/Account/RefreshAccessToken.cs` — `Command`, `Validator`, `Handler` (one-time use: invalida token antigo antes de emitir novo par), `Endpoint POST api/account/refresh-token` → 200 com novo `ResponseLogin`; 401 se token não encontrado/expirado; 403 se conta inativa.
+- [x] Testes em `tests/Ecocell.UnitTests/Features/Account/RefreshAccessTokenTests.cs`:
+  - [x] `Handle_ShouldReturnNewTokenPair_WhenRefreshTokenIsValid`
+  - [x] `Handle_ShouldInvalidateOldToken_WhenRefreshTokenIsUsed`
+  - [x] `Handle_ShouldReturnError_WhenRefreshTokenDoesNotExist`
+  - [x] `Handle_ShouldReturnError_WhenPersonIsNotActive`
+  - [x] `Handle_ShouldReturnValidationError_WhenRefreshTokenIsEmpty`
 
 ---
 
