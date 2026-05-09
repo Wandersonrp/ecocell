@@ -484,4 +484,4 @@ appsettings*
 # Superpowers specs e plans (artefatos locais de brainstorming/planejamento)
 docs/superpowers/*
 
-.claude/plans/*
+.claude/plans/*.claude/settings.local.json
