@@ -41,15 +41,15 @@ jobs:
       run: dotnet restore Ecocell.slnx
 
     - name: Begin SonarCloud analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         dotnet sonarscanner begin \
           /k:"Wandersonrp_ecocell" \
           /o:"wandersonrp" \
-          /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="coverage/**/coverage.opencover.xml"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build
       run: dotnet build Ecocell.slnx --no-restore
@@ -58,6 +58,7 @@ jobs:
       run: dotnet test Ecocell.slnx --no-build --settings coverlet.runsettings --results-directory coverage
 
     - name: End SonarCloud analysis
-      run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
       env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: dotnet sonarscanner end
