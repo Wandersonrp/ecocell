@@ -479,6 +479,7 @@ $RECYCLE.BIN/
 # appsettings
 appsettings*
 !appsettings.Example.json
+!appsettings.Testing.json
 
 
 # Superpowers specs e plans (artefatos locais de brainstorming/planejamento)

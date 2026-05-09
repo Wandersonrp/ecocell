@@ -1,10 +1,12 @@
+using Ecocell.Api.Database;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.External;
 using Ecocell.IntegrationTests.Stubs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 
@@ -31,31 +33,26 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         {
             builder.UseEnvironment("Testing");
 
-            builder.ConfigureAppConfiguration((_, cfg) =>
-            {
-                cfg.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:DefaultConnection"] = _postgres.GetConnectionString(),
-                    ["Redis:ConnectionString"] = _redis.GetConnectionString(),
-                    ["Jwt:SigningKey"] = "ecocell-integration-test-signing-key-2026!!",
-                    ["Jwt:Issuer"] = "ecocell-test",
-                    ["Jwt:Audience"] = "ecocell-test",
-                    ["Jwt:AccessTokenLifetimeMinutes"] = "60",
-                    ["Jwt:RefreshTokenLifetimeDays"] = "7",
-                    ["Nominatim:BaseUrl"] = "http://localhost/",
-                    ["Nominatim:UserAgent"] = "ecocell-integration-test",
-                    ["Nominatim:TimeoutSeconds"] = "5",
-                    ["Mail:Host"] = "localhost",
-                    ["Mail:Port"] = "25",
-                    ["Mail:Username"] = "test",
-                    ["Mail:Password"] = "test",
-                    ["Mail:From"] = "test@test.com",
-                });
-            });
-
             builder.ConfigureServices(services =>
             {
-                // Substitui IEmailSender pelo stub capturador (Singleton para que o mesmo
+                // Substitui AppDbContext pelo container Postgres dinâmico
+                var dbDescriptors = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>)
+                             || d.ServiceType == typeof(AppDbContext))
+                    .ToList();
+                foreach (var d in dbDescriptors) services.Remove(d);
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(_postgres.GetConnectionString()));
+
+                // Substitui IConnectionMultiplexer pelo container Redis dinâmico
+                var redisDescriptors = services
+                    .Where(d => d.ServiceType == typeof(IConnectionMultiplexer))
+                    .ToList();
+                foreach (var d in redisDescriptors) services.Remove(d);
+                services.AddSingleton<IConnectionMultiplexer>(_ =>
+                    ConnectionMultiplexer.Connect(_redis.GetConnectionString()));
+
+                // Substitui IEmailSender pelo stub capturador (Singleton para que a mesma
                 // instância seja resolvida tanto pelo handler quanto pelos testes)
                 var emailDescriptors = services
                     .Where(d => d.ServiceType == typeof(IEmailSender))
