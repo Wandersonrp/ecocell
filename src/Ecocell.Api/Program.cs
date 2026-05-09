@@ -79,3 +79,5 @@ app.UseAuthorization();
 app.MapCarter();
 
 app.Run();
+
+public partial class Program { }
