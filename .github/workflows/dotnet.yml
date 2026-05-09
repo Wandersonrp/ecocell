@@ -49,7 +49,9 @@ jobs:
           /k:"Wandersonrp_ecocell" \
           /o:"wandersonrp" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="coverage/**/coverage.opencover.xml"
+          /d:sonar.cs.opencover.reportsPaths="coverage/**/coverage.opencover.xml" \
+          /d:sonar.exclusions="**/appsettings.Example.json,**/Migrations/**" \
+          /d:sonar.coverage.exclusions="**/appsettings.Example.json,**/Migrations/**"
 
     - name: Build
       run: dotnet build Ecocell.slnx --no-restore
