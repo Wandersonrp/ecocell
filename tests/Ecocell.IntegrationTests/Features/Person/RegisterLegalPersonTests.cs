@@ -12,7 +12,7 @@ public class RegisterLegalPersonTests : IntegrationTestBase
 {
     public RegisterLegalPersonTests(IntegrationTestFixture fixture) : base(fixture) { }
 
-    private RequestRegisterLegalPerson BuildValidRequest()
+    private static RequestRegisterLegalPerson BuildValidRequest()
     {
         var faker = new Faker("pt_BR");
         return new RequestRegisterLegalPerson
