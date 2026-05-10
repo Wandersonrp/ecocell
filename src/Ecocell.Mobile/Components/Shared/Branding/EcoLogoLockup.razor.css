@@ -5,9 +5,9 @@
 }
 
 .eco-logo-lockup--md {
-    gap: 6px;
+    gap: var(--eco-space-lockup-gap-md);
 }
 
 .eco-logo-lockup--lg {
-    gap: 14px;
+    gap: var(--eco-space-lockup-gap-lg);
 }

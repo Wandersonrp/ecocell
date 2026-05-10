@@ -15,7 +15,7 @@
 }
 
 .eco-secondary-btn:hover:not(:disabled) {
-    background: rgba(0, 39, 0, 0.04);
+    background: var(--eco-color-primary-hover-bg);
 }
 
 .eco-secondary-btn:disabled {

@@ -20,6 +20,7 @@
     --eco-color-error-border: #DEB4B4;
     --eco-color-border: #C0C1C0;
     --eco-color-divider: #EBEBEB;
+    --eco-color-primary-hover-bg: rgba(0, 39, 0, 0.04);
 
     /* Tipografia */
     --eco-font-display-size: 2rem;
@@ -69,8 +70,11 @@
     --eco-space-xxl: 48px;
     --eco-space-auth-top: 54px;
     --eco-space-section-gap: 40px;
+    --eco-space-lockup-gap-md: 6px;
+    --eco-space-lockup-gap-lg: 14px;
 
     /* Radius */
+    --eco-radius-xs: 3px;
     --eco-radius-sm: 6px;
     --eco-radius-md: 12px;
     --eco-radius-lg: 16px;

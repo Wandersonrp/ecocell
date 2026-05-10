@@ -19,6 +19,14 @@ public static class ThemeTokens
     public const string ColorErrorBorder = "#DEB4B4";
     public const string ColorBorder = "#C0C1C0";
     public const string ColorDivider = "#EBEBEB";
+    public const string ColorPrimaryHoverBg = "rgba(0, 39, 0, 0.04)";
 
     public const string FontFamily = "Inter";
+
+    public const int RadiusXs = 3;
+
+    public const int SpaceAuthTop = 54;
+    public const int SpaceSectionGap = 40;
+    public const int SpaceLockupGapMd = 6;
+    public const int SpaceLockupGapLg = 14;
 }
