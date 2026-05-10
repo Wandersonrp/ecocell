@@ -1,0 +1,15 @@
+.eco-main-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background-color: var(--eco-color-surface);
+}
+
+.eco-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--eco-space-lg);
+    background-color: var(--eco-color-surface);
+}

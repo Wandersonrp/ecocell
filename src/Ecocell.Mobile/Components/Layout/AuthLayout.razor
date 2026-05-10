@@ -1,0 +1,17 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="EcocellTheme.Theme" IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="eco-auth-layout">
+    <div class="eco-auth-logo">
+        @* Logo virá aqui *@
+    </div>
+    @Body
+</div>
+
+@code {
+    private bool _isDarkMode = false;
+}

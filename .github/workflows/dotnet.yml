@@ -38,7 +38,7 @@ jobs:
       run: dotnet tool install --global dotnet-sonarscanner
 
     - name: Restore dependencies
-      run: dotnet restore Ecocell.slnx
+      run: dotnet restore Ecocell.Backend.slnf
 
     - name: Begin SonarCloud analysis
       env:
@@ -54,7 +54,7 @@ jobs:
           /d:sonar.coverage.exclusions="**/appsettings.Example.json,**/appsettings.Testing.json,**/Migrations/**"
 
     - name: Build
-      run: dotnet build Ecocell.slnx --no-restore
+      run: dotnet build Ecocell.Backend.slnf --no-restore
 
     - name: Test with coverage
       env:
@@ -68,7 +68,7 @@ jobs:
         Nominatim__BaseUrl: "http://localhost/"
         Nominatim__UserAgent: "ecocell-integration-test"
         Nominatim__TimeoutSeconds: "5"
-      run: dotnet test Ecocell.slnx --no-build --settings coverlet.runsettings --results-directory coverage
+      run: dotnet test Ecocell.Backend.slnf --no-build --settings coverlet.runsettings --results-directory coverage
 
     - name: End SonarCloud analysis
       env:

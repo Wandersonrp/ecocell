@@ -639,13 +639,47 @@ flowchart LR
 
 ---
 
+## Testes de Integração — [WND-262](https://linear.app/wnd-dev/issue/WND-262/criar-projeto-de-testes-de-integracao-ecocellintegrationtests)
+
+**Dependências:** US001-PF, US009, US002, US001-PJ, US007 (endpoints já implementados no backend).
+**Estado atual:** inexistente.
+
+**Stack:** xUnit · Testcontainers (PostgreSQL + Redis) · `WebApplicationFactory` · Shouldly · Bogus.
+
+### Setup do projeto
+
+- [ ] Criar `tests/Ecocell.IntegrationTests/Ecocell.IntegrationTests.csproj` (`net10.0`, referência a `Ecocell.Api`).
+- [ ] Adicionar ao `Ecocell.slnx`.
+- [ ] Criar `IntegrationTestFixture : IAsyncLifetime` com Testcontainers (PostgreSQL + Redis) e `WebApplicationFactory`.
+- [ ] Sobrescrever connection strings via `WebApplicationFactory.ConfigureWebHost` (apontando para contêineres).
+- [ ] Criar `IntegrationTestBase` com `IClassFixture<IntegrationTestFixture>`; executar `EnsureDeleted()` + `MigrateAsync()` no `InitializeAsync` para isolamento por classe.
+
+### Cobertura — Épico 1 (Identidade & Acesso)
+
+- [ ] `POST /api/natural-person` — 201 válido; 409 CPF duplicado.
+- [ ] `POST /api/account/confirm` — ativa conta com código válido; erro em código expirado.
+- [ ] `POST /api/account/resend-code` — reenvia código para conta pendente.
+- [ ] `POST /api/account/login/request-code` — OTP enviado; 200 quando conta não encontrada (anti-enumeração).
+- [ ] `POST /api/account/login` — emite JWT + refresh token com código válido.
+- [ ] `POST /api/account/refresh-token` — novo par emitido; token antigo invalidado.
+- [ ] `POST /api/legal-person` — 201 válido (requer JWT de PF autenticado).
+
+### Cobertura — Épico 4 (Governança)
+
+- [ ] `GET /api/v1/admin/partners` — lista parceiros pendentes (role Admin).
+- [ ] `POST /api/v1/admin/partners/{id}/approve` — aprova e envia e-mail.
+- [ ] `POST /api/v1/admin/partners/{id}/reject` — rejeita com motivo.
+- [ ] `POST /api/v1/admin/partners/{id}/block` — bloqueia parceiro ativo.
+
+---
+
 ## Transversal — Infra, qualidade e DX
 
 - [ ] Externalizar `BaseAddress` do Mobile de `MauiProgram.cs` para `wwwroot/config.json`.
 - [x] Remover `appsettings.Development.json` do versionamento; criar `appsettings.Example.json`.
 - [ ] Padronizar retorno `ProblemDetails` no `ExceptionHandlerMiddleware` (já existe em `Ecocell.Api/Middlewares/`).
 - [ ] Configurar Hangfire com PostgreSQL em `Production` e in-memory em `Development` em `AddApi`.
-- [x] Pipeline CI com `dotnet build Ecocell.slnx` + `dotnet test Ecocell.slnx` (inclui testes de integração via Testcontainers — Docker disponível no `ubuntu-latest`).
+- [ ] Pipeline CI com `dotnet build Ecocell.slnx` + `dotnet test Ecocell.slnx`. Veja **WND-263** para integração com SonarCloud.
 - [ ] Limpar pastas `obj/Debug/net9.0` órfãs (migração para net10 incompleta).
 - [ ] Definir estratégia para iOS no Mobile (hoje só `net10.0-android`).
 - [ ] Logs estruturados com Serilog + sink console/arquivo (Serilog já configurado via `AddApi`).
@@ -679,6 +713,16 @@ flowchart LR
   docker compose up -d
   ```
 
+### SonarCloud — [WND-263](https://linear.app/wnd-dev/issue/WND-263/integrar-cobertura-de-codigo-com-sonarcloud)
+
+- [ ] Criar organização/projeto no SonarCloud vinculado ao repositório GitHub.
+- [ ] Adicionar `SONAR_TOKEN` como secret no repositório.
+- [ ] Criar `sonar-project.properties` na raiz (`sonar.projectKey`, `sonar.organization`, `sonar.cs.opencover.reportsPaths`).
+- [ ] Adicionar `coverlet.collector` em `Ecocell.UnitTests` (e futuramente `Ecocell.IntegrationTests`).
+- [ ] Atualizar workflow CI para gerar relatório OpenCover e executar scanner SonarCloud.
+- [ ] Definir Quality Gate: cobertura ≥ 80%, zero bugs críticos, zero vulnerabilidades.
+- [ ] Bloquear merge de PR se Quality Gate falhar (branch protection no GitHub).
+
 ### Fluxo transversal sugerido
 
 ```mermaid
@@ -686,5 +730,6 @@ flowchart LR
     T1[Config externalizada] --> T2[Segredos fora do git]
     T2 --> T3[ProblemDetails padronizado]
     T3 --> T4[CI com build+test]
-    T4 --> T5[Logs estruturados]
+    T4 --> T5[SonarCloud + coverage]
+    T5 --> T6[Logs estruturados]
 ```
