@@ -645,7 +645,7 @@ flowchart LR
 - [x] Remover `appsettings.Development.json` do versionamento; criar `appsettings.Example.json`.
 - [ ] Padronizar retorno `ProblemDetails` no `ExceptionHandlerMiddleware` (já existe em `Ecocell.Api/Middlewares/`).
 - [ ] Configurar Hangfire com PostgreSQL em `Production` e in-memory em `Development` em `AddApi`.
-- [ ] Pipeline CI com `dotnet build Ecocell.slnx` + `dotnet test Ecocell.slnx`.
+- [x] Pipeline CI com `dotnet build Ecocell.slnx` + `dotnet test Ecocell.slnx` (inclui testes de integração via Testcontainers — Docker disponível no `ubuntu-latest`).
 - [ ] Limpar pastas `obj/Debug/net9.0` órfãs (migração para net10 incompleta).
 - [ ] Definir estratégia para iOS no Mobile (hoje só `net10.0-android`).
 - [ ] Logs estruturados com Serilog + sink console/arquivo (Serilog já configurado via `AddApi`).
