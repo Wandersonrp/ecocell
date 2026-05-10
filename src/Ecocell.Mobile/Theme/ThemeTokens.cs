@@ -2,7 +2,6 @@ namespace Ecocell.Mobile.Theme;
 
 public static class ThemeTokens
 {
-    // Cores (design-system-rules.md §3.1)
     public const string ColorPrimary = "#002700";
     public const string ColorPrimaryLight = "#335233";
     public const string ColorPrimarySubtle = "#546E54";
@@ -21,6 +20,5 @@ public static class ThemeTokens
     public const string ColorBorder = "#C0C1C0";
     public const string ColorDivider = "#EBEBEB";
 
-    // Tipografia (design-system-rules.md §3.2)
     public const string FontFamily = "Inter";
 }
