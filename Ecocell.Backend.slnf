@@ -1,0 +1,11 @@
+{
+  "solution": {
+    "path": "Ecocell.slnx",
+    "projects": [
+      "src/Ecocell.Api/Ecocell.Api.csproj",
+      "src/Ecocell.Shared/Ecocell.Shared.csproj",
+      "tests/Ecocell.IntegrationTests/Ecocell.IntegrationTests.csproj",
+      "tests/Ecocell.UnitTests/Ecocell.UnitTests.csproj"
+    ]
+  }
+}
