@@ -1,0 +1,39 @@
+.eco-secondary-btn {
+    width: 100%;
+    background: transparent;
+    color: var(--eco-color-primary);
+    border: 1.5px solid var(--eco-color-primary);
+    border-radius: var(--eco-radius-full);
+    padding: 12.5px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: var(--eco-font-button-size);
+    font-weight: var(--eco-font-button-weight);
+    letter-spacing: var(--eco-font-button-ls);
+    line-height: var(--eco-font-button-lh);
+    cursor: pointer;
+    transition: background 120ms ease;
+}
+
+.eco-secondary-btn:hover:not(:disabled) {
+    background: var(--eco-color-primary-hover-bg);
+}
+
+.eco-secondary-btn:disabled {
+    border-color: var(--eco-color-primary-muted);
+    color: var(--eco-color-primary-muted);
+    cursor: not-allowed;
+}
+
+.eco-btn-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: eco-spin 0.6s linear infinite;
+}
+
+@keyframes eco-spin {
+    to { transform: rotate(360deg); }
+}

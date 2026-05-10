@@ -1,0 +1,38 @@
+<button type="@Type"
+        class="eco-secondary-btn @CssClass"
+        disabled="@(Disabled || IsLoading)"
+        @onclick="OnClick"
+        @attributes="AdditionalAttributes">
+    @if (IsLoading)
+    {
+        @* TODO: substituir por <EcoSpinner /> quando o componente for criado *@
+        <span class="eco-btn-spinner" aria-hidden="true"></span>
+    }
+    else
+    {
+        @Label
+    }
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string Type { get; set; } = "button";
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+}

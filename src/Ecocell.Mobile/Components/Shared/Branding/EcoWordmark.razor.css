@@ -1,0 +1,10 @@
+.eco-wordmark {
+    background: var(--eco-color-primary);
+    color: var(--eco-color-text-on-primary);
+    border-radius: var(--eco-radius-xs);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+}

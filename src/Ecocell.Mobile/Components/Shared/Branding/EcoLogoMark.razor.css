@@ -1,0 +1,6 @@
+.eco-logo-mark {
+    color: var(--eco-color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
