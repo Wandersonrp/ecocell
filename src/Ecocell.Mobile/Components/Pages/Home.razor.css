@@ -11,8 +11,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 54px var(--eco-space-lg) 0;
-    gap: 40px;
+    padding: var(--eco-space-auth-top) var(--eco-space-lg) 0;
+    gap: var(--eco-space-section-gap);
 }
 
 .welcome-headline {

@@ -67,6 +67,8 @@
     --eco-space-lg: 24px;
     --eco-space-xl: 32px;
     --eco-space-xxl: 48px;
+    --eco-space-auth-top: 54px;
+    --eco-space-section-gap: 40px;
 
     /* Radius */
     --eco-radius-sm: 6px;
