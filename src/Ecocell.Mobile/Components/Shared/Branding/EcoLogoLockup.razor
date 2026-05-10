@@ -1,0 +1,20 @@
+@* src/Ecocell.Mobile/Components/Shared/Branding/EcoLogoLockup.razor *@
+@if (Size == EcoLogoSize.Sm)
+{
+    <EcoWordmark Size="18" />
+}
+else
+{
+    <div class="eco-logo-lockup eco-logo-lockup--@Size.ToString().ToLower()">
+        <EcoLogoMark Size="@_markSize" />
+        <EcoWordmark Size="@_wordmarkSize" />
+    </div>
+}
+
+@code {
+    [Parameter]
+    public EcoLogoSize Size { get; set; } = EcoLogoSize.Md;
+
+    private int _markSize     => Size == EcoLogoSize.Lg ? 104 : 38;
+    private int _wordmarkSize => Size == EcoLogoSize.Lg ? 22  : 14;
+}
