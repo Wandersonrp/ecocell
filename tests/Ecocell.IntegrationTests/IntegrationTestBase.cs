@@ -176,7 +176,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             neighborhood: faker.Address.SecondaryAddress(),
             city: faker.Address.City(),
             state: faker.Address.StateAbbr(),
-            zipCode: faker.Address.ZipCode("#####-###"));
+            zipCode: faker.Address.ZipCode("########"));
 
         var legalPerson = new LegalPerson(
             legalName: faker.Company.CompanyName(),
