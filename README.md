@@ -62,7 +62,8 @@ src/
 └── Ecocell.Shared/       # Contratos HTTP (Requests / Responses / Enums)
 
 tests/
-└── Ecocell.UnitTests/    # xUnit + Shouldly + Moq + Bogus + SQLite in-memory
+├── Ecocell.UnitTests/         # xUnit + Shouldly + Moq + Bogus + SQLite in-memory
+└── Ecocell.IntegrationTests/  # xUnit + Testcontainers (PostgreSQL + Redis) + WebApplicationFactory
 ```
 
 ---
@@ -86,7 +87,7 @@ tests/
 | Serilog | 4.3 | Logs estruturados |
 | Scalar | 2.14 | Documentação interativa da API |
 
-### Testes
+### Testes de Unidade
 
 | Tecnologia | Versão | Uso |
 |---|---|---|
@@ -96,6 +97,17 @@ tests/
 | Bogus + Bogus.Extensions.Brazil | 35.6 | Geração de dados falsos (CPF, CNPJ) |
 | EF Core SQLite In-Memory | 10.0 | Banco de testes isolado |
 
+### Testes de Integração
+
+| Tecnologia | Versão | Uso |
+|---|---|---|
+| xUnit | 2.9 | Framework de testes |
+| Shouldly | 4.3 | Asserções fluentes |
+| Bogus + Bogus.Extensions.Brazil | 35.6 | Geração de dados falsos (CPF, CNPJ) |
+| Testcontainers.PostgreSql | 4.4 | Container PostgreSQL efêmero por suite |
+| Testcontainers.Redis | 4.4 | Container Redis efêmero por suite |
+| Microsoft.AspNetCore.Mvc.Testing | 10.0 | `WebApplicationFactory<Program>` in-process |
+
 ---
 
 ## Pré-requisitos
@@ -103,6 +115,7 @@ tests/
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [PostgreSQL 16+](https://www.postgresql.org/)
 - [Redis 7+](https://redis.io/)
+- [Docker](https://www.docker.com/) — necessário para os testes de integração (Testcontainers sobe PostgreSQL e Redis automaticamente)
 
 ---
 
@@ -165,17 +178,22 @@ O esquema OpenAPI fica em `/openapi/v1.json`.
 ## Testes
 
 ```bash
-# Todos os testes
+# Todos os testes (unidade + integração)
 dotnet test Ecocell.slnx
 
-# Apenas a suíte de unidade
+# Apenas testes de unidade (sem Docker, SQLite in-memory)
 dotnet test tests/Ecocell.UnitTests/Ecocell.UnitTests.csproj
+
+# Apenas testes de integração (requer Docker)
+dotnet test tests/Ecocell.IntegrationTests/Ecocell.IntegrationTests.csproj
 
 # Filtro por nome
 dotnet test --filter "FullyQualifiedName~RegisterNaturalPersonTests"
 ```
 
-Os testes de unidade usam **SQLite in-memory** — nenhuma infraestrutura externa necessária.
+Os **testes de unidade** usam SQLite in-memory — nenhuma infraestrutura externa necessária.
+
+Os **testes de integração** requerem Docker. O Testcontainers sobe automaticamente containers de PostgreSQL e Redis por suite, sem configuração manual.
 
 ---
 

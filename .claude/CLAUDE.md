@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Regras do projeto
 
 - **Codificação** (arquitetura VSA, padrão de slice, summaries em PT-BR, KISS, DRY e convenções do repositório): [`.claude/rules/coding-rules.md`](rules/coding-rules.md). Consulte antes de criar ou alterar qualquer código de produção.
-- **Testes de unidade** (stack, `TestBase`, nomenclatura, setup com Bogus, padrão AAA, cobertura mínima por slice): [`.claude/rules/unit-tests-rules.md`](rules/unit-tests-rules.md). Consulte antes de escrever ou alterar qualquer teste.
+- **Testes de unidade** (stack, `TestBase`, nomenclatura, setup com Bogus, padrão AAA, cobertura mínima por slice): [`.claude/rules/unit-tests-rules.md`](rules/unit-tests-rules.md). Consulte antes de escrever ou alterar qualquer teste de unidade.
+- **Testes de integração** (Testcontainers, `IntegrationTestFixture`/`IntegrationTestBase`, helpers de auth, stubs, cobertura mínima por endpoint): [`.claude/rules/integration-tests-rules.md`](rules/integration-tests-rules.md). Consulte antes de escrever ou alterar qualquer teste de integração.
 
 Esses arquivos têm precedência sobre decisões pontuais.
 
@@ -76,3 +77,12 @@ dotnet test --filter "FullyQualifiedName~RegisterNaturalPersonTests.Handle_Shoul
 - Estrutura espelha as features: `tests/Ecocell.UnitTests/Features/<Agregado>/<Feature>Tests.cs`.
 - Use `Bogus.Faker<TCommand>` (com `Bogus.Extensions.Brazil` para `Cpf`/`Cnpj`) para gerar dados — não hardcode strings inválidas a menos que o teste exija.
 - Asserções com `Shouldly` (`result.IsSuccess.ShouldBeTrue()`, `result.Error.Messages.ShouldHaveSingleItem()`).
+
+## Stack de testes (`tests/Ecocell.IntegrationTests/`)
+
+- **xUnit + Shouldly + Bogus + Testcontainers + WebApplicationFactory**. PostgreSQL e Redis reais via Testcontainers — sem mocks de infraestrutura.
+- `IntegrationTestFixture` sobe containers uma vez por suite (`ICollectionFixture`). `IntegrationTestBase` reseta banco por teste (`EnsureDeletedAsync + MigrateAsync`). **Estenda `IntegrationTestBase`**.
+- Estrutura espelha as features: `tests/Ecocell.IntegrationTests/Features/<Agregado>/<Feature>Tests.cs`.
+- Auth via fluxo real (HTTP): `CreateAndLoginNaturalPersonAsync()` e `CreateAdminAndLoginAsync()` em `IntegrationTestBase`.
+- `CapturingEmailSender` (stub de `IEmailSender`) captura códigos OTP para uso nos testes. `StubGeocodingService` retorna coordenadas fixas (-23.5, -46.6).
+- Requer **Docker** em execução.
