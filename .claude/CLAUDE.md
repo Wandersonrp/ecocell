@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Codificação** (arquitetura VSA, padrão de slice, summaries em PT-BR, KISS, DRY e convenções do repositório): [`.claude/rules/coding-rules.md`](rules/coding-rules.md). Consulte antes de criar ou alterar qualquer código de produção.
 - **Testes de unidade** (stack, `TestBase`, nomenclatura, setup com Bogus, padrão AAA, cobertura mínima por slice): [`.claude/rules/unit-tests-rules.md`](rules/unit-tests-rules.md). Consulte antes de escrever ou alterar qualquer teste de unidade.
 - **Testes de integração** (Testcontainers, `IntegrationTestFixture`/`IntegrationTestBase`, helpers de auth, stubs, cobertura mínima por endpoint): [`.claude/rules/integration-tests-rules.md`](rules/integration-tests-rules.md). Consulte antes de escrever ou alterar qualquer teste de integração.
+- **Design System Mobile** (MAUI Blazor + MudBlazor, tokens CSS, paleta Ecocell, componentes `Eco*`, layouts, guardrails): [`.claude/rules/design-system-rules.md`](rules/design-system-rules.md). Consulte antes de criar ou alterar qualquer UI em `src/Ecocell.Mobile/`.
 
 Esses arquivos têm precedência sobre decisões pontuais.
 
