@@ -1,0 +1,16 @@
+.eco-ghost-btn {
+    background: transparent;
+    border: none;
+    color: var(--eco-color-primary-light);
+    font-family: 'Inter', sans-serif;
+    font-size: var(--eco-font-button-size);
+    font-weight: 500;
+    line-height: var(--eco-font-button-lh);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: opacity 120ms ease;
+}
+
+.eco-ghost-btn:hover {
+    opacity: 0.7;
+}
