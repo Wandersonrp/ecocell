@@ -2,8 +2,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100dvh;
     padding-top: var(--eco-space-xxl);
     padding-left: var(--eco-space-lg);
     padding-right: var(--eco-space-lg);
