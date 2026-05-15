@@ -1,4 +1,4 @@
-<button type="button"
+<button type="@Type"
         class="eco-selector-btn @(Selected ? "eco-selector-btn--selected" : "") @CssClass"
         disabled="@Disabled"
         @onclick="OnClick"
@@ -7,7 +7,7 @@
     {
         <span class="eco-selector-btn__icon" aria-hidden="true">@LeadingIcon</span>
     }
-    <span>@Label</span>
+    <span class="eco-selector-btn__label">@Label</span>
 </button>
 
 @code {
@@ -25,6 +25,9 @@
 
     [Parameter]
     public bool Disabled { get; set; }
+
+    [Parameter]
+    public string Type { get; set; } = "button";
 
     [Parameter]
     public string? CssClass { get; set; }

@@ -28,8 +28,15 @@
     color: var(--eco-color-text-on-primary);
 }
 
-.eco-selector-btn:disabled {
-    opacity: 0.5;
+.eco-selector-btn:disabled:not(.eco-selector-btn--selected) {
+    border-color: var(--eco-color-primary-muted);
+    color: var(--eco-color-text-disabled);
+    cursor: not-allowed;
+}
+
+.eco-selector-btn--selected:disabled {
+    background: var(--eco-color-primary-muted);
+    border-color: var(--eco-color-primary-muted);
     cursor: not-allowed;
 }
 
@@ -37,4 +44,8 @@
     display: inline-flex;
     align-items: center;
     color: inherit;
+}
+
+.eco-selector-btn__label {
+    display: inline;
 }
