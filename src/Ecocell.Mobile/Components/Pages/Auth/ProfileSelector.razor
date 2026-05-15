@@ -13,7 +13,7 @@
             <p>E ajude o meio ambiente</p>
         </div>
 
-        <div class="profile-selector-options">
+        <div class="profile-selector-options" role="group" aria-label="Tipo de cadastro">
             <EcoSelectorButton Label="Depositante"
                                Selected="@(_selectedProfile == "depositante")"
                                OnClick="@(() => _selectedProfile = "depositante")">

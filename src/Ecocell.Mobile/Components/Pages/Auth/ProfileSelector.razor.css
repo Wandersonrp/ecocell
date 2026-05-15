@@ -1,5 +1,5 @@
 .profile-selector-screen {
-    height: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     background: var(--eco-color-surface);
@@ -7,7 +7,7 @@
 }
 
 .profile-selector-header {
-    padding-top: 64px;
+    padding-top: var(--eco-space-auth-top);
 }
 
 .profile-selector-content {
