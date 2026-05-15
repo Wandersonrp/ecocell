@@ -1,0 +1,67 @@
+@page "/profile-selector"
+@layout AuthLayout
+@inject NavigationManager Navigation
+
+<div class="profile-selector-screen">
+    <div class="profile-selector-header">
+        <EcoWordmark />
+    </div>
+
+    <div class="profile-selector-content">
+        <div class="profile-selector-headline">
+            <h1>Escolha como quer se cadastrar</h1>
+            <p>E ajude o meio ambiente</p>
+        </div>
+
+        <div class="profile-selector-options">
+            <EcoSelectorButton Label="Depositante"
+                               Selected="@(_selectedProfile == "depositante")"
+                               OnClick="@(() => _selectedProfile = "depositante")">
+                <LeadingIcon>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.75"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </LeadingIcon>
+            </EcoSelectorButton>
+
+            <EcoSelectorButton Label="Ponto de coleta"
+                               Selected="@(_selectedProfile == "pc")"
+                               OnClick="@(() => _selectedProfile = "pc")">
+                <LeadingIcon>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.75"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </LeadingIcon>
+            </EcoSelectorButton>
+
+            <EcoSelectorButton Label="Coletor"
+                               Selected="@(_selectedProfile == "coletor")"
+                               OnClick="@(() => _selectedProfile = "coletor")">
+                <LeadingIcon>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.75"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </LeadingIcon>
+            </EcoSelectorButton>
+        </div>
+
+        <div class="profile-selector-back">
+            <EcoGhostButton Label="Voltar para a home" OnClick="OnBack" />
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? _selectedProfile;
+
+    private void OnBack() => Navigation.NavigateTo("/");
+}
