@@ -6,7 +6,7 @@
     font-size: var(--eco-font-button-size);
     font-weight: 500;
     line-height: var(--eco-font-button-lh);
-    padding: 10px 16px;
+    padding: var(--eco-space-sm) var(--eco-space-md);
     cursor: pointer;
     transition: opacity 120ms ease;
 }
