@@ -36,6 +36,16 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         Factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration(cfg =>
+            {
+                // Desabilita rate limiting na suite padrão de integração. appsettings.Testing.json
+                // é gitignored, então em CI o default (Enabled=true) ativaria o limiter e
+                // derrubaria os fluxos de auth (5 req/min por IP, localhost compartilhado).
+                cfg.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["RateLimit:Enabled"] = "false"
+                });
+            });
             builder.ConfigureServices(ConfigureTestServices);
         });
     }
