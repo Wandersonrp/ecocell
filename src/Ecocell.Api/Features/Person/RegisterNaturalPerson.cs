@@ -135,6 +135,7 @@ public class RegisterNaturalPersonEndpoint : ICarterModule
         .WithDescription("Cria um registro de NaturalPerson vinculado à jornada de descarte selecionada.")
         .Produces(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status409Conflict)
-        .Produces(StatusCodes.Status400BadRequest);
+        .Produces(StatusCodes.Status400BadRequest)
+        .RequireRateLimiting("public-ip");
     }
 }

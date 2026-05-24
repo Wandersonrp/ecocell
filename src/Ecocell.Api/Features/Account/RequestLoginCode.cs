@@ -148,6 +148,7 @@ public class RequestLoginCodeEndpoint : ICarterModule
         .WithSummary("Solicita o envio de um código OTP de login ao e-mail informado.")
         .WithDescription("Gera e envia um código OTP de 6 dígitos. Retorna 202 independentemente de o e-mail existir (anti-enumeração).")
         .Produces(StatusCodes.Status202Accepted)
-        .Produces(StatusCodes.Status400BadRequest);
+        .Produces(StatusCodes.Status400BadRequest)
+        .RequireRateLimiting("public-ip");
     }
 }
