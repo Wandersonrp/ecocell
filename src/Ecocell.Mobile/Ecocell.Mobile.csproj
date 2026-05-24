@@ -79,4 +79,8 @@
         <EmbeddedResource Include="appsettings.json" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\Ecocell.Shared\Ecocell.Shared.csproj" />
+    </ItemGroup>
+
 </Project>
