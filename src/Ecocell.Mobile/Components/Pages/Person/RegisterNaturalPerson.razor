@@ -1,0 +1,161 @@
+@page "/register/natural-person"
+@layout AuthLayout
+@inject IEcocellApi Api
+@inject NavigationManager Navigation
+@using System.Text.RegularExpressions
+
+<div class="register-screen">
+    <div class="register-header">
+        <EcoWordmark />
+    </div>
+
+    <div class="register-content">
+        <div class="register-headline">
+            <h1>Cadastre-se como Depositante</h1>
+            <p>E faça o descarte de materiais eletrônicos</p>
+        </div>
+
+        <div class="register-form">
+            <EcoTextField Placeholder="Nome completo"
+                          Value="@_fullName"
+                          ValueChanged="@(v => _fullName = v)">
+                <Icon>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                </Icon>
+            </EcoTextField>
+
+            <EcoTextField Placeholder="CPF"
+                          Value="@_cpf"
+                          ValueChanged="@(v => _cpf = v)"
+                          Type="tel"
+                          Mask="@MaskCpf">
+                <Icon>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <circle cx="9" cy="11" r="2" />
+                        <path d="M14 10h4M14 14h4M5 16c.6-1.5 2-2.5 4-2.5s3.4 1 4 2.5" />
+                    </svg>
+                </Icon>
+            </EcoTextField>
+
+            <EcoTextField Placeholder="E-mail"
+                          Value="@_email"
+                          ValueChanged="@(v => _email = v)"
+                          Type="email">
+                <Icon>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <path d="m3 7 9 6 9-6" />
+                    </svg>
+                </Icon>
+            </EcoTextField>
+
+            <EcoTextField Placeholder="Data de nascimento"
+                          Value="@_birthDateInput"
+                          ValueChanged="@OnBirthDateChanged"
+                          Type="date">
+                <Icon>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                </Icon>
+            </EcoTextField>
+        </div>
+
+        <div class="register-cta">
+            @if (_errorMessage is not null)
+            {
+                <p class="register-error" role="alert">@_errorMessage</p>
+            }
+            <EcoPrimaryButton Label="Cadastrar"
+                              OnClick="HandleSubmit"
+                              Disabled="@(!IsFormValid)"
+                              IsLoading="@_loading" />
+            <div class="register-back">
+                <EcoGhostButton Label="Voltar para opções" OnClick="GoBack" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _fullName = string.Empty;
+    private string _cpf = string.Empty;
+    private string _email = string.Empty;
+    private string _birthDateInput = string.Empty;
+    private DateOnly? _birthDate;
+    private bool _loading;
+    private string? _errorMessage;
+
+    private bool IsFormValid =>
+        _fullName.Trim().Length >= 3 &&
+        Regex.Replace(_cpf, @"\D", "").Length == 11 &&
+        Regex.IsMatch(_email, @"\S+@\S+\.\S+") &&
+        _birthDate is not null;
+
+    private string MaskCpf(string v)
+    {
+        var d = Regex.Replace(v, @"\D", "");
+        if (d.Length > 11) d = d[..11];
+        return d.Length switch
+        {
+            <= 3 => d,
+            <= 6 => $"{d[..3]}.{d[3..]}",
+            <= 9 => $"{d[..3]}.{d[3..6]}.{d[6..]}",
+            _ => $"{d[..3]}.{d[3..6]}.{d[6..9]}-{d[9..]}"
+        };
+    }
+
+    private void OnBirthDateChanged(string v)
+    {
+        _birthDateInput = v;
+        _birthDate = DateOnly.TryParse(v, out var d) ? d : null;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!IsFormValid || _loading) return;
+        _loading = true;
+        _errorMessage = null;
+
+        var request = new RequestRegisterNaturalPerson
+        {
+            FullName = _fullName.Trim(),
+            Cpf = Regex.Replace(_cpf, @"\D", ""),
+            Email = _email.Trim(),
+            Journey = Journey.Depositor,
+            BirthDate = _birthDate!.Value
+        };
+
+        var response = await Api.RegisterNaturalPersonAsync(request, CancellationToken.None);
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/confirm-account");
+        }
+        else
+        {
+            _errorMessage = "Não foi possível criar sua conta. Tente novamente.";
+            _loading = false;
+        }
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/profile-selector");
+}
