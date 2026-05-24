@@ -1,0 +1,51 @@
+.eco-selector-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--eco-space-sm);
+    background: transparent;
+    color: var(--eco-color-text-primary);
+    border: 1.5px solid var(--eco-color-border);
+    border-radius: var(--eco-radius-full);
+    padding: 12.5px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: var(--eco-font-button-size);
+    font-weight: var(--eco-font-button-weight);
+    letter-spacing: var(--eco-font-button-ls);
+    line-height: var(--eco-font-button-lh);
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.eco-selector-btn:hover:not(:disabled):not(.eco-selector-btn--selected) {
+    background: var(--eco-color-primary-hover-bg);
+}
+
+.eco-selector-btn--selected {
+    background: var(--eco-color-primary);
+    border-color: var(--eco-color-primary);
+    color: var(--eco-color-text-on-primary);
+}
+
+.eco-selector-btn:disabled:not(.eco-selector-btn--selected) {
+    border-color: var(--eco-color-primary-muted);
+    color: var(--eco-color-text-disabled);
+    cursor: not-allowed;
+}
+
+.eco-selector-btn--selected:disabled {
+    background: var(--eco-color-primary-muted);
+    border-color: var(--eco-color-primary-muted);
+    cursor: not-allowed;
+}
+
+.eco-selector-btn__icon {
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+}
+
+.eco-selector-btn__label {
+    display: inline;
+}
