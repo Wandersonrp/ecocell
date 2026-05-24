@@ -5,11 +5,10 @@
     background: var(--eco-color-surface);
     border: 1.5px solid var(--eco-color-border);
     border-radius: var(--eco-radius-full);
-    padding: 11px 18px;
+    padding: var(--eco-input-padding-v) var(--eco-input-padding-h);
     transition: border-color 120ms ease;
     cursor: text;
     width: 100%;
-    box-sizing: border-box;
 }
 
 .eco-text-field--focused {
@@ -56,7 +55,9 @@
 .eco-text-field-error {
     display: block;
     font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-caption-weight);
+    line-height: var(--eco-font-caption-lh);
     color: var(--eco-color-error);
-    padding-left: 18px;
+    padding-left: var(--eco-input-padding-h);
     margin-top: var(--eco-space-xs);
 }

@@ -54,6 +54,7 @@
     {
         var raw = e.Value?.ToString() ?? string.Empty;
         var result = Mask is not null ? Mask(raw) : raw;
+        Value = result;
         await ValueChanged.InvokeAsync(result);
     }
 }
