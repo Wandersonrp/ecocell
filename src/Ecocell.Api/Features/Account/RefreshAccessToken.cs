@@ -127,6 +127,7 @@ public class RefreshAccessTokenEndpoint : ICarterModule
         .Produces<ResponseLogin>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status401Unauthorized)
-        .Produces(StatusCodes.Status403Forbidden);
+        .Produces(StatusCodes.Status403Forbidden)
+        .RequireRateLimiting("public-ip");
     }
 }
