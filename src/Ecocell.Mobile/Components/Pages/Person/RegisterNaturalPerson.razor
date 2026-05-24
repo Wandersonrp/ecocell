@@ -2,7 +2,6 @@
 @layout AuthLayout
 @inject IEcocellApi Api
 @inject NavigationManager Navigation
-@using System.Text.RegularExpressions
 
 <div class="register-screen">
     <div class="register-header">
@@ -105,10 +104,12 @@
     private bool _loading;
     private string? _errorMessage;
 
+    private string CpfDigits => Regex.Replace(_cpf, @"\D", "");
+
     private bool IsFormValid =>
         _fullName.Trim().Length >= 3 &&
-        Regex.Replace(_cpf, @"\D", "").Length == 11 &&
-        Regex.IsMatch(_email, @"\S+@\S+\.\S+") &&
+        CpfDigits.Length == 11 &&
+        Regex.IsMatch(_email.Trim(), @"\S+@\S+\.\S+") &&
         _birthDate is not null;
 
     private string MaskCpf(string v)
@@ -139,7 +140,7 @@
         var request = new RequestRegisterNaturalPerson
         {
             FullName = _fullName.Trim(),
-            Cpf = Regex.Replace(_cpf, @"\D", ""),
+            Cpf = CpfDigits,
             Email = _email.Trim(),
             Journey = Journey.Depositor,
             BirthDate = _birthDate!.Value
@@ -148,6 +149,7 @@
         var response = await Api.RegisterNaturalPersonAsync(request, CancellationToken.None);
         if (response.IsSuccessStatusCode)
         {
+            _loading = false;
             Navigation.NavigateTo("/confirm-account");
         }
         else
