@@ -33,7 +33,7 @@
                           Value="@_cpf"
                           ValueChanged="@(v => _cpf = v)"
                           Type="tel"
-                          Mask="@MaskCpf">
+                          Mask="@_maskCpf">
                 <Icon>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="1.6"
@@ -96,6 +96,8 @@
 </div>
 
 @code {
+    private static readonly Func<string, string> _maskCpf = MaskCpf;
+
     private string _fullName = string.Empty;
     private string _cpf = string.Empty;
     private string _email = string.Empty;
@@ -112,7 +114,7 @@
         Regex.IsMatch(_email.Trim(), @"\S+@\S+\.\S+") &&
         _birthDate is not null;
 
-    private string MaskCpf(string v)
+    private static string MaskCpf(string v)
     {
         var d = Regex.Replace(v, @"\D", "");
         if (d.Length > 11) d = d[..11];
