@@ -30,6 +30,9 @@ public static class MauiProgram
         builder.Services.AddRefitClient<IEcocellApi>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
 
+        builder.Services.AddRefitClient<IAccountClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
+
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
