@@ -21,7 +21,6 @@ public static class RegisterNaturalPerson
         public string Email { get; set; } = string.Empty;
         public string Cpf { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
-        public Journey Journey { get; set; }
         public DateOnly BirthDate { get; set; }
     }
 
@@ -36,7 +35,6 @@ public static class RegisterNaturalPerson
                 .MinimumLength(3).WithMessage("Nome completo deve conter no mínimo 3 caracteres;")
                 .MaximumLength(100).WithMessage("Nome completo deve conter no máximo 100 caracteres.");
 
-            RuleFor(x => x.Journey).IsInEnum().WithMessage("Valor inválido para Journey.");            
             RuleFor(x => x.Cpf).IsValidCpf();
 
             RuleFor(x => x.BirthDate)
@@ -91,13 +89,14 @@ public static class RegisterNaturalPerson
                 return Result.Failure(Error.Conflict($"Já existe uma pessoa cadastrada com o Email {request.Email}"));
             }
 
+            // Journey fixada em Depositor: Ponto de Coleta e Coletor são exclusivos de PJ (RN003).
             var person = new NaturalPerson(
-                request.FullName, 
-                request.Cpf, 
-                request.BirthDate, 
-                Role.User, 
-                request.Email, 
-                request.Journey);
+                request.FullName,
+                request.Cpf,
+                request.BirthDate,
+                Role.User,
+                request.Email,
+                Journey.Depositor);
 
             _dbContext.People.Add(person);
 
@@ -122,7 +121,6 @@ public class RegisterNaturalPersonEndpoint : ICarterModule
                 Email = request.Email,
                 FullName = request.FullName,
                 Cpf = request.Cpf,
-                Journey = (Journey)request.Journey,
                 BirthDate = request.BirthDate
             };
             

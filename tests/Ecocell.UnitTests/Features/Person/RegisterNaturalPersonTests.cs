@@ -31,7 +31,6 @@ public class RegisterNaturalPersonTests : TestBase
             .RuleFor(x => x.FullName, f => f.Name.FullName())
             .RuleFor(x => x.Email, f => f.Internet.Email())
             .RuleFor(x => x.Cpf, f => f.Person.Cpf(includeFormatSymbols: false))
-            .RuleFor(x => x.Journey, f => f.PickRandom<Journey>())
             .RuleFor(x => x.BirthDate, f => DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-16)))
             .Generate();
     }
@@ -64,6 +63,22 @@ public class RegisterNaturalPersonTests : TestBase
                 It.Is<PersonRegistered>(e => e.Email == _command.Email),
                 CancellationToken.None),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldPersistWithDepositorJourney_WhenRequestIsValid()
+    {
+        // RN003: PF não escolhe jornada — é sempre persistida como Depositor.
+
+        // Act
+        var result = await _handler.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var person = await DbContext.NaturalPeople.FirstOrDefaultAsync(np => np.Cpf == _command.Cpf);
+        person.ShouldNotBeNull();
+        person.Journey.ShouldBe(Journey.Depositor);
     }
 
     [Theory]
@@ -133,20 +148,6 @@ public class RegisterNaturalPersonTests : TestBase
     {
         // Arrange
         _command.FullName = new string('A', 101);
-
-        // Act
-        var result = await _handler.Handle(_command, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.Error.Messages.ShouldHaveSingleItem();
-    }
-
-    [Fact]
-    public async Task Handle_ShouldNotPersistInDatabase_WhenJourneyIsInvalid()
-    {
-        // Arrange
-        _command.Journey = (Journey)999;
 
         // Act
         var result = await _handler.Handle(_command, CancellationToken.None);

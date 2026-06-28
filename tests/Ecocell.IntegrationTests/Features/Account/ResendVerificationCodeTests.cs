@@ -24,7 +24,6 @@ public class ResendVerificationCodeTests : IntegrationTestBase
             Email = unconfirmedEmail,
             Cpf = faker.Person.Cpf(includeFormatSymbols: false),
             FullName = faker.Name.FullName(),
-            Journey = Journey.Depositor,
             BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20)),
         });
 

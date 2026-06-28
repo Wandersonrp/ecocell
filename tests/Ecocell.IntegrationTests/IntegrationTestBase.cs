@@ -48,8 +48,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     /// Registra uma pessoa física via endpoint, confirma a conta via OTP e faz login.
     /// Retorna o e-mail gerado e o JWT de acesso.
     /// </summary>
-    protected async Task<(string email, string jwt)> CreateAndLoginNaturalPersonAsync(
-        SharedEnums.Journey journey = SharedEnums.Journey.Depositor)
+    protected async Task<(string email, string jwt)> CreateAndLoginNaturalPersonAsync()
     {
         var faker = new Faker("pt_BR");
         var request = new RequestRegisterNaturalPerson
@@ -57,7 +56,6 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             FullName = faker.Name.FullName(),
             Email = faker.Internet.Email(),
             Cpf = faker.Person.Cpf(includeFormatSymbols: false),
-            Journey = journey,
             BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
         };
 
