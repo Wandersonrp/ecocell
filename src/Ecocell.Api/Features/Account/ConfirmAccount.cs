@@ -21,14 +21,12 @@ namespace Ecocell.Api.Features.Account;
 /// </summary>
 public static class ConfirmAccount
 {
-    /// <summary>Comando para confirmação de conta.</summary>
     public record Command : IRequest<Result>
     {
         public string Email { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
     }
 
-    /// <summary>Validador do comando de confirmação de conta.</summary>
     public class Validator : AbstractValidator<Command>
     {
         public Validator()
@@ -43,9 +41,6 @@ public static class ConfirmAccount
         }
     }
 
-    /// <summary>
-    /// Handler que valida o código OTP e ativa a conta da pessoa.
-    /// </summary>
     public sealed class Handler : IRequestHandler<Command, Result>
     {
         private readonly AppDbContext _dbContext;
@@ -80,7 +75,7 @@ public static class ConfirmAccount
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                _logger.LogError("Erros de validação na confirmação de conta {@Erros}", errors);
+                _logger.LogWarning("Erros de validação na confirmação de conta {@Erros}", errors);
                 return Result.Failure(Error.ErrorOnValidation(errors));
             }
 
@@ -107,13 +102,13 @@ public static class ConfirmAccount
 
             if (record is null)
             {
-                _logger.LogError("Código OTP inexistente ou expirado para {Email}", request.Email);
+                _logger.LogWarning("Código OTP inexistente ou expirado para {Email}", request.Email);
                 return Result.Failure(Error.InvalidCredential());
             }
 
             if (record.Attempts >= 3)
             {
-                _logger.LogError("Número máximo de tentativas atingido para {Email}", request.Email);
+                _logger.LogWarning("Número máximo de tentativas atingido para {Email}", request.Email);
                 return Result.Failure(Error.Forbidden());
             }
 
@@ -125,7 +120,7 @@ public static class ConfirmAccount
             if (!isValid)
             {
                 await _store.IncrementAttemptsAsync(key, cancellationToken);
-                _logger.LogError("Código OTP incorreto para {Email}", request.Email);
+                _logger.LogWarning("Código OTP incorreto para {Email}", request.Email);
                 return Result.Failure(Error.InvalidCredential());
             }
 
@@ -144,7 +139,6 @@ public static class ConfirmAccount
 /// </summary>
 public class ConfirmAccountEndpoint : ICarterModule
 {
-    /// <summary>Registra a rota POST /api/account/confirm.</summary>
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("api/account/confirm", async ([FromBody] RequestConfirmAccount request, ISender sender) =>
