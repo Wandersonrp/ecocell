@@ -1,0 +1,48 @@
+.eco-otp {
+    display: flex;
+    gap: var(--eco-space-sm);
+    justify-content: center;
+}
+
+.eco-otp__box {
+    width: 3rem;
+    height: 3.5rem;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: var(--eco-font-h2-size);
+    font-weight: var(--eco-font-h2-weight);
+    line-height: var(--eco-font-h2-lh);
+    color: var(--eco-color-text-primary);
+    background: var(--eco-color-surface);
+    border: 1.5px solid var(--eco-color-border);
+    border-radius: var(--eco-radius-sm);
+    outline: none;
+    transition: border-color 120ms ease;
+}
+
+.eco-otp__box:focus {
+    border-color: var(--eco-color-primary);
+}
+
+.eco-otp__box--filled {
+    border-color: var(--eco-color-primary);
+}
+
+.eco-otp__box:disabled {
+    background: var(--eco-color-surface-alt);
+    color: var(--eco-color-text-disabled);
+}
+
+.eco-otp--error .eco-otp__box {
+    border-color: var(--eco-color-error);
+}
+
+.eco-otp__error {
+    display: block;
+    text-align: center;
+    font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-caption-weight);
+    line-height: var(--eco-font-caption-lh);
+    color: var(--eco-color-error);
+    margin-top: var(--eco-space-sm);
+}

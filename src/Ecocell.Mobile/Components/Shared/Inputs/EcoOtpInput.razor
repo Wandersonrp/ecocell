@@ -1,0 +1,143 @@
+<div class="eco-otp @(HasError ? "eco-otp--error" : string.Empty) @CssClass"
+     role="group"
+     aria-label="Código de verificação"
+     @attributes="AdditionalAttributes">
+    @for (var i = 0; i < Length; i++)
+    {
+        var index = i;
+        <input class="eco-otp__box @(_digits[index].Length > 0 ? "eco-otp__box--filled" : string.Empty)"
+               type="text"
+               inputmode="numeric"
+               autocomplete="one-time-code"
+               aria-label="@($"Dígito {index + 1}")"
+               disabled="@Disabled"
+               value="@_digits[index]"
+               @ref="_inputs[index]"
+               @oninput="@(e => OnInput(index, e))"
+               @onkeydown="@(e => OnKeyDown(index, e))" />
+    }
+</div>
+@if (HasError && ErrorText is not null)
+{
+    <span class="eco-otp__error" role="alert">@ErrorText</span>
+}
+
+@code {
+    private string[] _digits = [];
+    private ElementReference[] _inputs = [];
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public int Length { get; set; } = 6;
+
+    [Parameter]
+    public bool HasError { get; set; }
+
+    [Parameter]
+    public string? ErrorText { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>Disparado quando todas as caixas estão preenchidas.</summary>
+    [Parameter]
+    public EventCallback<string> Completed { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _digits = Enumerable.Repeat(string.Empty, Length).ToArray();
+        _inputs = new ElementReference[Length];
+    }
+
+    /// <summary>Limpa todas as caixas e devolve o foco à primeira. Chamado pela página ao exibir erro.</summary>
+    public async Task ClearAsync()
+    {
+        for (var i = 0; i < Length; i++)
+        {
+            _digits[i] = string.Empty;
+        }
+
+        Value = string.Empty;
+        await ValueChanged.InvokeAsync(Value);
+        StateHasChanged();
+        await _inputs[0].FocusAsync();
+    }
+
+    /// <summary>
+    /// Trata digitação e colagem. Um único dígito avança o foco; múltiplos dígitos (colagem)
+    /// são distribuídos a partir do índice atual. Sem maxlength para permitir colar 6 dígitos sem JS.
+    /// </summary>
+    private async Task OnInput(int index, ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? string.Empty;
+        var digits = new string(raw.Where(char.IsDigit).ToArray());
+
+        if (digits.Length == 0)
+        {
+            _digits[index] = string.Empty;
+            await EmitAsync();
+            StateHasChanged();
+            return;
+        }
+
+        if (digits.Length == 1)
+        {
+            _digits[index] = digits;
+            await EmitAsync();
+            if (index < Length - 1)
+            {
+                await _inputs[index + 1].FocusAsync();
+            }
+            return;
+        }
+
+        var pos = index;
+        foreach (var d in digits)
+        {
+            if (pos >= Length)
+            {
+                break;
+            }
+
+            _digits[pos] = d.ToString();
+            pos++;
+        }
+
+        await EmitAsync();
+        StateHasChanged();
+        await _inputs[Math.Min(pos, Length - 1)].FocusAsync();
+    }
+
+    private async Task OnKeyDown(int index, KeyboardEventArgs e)
+    {
+        if (e.Key == "Backspace" && _digits[index].Length == 0 && index > 0)
+        {
+            _digits[index - 1] = string.Empty;
+            await EmitAsync();
+            StateHasChanged();
+            await _inputs[index - 1].FocusAsync();
+        }
+    }
+
+    private async Task EmitAsync()
+    {
+        Value = string.Concat(_digits);
+        await ValueChanged.InvokeAsync(Value);
+
+        if (Value.Length == Length)
+        {
+            await Completed.InvokeAsync(Value);
+        }
+    }
+}
