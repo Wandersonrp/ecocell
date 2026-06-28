@@ -15,8 +15,8 @@
 
         <div class="profile-selector-options" role="group" aria-label="Tipo de cadastro">
             <EcoSelectorButton Label="Depositante"
-                               Selected="@(_selectedProfile == "depositante")"
-                               OnClick="@(() => _selectedProfile = "depositante")">
+                               Selected="false"
+                               OnClick="@(() => Navigation.NavigateTo("/register/natural-person"))">
                 <LeadingIcon>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="1.75"

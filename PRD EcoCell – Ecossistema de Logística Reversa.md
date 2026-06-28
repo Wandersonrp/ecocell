@@ -66,7 +66,7 @@ Os rankings são segregados para garantir competitividade justa:
 
 - **Tasks Técnicas:**
 
-    - [ ] Slice `RegisterNaturalPerson` (PF → Depositante) — já parcialmente implementado.
+    - [x] Slice `RegisterNaturalPerson` (PF → Depositante).
 
     - [ ] Slice `RegisterLegalPerson` (PJ → PC ou Coletor), acessível apenas por PF autenticado.
 

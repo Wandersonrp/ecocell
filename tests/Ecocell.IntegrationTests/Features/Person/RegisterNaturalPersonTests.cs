@@ -20,7 +20,6 @@ public class RegisterNaturalPersonTests : IntegrationTestBase
             Email = faker.Internet.Email(),
             Cpf = faker.Person.Cpf(includeFormatSymbols: false),
             FullName = faker.Name.FullName(),
-            Journey = Journey.Depositor,
             BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20)),
         };
     }
@@ -48,7 +47,6 @@ public class RegisterNaturalPersonTests : IntegrationTestBase
             Email = new Faker().Internet.Email(),
             Cpf = _request.Cpf,
             FullName = _request.FullName,
-            Journey = _request.Journey,
             BirthDate = _request.BirthDate,
         };
 

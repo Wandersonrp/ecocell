@@ -24,7 +24,6 @@ public class ConfirmAccountTests : IntegrationTestBase
             Email = email,
             Cpf = faker.Person.Cpf(includeFormatSymbols: false),
             FullName = faker.Name.FullName(),
-            Journey = Journey.Depositor,
             BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20)),
         };
         await Client.PostAsJsonAsync("api/natural-person", registerRequest);
@@ -52,7 +51,6 @@ public class ConfirmAccountTests : IntegrationTestBase
             Email = email,
             Cpf = faker.Person.Cpf(includeFormatSymbols: false),
             FullName = faker.Name.FullName(),
-            Journey = Journey.Depositor,
             BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20)),
         };
         await Client.PostAsJsonAsync("api/natural-person", registerRequest);

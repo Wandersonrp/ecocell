@@ -73,6 +73,10 @@
     --eco-space-lockup-gap-md: 6px;
     --eco-space-lockup-gap-lg: 14px;
 
+    /* Input */
+    --eco-input-padding-v: 11px;
+    --eco-input-padding-h: 18px;
+
     /* Radius */
     --eco-radius-xs: 3px;
     --eco-radius-sm: 6px;

@@ -55,7 +55,6 @@ public class RateLimitTests : IAsyncLifetime
                 FullName = person.FullName,
                 Email = person.Email,
                 Cpf = person.Cpf(includeFormatSymbols: false),
-                Journey = SharedEnums.Journey.Depositor,
                 BirthDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-20))
             };
         }

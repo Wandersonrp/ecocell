@@ -1,0 +1,63 @@
+.eco-text-field {
+    display: flex;
+    align-items: center;
+    gap: var(--eco-space-xs);
+    background: var(--eco-color-surface);
+    border: 1.5px solid var(--eco-color-border);
+    border-radius: var(--eco-radius-full);
+    padding: var(--eco-input-padding-v) var(--eco-input-padding-h);
+    transition: border-color 120ms ease;
+    cursor: text;
+    width: 100%;
+}
+
+.eco-text-field--focused {
+    border-color: var(--eco-color-primary);
+}
+
+.eco-text-field--focused .eco-text-field-icon {
+    color: var(--eco-color-primary);
+}
+
+.eco-text-field--error {
+    border-color: var(--eco-color-error-border);
+}
+
+.eco-text-field--error .eco-text-field-icon {
+    color: var(--eco-color-error);
+}
+
+.eco-text-field-icon {
+    color: var(--eco-color-text-tertiary);
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: color 120ms ease;
+}
+
+.eco-text-field-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: var(--eco-font-body-lg-size);
+    font-weight: var(--eco-font-body-lg-weight);
+    line-height: var(--eco-font-body-lg-lh);
+    color: var(--eco-color-text-primary);
+    min-width: 0;
+}
+
+.eco-text-field-input::placeholder {
+    color: var(--eco-color-text-tertiary);
+    opacity: 1;
+}
+
+.eco-text-field-error {
+    display: block;
+    font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-caption-weight);
+    line-height: var(--eco-font-caption-lh);
+    color: var(--eco-color-error);
+    padding-left: var(--eco-input-padding-h);
+    margin-top: var(--eco-space-xs);
+}
