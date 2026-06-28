@@ -70,7 +70,7 @@
 
         Value = string.Empty;
         await ValueChanged.InvokeAsync(Value);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
         await _inputs[0].FocusAsync();
     }
 
@@ -87,7 +87,7 @@
         {
             _digits[index] = string.Empty;
             await EmitAsync();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
             return;
         }
 
@@ -115,7 +115,7 @@
         }
 
         await EmitAsync();
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
         await _inputs[Math.Min(pos, Length - 1)].FocusAsync();
     }
 
@@ -125,7 +125,7 @@
         {
             _digits[index - 1] = string.Empty;
             await EmitAsync();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
             await _inputs[index - 1].FocusAsync();
         }
     }

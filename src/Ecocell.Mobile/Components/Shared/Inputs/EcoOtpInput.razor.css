@@ -34,7 +34,7 @@
 }
 
 .eco-otp--error .eco-otp__box {
-    border-color: var(--eco-color-error);
+    border-color: var(--eco-color-error-border);
 }
 
 .eco-otp__error {
