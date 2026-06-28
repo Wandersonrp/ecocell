@@ -1,5 +1,6 @@
 @page "/register/natural-person"
 @layout AuthLayout
+@implements IDisposable
 @inject IEcocellApi Api
 @inject NavigationManager Navigation
 
@@ -105,6 +106,7 @@
     private DateOnly? _birthDate;
     private bool _loading;
     private string? _errorMessage;
+    private readonly CancellationTokenSource _cts = new();
 
     private string CpfDigits => Regex.Replace(_cpf, @"\D", "");
 
@@ -147,18 +149,31 @@
             BirthDate = _birthDate!.Value
         };
 
-        var response = await Api.RegisterNaturalPersonAsync(request, CancellationToken.None);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            _loading = false;
-            Navigation.NavigateTo("/confirm-account");
+            var response = await Api.RegisterNaturalPersonAsync(request, _cts.Token);
+            if (response.IsSuccessStatusCode)
+            {
+                _loading = false;
+                Navigation.NavigateTo("/confirm-account");
+            }
+            else
+            {
+                _errorMessage = "Não foi possível criar sua conta. Tente novamente.";
+                _loading = false;
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            _errorMessage = "Não foi possível criar sua conta. Tente novamente.";
-            _loading = false;
+            // Página fechada/abandonada durante a requisição — descarta sem atualizar estado.
         }
     }
 
     private void GoBack() => Navigation.NavigateTo("/profile-selector");
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 }
