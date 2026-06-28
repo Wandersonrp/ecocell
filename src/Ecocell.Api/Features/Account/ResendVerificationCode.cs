@@ -139,6 +139,7 @@ public class ResendVerificationCodeEndpoint : ICarterModule
         .Produces(StatusCodes.Status202Accepted)
         .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status404NotFound)
-        .Produces(StatusCodes.Status409Conflict);
+        .Produces(StatusCodes.Status409Conflict)
+        .RequireRateLimiting("public-ip");
     }
 }

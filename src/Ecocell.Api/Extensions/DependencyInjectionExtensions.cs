@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using System.Threading.RateLimiting;
 using Carter;
 using Ecocell.Api.Configurations;
 using Ecocell.Api.Enums;
@@ -9,8 +11,10 @@ using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.External;
 using Ecocell.Api.Services.VerificationCodes;
+using Ecocell.Shared.Responses;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -40,6 +44,7 @@ public static class DependencyInjectionExtensions
         AddServices(services, environment);
         AddGeocoding(services, configuration);
         AddJwtAuthentication(services, configuration);
+        AddRateLimiting(services, configuration);
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -190,6 +195,50 @@ public static class DependencyInjectionExtensions
             options.AddPolicy(AuthorizationPolicies.Admin, policy =>
                 policy.RequireAuthenticatedUser()
                       .RequireClaim("role", Ecocell.Api.Enums.Role.Admin.ToString()));
+        });
+    }
+
+    /// <summary>
+    /// Registra rate limiting por IP com política fixa baseada em janela de tempo.
+    /// Requer a seção "RateLimit" em appsettings com Enabled, PermitLimit e WindowMinutes.
+    /// </summary>
+    private static void AddRateLimiting(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<RateLimitSettings>()
+            .Bind(configuration.GetSection(RateLimitSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddRateLimiter(options =>
+        {
+            // PermitLimit e WindowMinutes resolvidos por request via IOptionsMonitor
+            // para que overrides de configuração (ex.: testes de integração com InMemory)
+            // aplicados após AddApi sejam respeitados.
+            options.AddPolicy("public-ip", context =>
+            {
+                var settings = context.RequestServices
+                    .GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<RateLimitSettings>>()
+                    .CurrentValue;
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = settings.PermitLimit,
+                        Window = TimeSpan.FromMinutes(settings.WindowMinutes),
+                        QueueLimit = 0
+                    });
+            });
+
+            options.OnRejected = async (ctx, ct) =>
+            {
+                ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                ctx.HttpContext.Response.ContentType = "application/json";
+                var body = JsonSerializer.Serialize(
+                    new ResponseError("Limite de requisições excedido. Tente novamente em instantes."),
+                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                await ctx.HttpContext.Response.WriteAsync(body, ct);
+            };
         });
     }
 }

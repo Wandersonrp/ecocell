@@ -1,4 +1,5 @@
 using Carter;
+using Ecocell.Api.Configurations;
 using Ecocell.Api.Extensions;
 using Ecocell.Api.Middlewares;
 using Microsoft.AspNetCore.Authorization;
@@ -72,6 +73,14 @@ app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseHttpsRedirection();
+
+// Resolve via IOptions para enxergar overrides de configuração aplicados após
+// AddApi (ex.: WebApplicationFactory.ConfigureAppConfiguration nos testes).
+var rateLimitSettings = app.Services
+    .GetRequiredService<Microsoft.Extensions.Options.IOptions<RateLimitSettings>>().Value;
+
+if (rateLimitSettings.Enabled)
+    app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
