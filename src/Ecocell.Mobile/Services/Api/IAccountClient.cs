@@ -14,4 +14,9 @@ public interface IAccountClient
     Task<IApiResponse> ResendVerificationCodeAsync(
         [Body] RequestResendVerificationCode request,
         CancellationToken ct = default);
+
+    [Post("/api/account/login/request-code")]
+    Task<IApiResponse> RequestLoginCodeAsync(
+        [Body] RequestRequestLoginCode request,
+        CancellationToken ct = default);
 }
