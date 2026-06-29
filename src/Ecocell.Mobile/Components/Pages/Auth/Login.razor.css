@@ -1,0 +1,37 @@
+.login-screen {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.login-brand {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--eco-space-xl);
+}
+
+.login-field {
+    margin-top: var(--eco-space-lg);
+    margin-bottom: var(--eco-space-md);
+}
+
+.login-error {
+    margin: 0 0 var(--eco-space-form-gap);
+    font-size: var(--eco-font-caption-size);
+    color: var(--eco-color-error);
+    text-align: center;
+}
+
+.login-footer {
+    padding-bottom: var(--eco-space-xl);
+    display: flex;
+    justify-content: center;
+}
