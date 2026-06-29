@@ -24,9 +24,7 @@
                      ErrorText="@_errorMessage" />
 
         <div class="confirm-resend">
-            <EcoGhostButton Label="@ResendLabel"
-                            OnClick="HandleResend"
-                            Disabled="@(_cooldownSeconds > 0 || _resending)" />
+            <EcoResendButton OnResend="HandleResend" />
         </div>
     </div>
 </div>
@@ -35,22 +33,13 @@
     private EcoOtpInput _otp = default!;
     private string _code = string.Empty;
     private bool _verifying;
-    private bool _resending;
     private string? _errorMessage;
-    private int _cooldownSeconds;
-    private PeriodicTimer? _timer;
     private readonly CancellationTokenSource _cts = new();
 
     [SupplyParameterFromQuery]
     public string? Email { get; set; }
 
     private string DisplayEmail => string.IsNullOrWhiteSpace(Email) ? "seu e-mail" : Email!;
-
-    private string ResendLabel => _cooldownSeconds > 0
-        ? $"Reenviar em {_cooldownSeconds}s"
-        : "Reenviar código";
-
-    protected override void OnInitialized() => StartCooldown();
 
     private void OnCodeChanged(string value)
     {
@@ -97,12 +86,6 @@
 
     private async Task HandleResend()
     {
-        if (_cooldownSeconds > 0 || _resending)
-        {
-            return;
-        }
-
-        _resending = true;
         _errorMessage = null;
 
         try
@@ -110,44 +93,10 @@
             await AccountClient.ResendVerificationCodeAsync(
                 new RequestResendVerificationCode { Email = Email ?? string.Empty },
                 _cts.Token);
-            StartCooldown();
         }
         catch (OperationCanceledException)
         {
             // Página abandonada — descarta.
-        }
-        finally
-        {
-            _resending = false;
-        }
-    }
-
-    private void StartCooldown()
-    {
-        _timer?.Dispose();
-        _cooldownSeconds = 60;
-        _timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-        _ = RunCooldownAsync(_timer);
-    }
-
-    private async Task RunCooldownAsync(PeriodicTimer timer)
-    {
-        try
-        {
-            while (await timer.WaitForNextTickAsync(_cts.Token))
-            {
-                _cooldownSeconds--;
-                await InvokeAsync(StateHasChanged);
-                if (_cooldownSeconds <= 0)
-                {
-                    timer.Dispose();
-                    break;
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Timer cancelado no Dispose.
         }
     }
 
@@ -155,6 +104,5 @@
     {
         _cts.Cancel();
         _cts.Dispose();
-        _timer?.Dispose();
     }
 }
