@@ -62,4 +62,32 @@ public class ConfirmAccountTests : IntegrationTestBase
         // Assert
         response.IsSuccessStatusCode.ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task Post_ShouldReturn401_WhenEmailDoesNotExist()
+    {
+        // Arrange — e-mail sem conta cadastrada; resposta neutra anti-enumeração
+        var email = new Faker("pt_BR").Internet.Email();
+
+        // Act
+        var response = await Client.PostAsJsonAsync("api/account/confirm",
+            new RequestConfirmAccount { Email = email, Code = "123456" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Post_ShouldReturn401_WhenAccountAlreadyConfirmed()
+    {
+        // Arrange — registra, confirma e tenta confirmar novamente (status já Active)
+        var (email, _) = await CreateAndLoginNaturalPersonAsync();
+
+        // Act
+        var response = await Client.PostAsJsonAsync("api/account/confirm",
+            new RequestConfirmAccount { Email = email, Code = "123456" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
 }
