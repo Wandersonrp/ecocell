@@ -26,8 +26,11 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
 
-        var apiBaseUrl = builder.Configuration["ApiBaseUrl"]!;
+        var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"]!;
         builder.Services.AddRefitClient<IEcocellApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
+
+        builder.Services.AddRefitClient<IAccountClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
 
 #if DEBUG

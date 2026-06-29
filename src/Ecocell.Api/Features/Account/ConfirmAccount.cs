@@ -16,17 +16,17 @@ namespace Ecocell.Api.Features.Account;
 
 /// <summary>
 /// Slice responsável por confirmar o cadastro de uma pessoa via código OTP enviado ao e-mail.
+/// Para evitar enumeração de e-mails, conta inexistente ou em status inválido retorna a mesma
+/// resposta de código inválido (InvalidCredential/401).
 /// </summary>
 public static class ConfirmAccount
 {
-    /// <summary>Comando para confirmação de conta.</summary>
     public record Command : IRequest<Result>
     {
         public string Email { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
     }
 
-    /// <summary>Validador do comando de confirmação de conta.</summary>
     public class Validator : AbstractValidator<Command>
     {
         public Validator()
@@ -41,9 +41,6 @@ public static class ConfirmAccount
         }
     }
 
-    /// <summary>
-    /// Handler que valida o código OTP e ativa a conta da pessoa.
-    /// </summary>
     public sealed class Handler : IRequestHandler<Command, Result>
     {
         private readonly AppDbContext _dbContext;
@@ -78,7 +75,7 @@ public static class ConfirmAccount
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                _logger.LogError("Erros de validação na confirmação de conta {@Erros}", errors);
+                _logger.LogWarning("Erros de validação na confirmação de conta {@Erros}", errors);
                 return Result.Failure(Error.ErrorOnValidation(errors));
             }
 
@@ -87,17 +84,17 @@ public static class ConfirmAccount
 
             if (person is null)
             {
-                _logger.LogError("Nenhuma conta encontrada para o e-mail {Email}", request.Email);
-                return Result.Failure(Error.NotFound($"Nenhuma conta encontrada para o e-mail {request.Email}."));
+                _logger.LogWarning(
+                    "Confirmação ignorada: conta inexistente para {Email} (anti-enumeração)", request.Email);
+                return Result.Failure(Error.InvalidCredential());
             }
 
             if (person.PersonStatus != PersonStatus.AwaitingConfirmation)
             {
-                var message = person.PersonStatus == PersonStatus.Active
-                    ? "Conta já confirmada."
-                    : $"Não é possível confirmar uma conta com status '{person.PersonStatus}'.";
-                _logger.LogError("Status inválido para confirmação: {Status}", person.PersonStatus);
-                return Result.Failure(Error.Conflict(message));
+                _logger.LogWarning(
+                    "Confirmação ignorada: status {Status} para {Email} (anti-enumeração)",
+                    person.PersonStatus, request.Email);
+                return Result.Failure(Error.InvalidCredential());
             }
 
             var key = IVerificationCodeStore.BuildKey(VerificationCodePurpose.EmailConfirmation, request.Email);
@@ -105,13 +102,13 @@ public static class ConfirmAccount
 
             if (record is null)
             {
-                _logger.LogError("Código OTP inexistente ou expirado para {Email}", request.Email);
+                _logger.LogWarning("Código OTP inexistente ou expirado para {Email}", request.Email);
                 return Result.Failure(Error.InvalidCredential());
             }
 
             if (record.Attempts >= 3)
             {
-                _logger.LogError("Número máximo de tentativas atingido para {Email}", request.Email);
+                _logger.LogWarning("Número máximo de tentativas atingido para {Email}", request.Email);
                 return Result.Failure(Error.Forbidden());
             }
 
@@ -123,7 +120,7 @@ public static class ConfirmAccount
             if (!isValid)
             {
                 await _store.IncrementAttemptsAsync(key, cancellationToken);
-                _logger.LogError("Código OTP incorreto para {Email}", request.Email);
+                _logger.LogWarning("Código OTP incorreto para {Email}", request.Email);
                 return Result.Failure(Error.InvalidCredential());
             }
 
@@ -142,7 +139,6 @@ public static class ConfirmAccount
 /// </summary>
 public class ConfirmAccountEndpoint : ICarterModule
 {
-    /// <summary>Registra a rota POST /api/account/confirm.</summary>
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("api/account/confirm", async ([FromBody] RequestConfirmAccount request, ISender sender) =>
@@ -159,13 +155,11 @@ public class ConfirmAccountEndpoint : ICarterModule
         .WithTags("Account")
         .WithName("ConfirmAccount")
         .WithSummary("Confirma o cadastro da pessoa via código OTP.")
-        .WithDescription("Valida o código OTP enviado ao e-mail e ativa a conta (AwaitingConfirmation → Active).")
+        .WithDescription("Valida o código OTP enviado ao e-mail e ativa a conta (AwaitingConfirmation → Active). Conta inexistente, já confirmada ou bloqueada retornam 401 (resposta neutra, anti-enumeração).")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces(StatusCodes.Status403Forbidden)
-        .Produces(StatusCodes.Status404NotFound)
-        .Produces(StatusCodes.Status409Conflict)
         .RequireRateLimiting("public-ip");
     }
 }

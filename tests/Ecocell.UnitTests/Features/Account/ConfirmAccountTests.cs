@@ -65,7 +65,7 @@ public class ConfirmAccountTests : TestBase
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenEmailDoesNotExist()
+    public async Task Handle_ShouldReturnInvalidCredential_WhenEmailDoesNotExist()
     {
         // Arrange
         _command.Email = new Faker().Internet.Email();
@@ -75,11 +75,11 @@ public class ConfirmAccountTests : TestBase
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.Code.ShouldBe(ErrorCodes.NotFound);
+        result.Error.Code.ShouldBe(ErrorCodes.InvalidCredential);
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnConflict_WhenAccountAlreadyActive()
+    public async Task Handle_ShouldReturnInvalidCredential_WhenAccountAlreadyActive()
     {
         // Arrange — confirma a conta na primeira chamada; semeia novo código para chegar ao branch de status
         await _handler.Handle(_command, CancellationToken.None);
@@ -90,7 +90,7 @@ public class ConfirmAccountTests : TestBase
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.Code.ShouldBe(ErrorCodes.Conflict);
+        result.Error.Code.ShouldBe(ErrorCodes.InvalidCredential);
     }
 
     [Fact]
