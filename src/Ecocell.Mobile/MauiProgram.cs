@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 using Refit;
 using Ecocell.Mobile.Services.Api;
+using Ecocell.Mobile.Services.Auth;
 
 namespace Ecocell.Mobile;
 
@@ -31,6 +32,14 @@ public static class MauiProgram
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
 
         builder.Services.AddRefitClient<IAccountClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
+
+        builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
+        builder.Services.AddSingleton<AuthStateService>();
+        builder.Services.AddTransient<AuthTokenHandler>();
+
+        // Client dedicado ao refresh — registrado SEM AuthTokenHandler (evita ciclo/recursão).
+        builder.Services.AddRefitClient<IAuthRefreshClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
 
 #if DEBUG
