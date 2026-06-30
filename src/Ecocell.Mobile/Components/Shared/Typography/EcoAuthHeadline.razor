@@ -1,0 +1,16 @@
+@* src/Ecocell.Mobile/Components/Shared/Typography/EcoAuthHeadline.razor *@
+<div class="eco-auth-headline">
+    <h1>@Title</h1>
+    @if (Subtitle is not null)
+    {
+        <p>@Subtitle</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+}

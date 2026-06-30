@@ -1,29 +1,30 @@
-@page "/confirm-account"
+@page "/login/verify"
 @layout AuthLayout
 @implements IDisposable
 @inject IAccountClient AccountClient
+@inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
-<div class="confirm-screen">
-    <div class="confirm-header">
-        <EcoWordmark />
-    </div>
-
-    <div class="confirm-content">
-        <div class="confirm-headline">
-            <h1>Confirme sua conta</h1>
-            <p>Digite o código de 6 dígitos enviado para @DisplayEmail</p>
+<div class="verify-screen">
+    <div class="verify-content">
+        <div class="verify-brand">
+            <EcoLogoLockup Size="EcoLogoSize.Lg" />
         </div>
 
-        <EcoOtpInput @ref="_otp"
-                     Value="@_code"
-                     ValueChanged="OnCodeChanged"
-                     Completed="OnCompleted"
-                     Disabled="@_verifying"
-                     HasError="@(_errorMessage is not null)"
-                     ErrorText="@_errorMessage" />
+        <EcoAuthHeadline Title="Verifique seu login"
+                         Subtitle="@($"Digite o código de 6 dígitos enviado para {DisplayEmail}")" />
 
-        <div class="confirm-resend">
+        <div class="verify-otp">
+            <EcoOtpInput @ref="_otp"
+                         Value="@_code"
+                         ValueChanged="OnCodeChanged"
+                         Completed="OnCompleted"
+                         Disabled="@_verifying"
+                         HasError="@(_errorMessage is not null)"
+                         ErrorText="@_errorMessage" />
+        </div>
+
+        <div class="verify-resend">
             <EcoResendButton OnResend="HandleResend" />
         </div>
     </div>
@@ -62,13 +63,14 @@
 
         try
         {
-            var response = await AccountClient.ConfirmAccountAsync(
-                new RequestConfirmAccount { Email = Email ?? string.Empty, Code = code },
+            var response = await AccountClient.VerifyLoginCodeAsync(
+                new RequestVerifyLoginCode { Email = Email ?? string.Empty, Code = code },
                 _cts.Token);
 
-            if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode && response.Content is not null)
             {
-                Navigation.NavigateTo("/login");
+                await AuthState.SignInAsync(response.Content);
+                Navigation.NavigateTo("/");
                 return;
             }
 
@@ -90,8 +92,8 @@
 
         try
         {
-            await AccountClient.ResendVerificationCodeAsync(
-                new RequestResendVerificationCode { Email = Email ?? string.Empty },
+            await AccountClient.RequestLoginCodeAsync(
+                new RequestRequestLoginCode { Email = Email ?? string.Empty },
                 _cts.Token);
         }
         catch (OperationCanceledException)

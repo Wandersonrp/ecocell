@@ -1,0 +1,29 @@
+.verify-screen {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.verify-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.verify-brand {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--eco-space-xl);
+}
+
+.verify-otp {
+    margin-top: var(--eco-space-lg);
+}
+
+.verify-resend {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--eco-space-xl);
+}

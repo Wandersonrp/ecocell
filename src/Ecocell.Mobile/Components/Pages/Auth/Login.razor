@@ -1,0 +1,90 @@
+@page "/login"
+@layout AuthLayout
+@implements IDisposable
+@inject IAccountClient Api
+@inject NavigationManager Navigation
+
+<div class="login-screen">
+    <div class="login-content">
+        <div class="login-brand">
+            <EcoLogoLockup Size="EcoLogoSize.Lg" />
+        </div>
+
+        <EcoAuthHeadline Title="Entrar"
+                         Subtitle="Enviaremos um código para o seu e-mail" />
+
+        <div class="login-field">
+            <EcoTextField Placeholder="E-mail"
+                          Type="email"
+                          Value="@_email"
+                          ValueChanged="@(v => _email = v)"
+                          HasError="@(_errorMessage is not null)">
+                <Icon>
+                    <MudIcon Icon="@Icons.Material.Filled.Email"
+                             Color="Color.Inherit"
+                             Size="Size.Small" />
+                </Icon>
+            </EcoTextField>
+        </div>
+
+        @if (_errorMessage is not null)
+        {
+            <p class="login-error" role="alert">@_errorMessage</p>
+        }
+
+        <EcoPrimaryButton Label="Entrar"
+                          OnClick="HandleSubmit"
+                          Disabled="@(!IsFormValid)"
+                          IsLoading="@_loading" />
+    </div>
+
+    <div class="login-footer">
+        <EcoGhostButton Label="Voltar para a home" OnClick="GoHome" />
+    </div>
+</div>
+
+@code {
+    private string _email = string.Empty;
+    private bool _loading;
+    private string? _errorMessage;
+    private readonly CancellationTokenSource _cts = new();
+
+    private bool IsFormValid => Regex.IsMatch(_email.Trim(), @"\S+@\S+\.\S+");
+
+    private async Task HandleSubmit()
+    {
+        if (!IsFormValid || _loading) return;
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var response = await Api.RequestLoginCodeAsync(
+                new RequestRequestLoginCode { Email = _email.Trim() },
+                _cts.Token);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _loading = false;
+                Navigation.NavigateTo($"/login/verify?email={Uri.EscapeDataString(_email.Trim())}");
+            }
+            else
+            {
+                _errorMessage = "Não foi possível enviar o código. Tente novamente.";
+                _loading = false;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Página abandonada durante a requisição — descarta sem atualizar estado.
+        }
+    }
+
+    private void GoHome() => Navigation.NavigateTo("/");
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+}
