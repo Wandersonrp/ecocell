@@ -1,0 +1,23 @@
+<div class="eco-empty-state">
+    <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Class="eco-empty-state__icon" aria-hidden="true" />
+    <h2 class="eco-empty-state__title">@Title</h2>
+    @if (!string.IsNullOrWhiteSpace(Description))
+    {
+        <p class="eco-empty-state__desc">@Description</p>
+    }
+    @if (Action is not null)
+    {
+        <div class="eco-empty-state__action">@Action</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public RenderFragment? Action { get; set; }
+}

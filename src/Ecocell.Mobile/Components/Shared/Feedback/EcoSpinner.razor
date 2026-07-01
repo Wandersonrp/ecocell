@@ -1,0 +1,12 @@
+<div class="eco-spinner" role="status">
+    <span class="eco-spinner__ring" aria-hidden="true"></span>
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <span class="eco-spinner__label">@Label</span>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Label { get; set; }
+}
