@@ -34,6 +34,10 @@ public static class MauiProgram
         builder.Services.AddRefitClient<IAccountClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
 
+        builder.Services.AddRefitClient<IMapClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<AuthTokenHandler>();
+
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<AuthStateService>();
         builder.Services.AddTransient<AuthTokenHandler>();
