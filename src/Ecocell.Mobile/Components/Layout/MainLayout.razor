@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="EcocellTheme.Theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -6,11 +6,9 @@
 <MudSnackbarProvider />
 
 <div class="eco-main-layout">
-    @* EcoTopBar virá aqui — Components/Shared/Navigation/EcoTopBar.razor *@
     <main class="eco-content">
         @Body
     </main>
-    @* EcoNavBar virá aqui — Components/Shared/Navigation/EcoNavBar.razor *@
 </div>
 
 @code {

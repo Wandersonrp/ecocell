@@ -1,0 +1,31 @@
+.eco-nav-bar {
+    display: flex;
+    align-items: stretch;
+    height: 4rem;
+    background: var(--eco-color-surface);
+    border-top: 0.0625rem solid var(--eco-color-divider);
+}
+
+.eco-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--eco-space-xs);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--eco-color-text-tertiary);
+    min-height: 2.75rem;
+}
+
+.eco-nav-item--active {
+    color: var(--eco-color-primary);
+}
+
+.eco-nav-label {
+    font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-caption-weight);
+    line-height: var(--eco-font-caption-lh);
+}
