@@ -8,6 +8,7 @@ using FluentValidation;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Ecocell.Api.Features.Map;
 
@@ -103,8 +104,89 @@ public static class SearchNearbyPoints
                 return ResultT<IReadOnlyList<ResponseNearbyPoint>>.Success(points);
             }
 
-            throw new NotImplementedException("Modo proximidade — Task 4.");
+            var lat = (double)request.Latitude!.Value;
+            var lng = (double)request.Longitude!.Value;
+            var radius = request.RadiusKm ?? DefaultRadiusKm;
+            var collectPoint = (int)Journey.CollectPoint;
+            var active = (int)PersonStatus.Active;
+
+            FormattableString sql = $"""
+                SELECT
+                    lp."PersonId"    AS "Id",
+                    lp."TradeName"   AS "TradeName",
+                    a."Street"       AS "Street",
+                    a."Number"       AS "Number",
+                    a."Neighborhood" AS "Neighborhood",
+                    a."City"         AS "City",
+                    a."State"        AS "State",
+                    a."Latitude"     AS "Latitude",
+                    a."Longitude"    AS "Longitude",
+                    (6371 * acos(LEAST(1.0, GREATEST(-1.0,
+                        cos(radians({lat})) * cos(radians(a."Latitude"::double precision)) *
+                        cos(radians(a."Longitude"::double precision) - radians({lng})) +
+                        sin(radians({lat})) * sin(radians(a."Latitude"::double precision))
+                    )))) AS "DistanceKm"
+                FROM "LegalPeople" lp
+                INNER JOIN "People" p ON p."PersonId" = lp."PersonId"
+                INNER JOIN "Addresses" a ON a."Id" = lp."AddressId"
+                WHERE p."Journey" = {collectPoint}
+                  AND p."PersonStatus" = {active}
+                  AND a."Latitude" IS NOT NULL
+                  AND a."Longitude" IS NOT NULL
+                  AND (6371 * acos(LEAST(1.0, GREATEST(-1.0,
+                        cos(radians({lat})) * cos(radians(a."Latitude"::double precision)) *
+                        cos(radians(a."Longitude"::double precision) - radians({lng})) +
+                        sin(radians({lat})) * sin(radians(a."Latitude"::double precision))
+                    )))) <= {radius}
+                ORDER BY "DistanceKm"
+                """;
+
+            var rows = await _dbContext.Set<NearbyPointRow>()
+                .FromSqlInterpolated(sql)
+                .ToListAsync(cancellationToken);
+
+            var result = rows
+                .Select(r => new ResponseNearbyPoint
+                {
+                    Id = r.Id,
+                    TradeName = r.TradeName,
+                    Street = r.Street,
+                    Number = r.Number,
+                    Neighborhood = r.Neighborhood,
+                    City = r.City,
+                    State = r.State,
+                    Latitude = r.Latitude,
+                    Longitude = r.Longitude,
+                    DistanceKm = r.DistanceKm
+                })
+                .ToList();
+
+            return ResultT<IReadOnlyList<ResponseNearbyPoint>>.Success(result);
         }
+    }
+}
+
+/// <summary>Linha de leitura da busca por proximidade (keyless). Não gera tabela/migration.</summary>
+public class NearbyPointRow
+{
+    public Guid Id { get; set; }
+    public string TradeName { get; set; } = string.Empty;
+    public string Street { get; set; } = string.Empty;
+    public string Number { get; set; } = string.Empty;
+    public string Neighborhood { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string State { get; set; } = string.Empty;
+    public decimal Latitude { get; set; }
+    public decimal Longitude { get; set; }
+    public double DistanceKm { get; set; }
+}
+
+public class NearbyPointRowConfiguration : IEntityTypeConfiguration<NearbyPointRow>
+{
+    public void Configure(EntityTypeBuilder<NearbyPointRow> builder)
+    {
+        builder.HasNoKey();
+        builder.ToView(null);
     }
 }
 

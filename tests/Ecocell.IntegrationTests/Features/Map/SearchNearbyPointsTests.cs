@@ -64,4 +64,26 @@ public class SearchNearbyPointsTests : IntegrationTestBase
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Get_ShouldReturnOrderedWithinRadius_WhenProximitySearch()
+    {
+        // Arrange — referência em São Paulo (-23.55, -46.63)
+        await SeedCollectPointAsync("São Paulo", -23.55m, -46.63m);   // ~0 km
+        await SeedCollectPointAsync("Guarulhos", -23.46m, -46.53m);   // ~14 km (fora de 10km)
+        var (_, jwt) = await CreateAndLoginNaturalPersonAsync();
+        using var authClient = CreateAuthenticatedClient(jwt);
+
+        // Act
+        var response = await authClient.GetAsync("api/map/nearby?latitude=-23.55&longitude=-46.63&radiusKm=10");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var points = await response.Content.ReadFromJsonAsync<List<ResponseNearbyPoint>>();
+        points.ShouldNotBeNull();
+        points.ShouldHaveSingleItem();
+        points![0].City.ShouldBe("São Paulo");
+        points[0].DistanceKm.ShouldNotBeNull();
+        points[0].DistanceKm!.Value.ShouldBeLessThan(1);
+    }
 }
