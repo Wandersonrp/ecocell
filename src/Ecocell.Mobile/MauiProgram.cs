@@ -41,6 +41,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<AuthStateService>();
         builder.Services.AddTransient<AuthTokenHandler>();
+        builder.Services.AddSingleton<Ecocell.Mobile.Services.Location.ILocationService,
+                                      Ecocell.Mobile.Services.Location.LocationService>();
 
         // Client dedicado ao refresh — registrado SEM AuthTokenHandler (evita ciclo/recursão).
         builder.Services.AddRefitClient<IAuthRefreshClient>()
