@@ -1,9 +1,12 @@
+using Carter;
 using Ecocell.Api.Database;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Responses;
 using FluentValidation;
 using Mediator;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecocell.Api.Features.Map;
@@ -102,5 +105,40 @@ public static class SearchNearbyPoints
 
             throw new NotImplementedException("Modo proximidade — Task 4.");
         }
+    }
+}
+
+/// <summary>
+/// Endpoint Carter para GET /api/map/nearby — busca Pontos de Coleta ativos por proximidade ou cidade.
+/// </summary>
+public class SearchNearbyPointsEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapGet("api/map/nearby", async (
+            [FromQuery] decimal? latitude,
+            [FromQuery] decimal? longitude,
+            [FromQuery] double? radiusKm,
+            [FromQuery] string? city,
+            ISender sender) =>
+        {
+            var command = new SearchNearbyPoints.Command
+            {
+                Latitude = latitude,
+                Longitude = longitude,
+                RadiusKm = radiusKm,
+                City = city
+            };
+
+            var result = await sender.Send(command);
+            return result.ToProcessResult(StatusCodes.Status200OK);
+        })
+        .WithTags("Map")
+        .WithName("SearchNearbyPoints")
+        .WithSummary("Busca Pontos de Coleta ativos por proximidade (coordenadas + raio) ou por cidade.")
+        .RequireAuthorization(AuthorizationPolicies.Authenticated)
+        .Produces<List<ResponseNearbyPoint>>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status401Unauthorized);
     }
 }
