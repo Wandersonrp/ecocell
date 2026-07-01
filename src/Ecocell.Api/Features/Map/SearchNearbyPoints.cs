@@ -1,8 +1,10 @@
 using Ecocell.Api.Database;
+using Ecocell.Api.Enums;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Responses;
 using FluentValidation;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ecocell.Api.Features.Map;
 
@@ -60,9 +62,45 @@ public static class SearchNearbyPoints
             _validator = validator;
         }
 
-        public ValueTask<ResultT<IReadOnlyList<ResponseNearbyPoint>>> Handle(Command request, CancellationToken cancellationToken)
+        public async ValueTask<ResultT<IReadOnlyList<ResponseNearbyPoint>>> Handle(Command request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var validation = _validator.Validate(request);
+            if (!validation.IsValid)
+            {
+                var errors = validation.Errors.Select(e => e.ErrorMessage).ToList();
+                return ResultT<IReadOnlyList<ResponseNearbyPoint>>.Failure(Error.ErrorOnValidation(errors));
+            }
+
+            if (request.IsCityMode)
+            {
+                var city = request.City!.Trim().ToLower();
+
+                var points = await _dbContext.LegalPeople
+                    .Where(lp => lp.Journey == Journey.CollectPoint
+                        && lp.PersonStatus == PersonStatus.Active
+                        && lp.Address != null
+                        && lp.Address.Latitude != null
+                        && lp.Address.Longitude != null
+                        && lp.Address.City.ToLower() == city)
+                    .Select(lp => new ResponseNearbyPoint
+                    {
+                        Id = lp.Id,
+                        TradeName = lp.TradeName,
+                        Street = lp.Address!.Street,
+                        Number = lp.Address.Number,
+                        Neighborhood = lp.Address.Neighborhood,
+                        City = lp.Address.City,
+                        State = lp.Address.State,
+                        Latitude = lp.Address.Latitude!.Value,
+                        Longitude = lp.Address.Longitude!.Value,
+                        DistanceKm = null
+                    })
+                    .ToListAsync(cancellationToken);
+
+                return ResultT<IReadOnlyList<ResponseNearbyPoint>>.Success(points);
+            }
+
+            throw new NotImplementedException("Modo proximidade — Task 4.");
         }
     }
 }
