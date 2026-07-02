@@ -58,6 +58,9 @@
 </div>
 
 @code {
+    private const double DefaultLatitude = -23.55;
+    private const double DefaultLongitude = -46.63;
+
     private DotNetObjectReference<Nearby>? _selfRef;
     private string _city = string.Empty;
     private bool _showCitySearch;
@@ -70,23 +73,28 @@
         new("perfil", "Perfil", Icons.Material.Filled.Person, "/perfil"),
     ];
 
-    protected override async Task OnInitializedAsync()
-    {
-        await ViewModel.InitializeAsync();
-    }
-
+    /// <remarks>
+    /// Todo o boot do mapa acontece aqui, em sequência, porque o GPS resolve DEPOIS do
+    /// primeiro render: inicializar o JS no fallback e só então aguardar a localização
+    /// evita a corrida em que o mapa ficava preso no centro padrão (WND-267).
+    /// </remarks>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             var tileUrl = Configuration["MapSettings:TileUrl"]!;
             var attribution = Configuration["MapSettings:Attribution"]!;
-            var lat = ViewModel.Center?.Latitude ?? -23.55;
-            var lng = ViewModel.Center?.Longitude ?? -46.63;
 
             _selfRef = DotNetObjectReference.Create(this);
-            await Js.InvokeVoidAsync("ecoMap.init", "eco-map-canvas", lat, lng, tileUrl, attribution);
+            await Js.InvokeVoidAsync("ecoMap.init", "eco-map-canvas", DefaultLatitude, DefaultLongitude, tileUrl, attribution);
+
+            await ViewModel.InitializeAsync();
+
+            if (ViewModel.Center is not null)
+                await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
+
             await RenderMarkersAsync();
+            StateHasChanged();
         }
     }
 
