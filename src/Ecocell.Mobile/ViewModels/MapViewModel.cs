@@ -30,6 +30,7 @@ public class MapViewModel
     /// <summary>Tenta GPS; se negado, sinaliza <see cref="LocationDenied"/> para a UI abrir a busca por cidade.</summary>
     public async Task InitializeAsync(CancellationToken ct = default)
     {
+        LocationDenied = false;
         var location = await _locationService.GetCurrentAsync(ct);
         if (location is null)
         {
@@ -54,6 +55,7 @@ public class MapViewModel
         IsLoading = true;
         ErrorMessage = null;
         Selected = null;
+        Points = [];
         try
         {
             var response = await call();

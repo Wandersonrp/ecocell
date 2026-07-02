@@ -107,7 +107,8 @@
     private async Task SearchByCityAsync()
     {
         await ViewModel.SearchByCityAsync(_city);
-        await RenderMarkersAsync();
+        if (ViewModel.ErrorMessage is null)
+            await RenderMarkersAsync();
     }
 
     private async Task RetryAsync()
@@ -116,7 +117,8 @@
             await ViewModel.SearchByCityAsync(_city);
         else
             await ViewModel.InitializeAsync();
-        await RenderMarkersAsync();
+        if (ViewModel.ErrorMessage is null)
+            await RenderMarkersAsync();
     }
 
     private async Task RecenterAsync()
@@ -124,7 +126,8 @@
         await ViewModel.InitializeAsync();
         if (ViewModel.Center is not null)
             await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
-        await RenderMarkersAsync();
+        if (ViewModel.ErrorMessage is null)
+            await RenderMarkersAsync();
     }
 
     private void ToggleCitySearch() => _showCitySearch = !_showCitySearch;

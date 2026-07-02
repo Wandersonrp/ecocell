@@ -21,8 +21,9 @@ public static class MauiProgram
             });
 
         var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream("Ecocell.Mobile.appsettings.json");
-        builder.Configuration.AddJsonStream(stream!);
+        var stream = assembly.GetManifestResourceStream("Ecocell.Mobile.appsettings.json");
+        if (stream is not null)
+            builder.Configuration.AddJsonStream(stream);
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();

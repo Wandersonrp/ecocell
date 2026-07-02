@@ -37,7 +37,7 @@ public static class SearchNearbyPoints
                 .Must(c => c.IsProximityMode ^ c.IsCityMode)
                 .WithMessage("Informe coordenadas (latitude e longitude) ou uma cidade, mas não ambos.");
 
-            When(x => x.Latitude.HasValue || x.Longitude.HasValue, () =>
+            When(x => (x.Latitude.HasValue || x.Longitude.HasValue) && !x.IsCityMode, () =>
             {
                 RuleFor(x => x.Latitude).NotNull().InclusiveBetween(-90m, 90m)
                     .WithMessage("Latitude deve estar entre -90 e 90.");
