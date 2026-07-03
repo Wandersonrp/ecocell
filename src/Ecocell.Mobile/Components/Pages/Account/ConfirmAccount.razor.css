@@ -5,7 +5,7 @@
 }
 
 .confirm-header {
-    padding-top: var(--eco-space-auth-top);
+    /* Sem padding-top próprio: o AuthLayout já aplica --eco-space-xxl no topo (WND-271). */
     margin-bottom: var(--eco-space-xl);
 }
 

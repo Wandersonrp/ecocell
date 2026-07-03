@@ -4,15 +4,8 @@
     align-items: center;
     height: 100dvh;
     padding-top: var(--eco-space-xxl);
-    padding-left: var(--eco-space-lg);
-    padding-right: var(--eco-space-lg);
+    padding-left: var(--eco-space-md);
+    padding-right: var(--eco-space-md);
     background-color: var(--eco-color-surface);
     overflow-y: auto;
-}
-
-.eco-auth-logo {
-    margin-bottom: var(--eco-space-xl);
-    display: flex;
-    justify-content: center;
-    width: 100%;
 }

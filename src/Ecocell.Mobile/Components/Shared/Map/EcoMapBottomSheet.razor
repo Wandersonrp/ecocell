@@ -1,0 +1,33 @@
+@if (Point is not null)
+{
+    <div class="eco-map-sheet" role="dialog" aria-label="Detalhes do ponto de coleta">
+        <div class="eco-map-sheet__header">
+            <div class="eco-map-sheet__icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Recycling" />
+            </div>
+            <div class="eco-map-sheet__info">
+                <h3 class="eco-map-sheet__title">@Point.TradeName</h3>
+                <p class="eco-map-sheet__address">@Point.Street, @Point.Number — @Point.Neighborhood, @Point.City/@Point.State</p>
+                @if (Point.DistanceKm is not null)
+                {
+                    <span class="eco-map-sheet__distance">@Point.DistanceKm.Value.ToString("0.0") km</span>
+                }
+            </div>
+            <button type="button" class="eco-map-sheet__close" aria-label="Fechar" @onclick="OnClose">
+                <MudIcon Icon="@Icons.Material.Filled.Close" />
+            </button>
+        </div>
+        <EcoPrimaryButton Label="Ver rota" OnClick="() => OnRoute.InvokeAsync(Point)" />
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ResponseNearbyPoint? Point { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<ResponseNearbyPoint> OnRoute { get; set; }
+}

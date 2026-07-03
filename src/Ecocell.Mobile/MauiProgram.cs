@@ -21,8 +21,9 @@ public static class MauiProgram
             });
 
         var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream("Ecocell.Mobile.appsettings.json");
-        builder.Configuration.AddJsonStream(stream!);
+        var stream = assembly.GetManifestResourceStream("Ecocell.Mobile.appsettings.json");
+        if (stream is not null)
+            builder.Configuration.AddJsonStream(stream);
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
@@ -34,9 +35,16 @@ public static class MauiProgram
         builder.Services.AddRefitClient<IAccountClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl));
 
+        builder.Services.AddRefitClient<IMapClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<AuthTokenHandler>();
+
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<AuthStateService>();
         builder.Services.AddTransient<AuthTokenHandler>();
+        builder.Services.AddSingleton<Ecocell.Mobile.Services.Location.ILocationService,
+                                      Ecocell.Mobile.Services.Location.LocationService>();
+        builder.Services.AddTransient<Ecocell.Mobile.ViewModels.MapViewModel>();
 
         // Client dedicado ao refresh — registrado SEM AuthTokenHandler (evita ciclo/recursão).
         builder.Services.AddRefitClient<IAuthRefreshClient>()

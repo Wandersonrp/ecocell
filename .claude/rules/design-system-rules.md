@@ -216,12 +216,13 @@ Regras:
 
 - Container pill (`--eco-radius-full`), `background: var(--eco-color-surface)`, sombra `--eco-shadow-top-bar`.
 - Layout fixo: `[avatar 36px] ── [logo centralizado] ── [sino]`. Não inverter a ordem.
-- Padding: 8px vertical / 16px horizontal.
+- Padding: 4px vertical / 16px horizontal.
 - **Exclusivo** de telas operacionais — **nunca** em onboarding/auth.
 
 **Nav bar** (`<EcoNavBar>`):
 
-- `background: var(--eco-color-surface)`, altura 64px, `border-top: 1px solid var(--eco-color-divider)`.
+- `background: var(--eco-color-surface)`, altura 52px (3.25rem), `border-top: 1px solid var(--eco-color-divider)`.
+- Itens ancorados no rodapé da barra (`justify-content: flex-end`), não centralizados.
 - Ativo `--eco-color-primary`, inativo `--eco-color-text-tertiary`.
 - **Sempre** exibir label em `--eco-font-caption` abaixo do ícone — nunca ícone sozinho.
 

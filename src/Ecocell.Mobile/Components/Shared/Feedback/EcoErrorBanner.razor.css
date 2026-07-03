@@ -1,0 +1,25 @@
+.eco-error-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--eco-space-sm);
+    padding: var(--eco-space-md);
+    background: var(--eco-color-error-light);
+    border: 0.0625rem solid var(--eco-color-error-border);
+    border-radius: var(--eco-radius-md);
+    color: var(--eco-color-error);
+}
+
+.eco-error-banner__text {
+    flex: 1;
+    font-size: var(--eco-font-body-md-size);
+    line-height: var(--eco-font-body-md-lh);
+}
+
+.eco-error-banner__retry {
+    border: none;
+    background: transparent;
+    color: var(--eco-color-error);
+    font-weight: var(--eco-font-label-weight);
+    cursor: pointer;
+    min-height: 2.75rem;
+}

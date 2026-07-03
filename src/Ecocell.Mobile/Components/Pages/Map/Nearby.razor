@@ -1,0 +1,186 @@
+@page "/map"
+@layout MainLayout
+@using Microsoft.Extensions.Configuration
+@inject MapViewModel ViewModel
+@inject IJSRuntime Js
+@inject IConfiguration Configuration
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<div class="eco-map-screen">
+    <div id="eco-map-canvas" class="eco-map-canvas"></div>
+
+    <div class="eco-map-topbar">
+        <EcoTopBar NotificationCount="0" />
+    </div>
+
+    @if (_showCitySearch)
+    {
+        <div class="eco-map-citysearch">
+            <div class="eco-map-citysearch__header">
+                <label class="eco-map-citysearch__label" for="eco-city-input">Cidade</label>
+                <button type="button"
+                        class="eco-map-citysearch__close"
+                        aria-label="Fechar busca por cidade"
+                        @onclick="CloseCitySearch">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </div>
+            <EcoTextField id="eco-city-input" @bind-Value="_city" Placeholder="Buscar por cidade" />
+            <EcoPrimaryButton Label="Buscar" OnClick="SearchByCityAsync" IsLoading="ViewModel.IsLoading" />
+        </div>
+    }
+
+    <div class="eco-map-controls">
+        <button type="button" class="eco-map-fab" aria-label="Buscar por cidade" @onclick="ToggleCitySearch">
+            <MudIcon Icon="@Icons.Material.Filled.Search" />
+        </button>
+        <button type="button" class="eco-map-fab eco-map-fab--primary" aria-label="Minha localização" @onclick="RecenterAsync">
+            <MudIcon Icon="@Icons.Material.Filled.MyLocation" />
+        </button>
+    </div>
+
+    @if (ViewModel.IsLoading)
+    {
+        <div class="eco-map-overlay"><EcoSpinner Label="Carregando pontos..." /></div>
+    }
+    else if (ViewModel.ErrorMessage is not null)
+    {
+        <div class="eco-map-overlay eco-map-overlay--interactive">
+            <EcoErrorBanner Message="@ViewModel.ErrorMessage" ShowRetry="true" OnRetry="RetryAsync" />
+        </div>
+    }
+    else if (ViewModel.IsEmpty)
+    {
+        <div class="eco-map-overlay">
+            <EcoEmptyState Title="Nenhum ponto por perto"
+                           Description="Não encontramos pontos de coleta. Tente buscar por outra cidade." />
+        </div>
+    }
+
+    <EcoMapBottomSheet Point="ViewModel.Selected" OnClose="() => ViewModel.Select(null)" OnRoute="OpenRouteAsync" />
+
+    <div class="eco-map-navbar">
+        <EcoNavBar Items="_navItems" ActiveId="inicio" OnSelect="OnNavSelect" />
+    </div>
+</div>
+
+@code {
+    private const double DefaultLatitude = -23.55;
+    private const double DefaultLongitude = -46.63;
+
+    private DotNetObjectReference<Nearby>? _selfRef;
+    private string _city = string.Empty;
+    private bool _showCitySearch;
+
+    private static readonly IReadOnlyList<EcoNavItem> _navItems =
+    [
+        new("inicio", "Início", Icons.Material.Filled.Home),
+        new("descartar", "Descartar", Icons.Material.Filled.Recycling, "/descartar"),
+        new("ranking", "Ranking", Icons.Material.Filled.EmojiEvents),
+        new("perfil", "Perfil", Icons.Material.Filled.Person, "/perfil"),
+    ];
+
+    /// <remarks>
+    /// Todo o boot do mapa acontece aqui, em sequência, porque o GPS resolve DEPOIS do
+    /// primeiro render: inicializar o JS no fallback e só então aguardar a localização
+    /// evita a corrida em que o mapa ficava preso no centro padrão (WND-267).
+    /// </remarks>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var tileUrl = Configuration["MapSettings:TileUrl"]!;
+            var attribution = Configuration["MapSettings:Attribution"]!;
+
+            // Centro inicial: último local persistido (WND-273); fallback padrão só no primeiro uso.
+            var initialCenter = ViewModel.CachedCenter;
+            var lat = initialCenter?.Latitude ?? DefaultLatitude;
+            var lng = initialCenter?.Longitude ?? DefaultLongitude;
+
+            _selfRef = DotNetObjectReference.Create(this);
+            await Js.InvokeVoidAsync("ecoMap.init", "eco-map-canvas", lat, lng, tileUrl, attribution);
+
+            await ViewModel.InitializeAsync();
+
+            if (ViewModel.LocationDenied)
+                _showCitySearch = true;
+
+            if (ViewModel.Center is not null)
+                await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
+
+            await RenderMarkersAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task RenderMarkersAsync()
+    {
+        await Js.InvokeVoidAsync("ecoMap.setMarkers", ViewModel.Points, _selfRef);
+    }
+
+    [JSInvokable]
+    public Task OnPinSelected(Guid id)
+    {
+        var point = ViewModel.Points.FirstOrDefault(p => p.Id == id);
+        ViewModel.Select(point);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task SearchByCityAsync()
+    {
+        await ViewModel.SearchByCityAsync(_city);
+        if (ViewModel.ErrorMessage is null)
+        {
+            _showCitySearch = false;
+            await RenderMarkersAsync();
+        }
+    }
+
+    private async Task RetryAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_city))
+            await ViewModel.SearchByCityAsync(_city);
+        else
+            await ViewModel.InitializeAsync();
+        if (ViewModel.LocationDenied)
+            _showCitySearch = true;
+        if (ViewModel.ErrorMessage is null)
+            await RenderMarkersAsync();
+    }
+
+    private async Task RecenterAsync()
+    {
+        await ViewModel.InitializeAsync();
+        if (ViewModel.LocationDenied)
+            _showCitySearch = true;
+        if (ViewModel.Center is not null)
+            await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
+        if (ViewModel.ErrorMessage is null)
+            await RenderMarkersAsync();
+    }
+
+    private void ToggleCitySearch() => _showCitySearch = !_showCitySearch;
+
+    private void CloseCitySearch() => _showCitySearch = false;
+
+    private async Task OpenRouteAsync(ResponseNearbyPoint point)
+    {
+        var uri = $"geo:{point.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                  $"{point.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        await Launcher.Default.TryOpenAsync(uri);
+    }
+
+    private void OnNavSelect(string id)
+    {
+        var item = _navItems.FirstOrDefault(n => n.Id == id);
+        if (item?.Href is not null) Navigation.NavigateTo(item.Href);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _selfRef?.Dispose();
+        await Task.CompletedTask;
+    }
+}

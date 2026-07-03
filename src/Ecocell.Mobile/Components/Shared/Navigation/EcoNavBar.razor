@@ -1,0 +1,23 @@
+<nav class="eco-nav-bar" aria-label="Navegação principal">
+    @foreach (var item in Items)
+    {
+        <button type="button"
+                class="eco-nav-item @(item.Id == ActiveId ? "eco-nav-item--active" : "")"
+                aria-current="@(item.Id == ActiveId ? "page" : null)"
+                @onclick="() => OnSelect.InvokeAsync(item.Id)">
+            <MudIcon Icon="@item.Icon" Class="eco-nav-icon" aria-hidden="true" />
+            <span class="eco-nav-label">@item.Label</span>
+        </button>
+    }
+</nav>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<EcoNavItem> Items { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string ActiveId { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> OnSelect { get; set; }
+}

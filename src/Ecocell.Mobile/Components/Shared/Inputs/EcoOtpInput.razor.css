@@ -5,7 +5,11 @@
 }
 
 .eco-otp__box {
-    width: 3rem;
+    /* Fluido em telas estreitas: encolhe por igual até caber, com teto no tamanho
+       do design (3rem). min-width: 0 destrava o shrink do <input> (WND-274). */
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 3rem;
     height: 3.5rem;
     text-align: center;
     font-family: 'Inter', sans-serif;

@@ -1,3 +1,5 @@
+using Ecocell.Shared.Auth;
+using Ecocell.Shared.Enums;
 using Ecocell.Shared.Responses;
 
 namespace Ecocell.Mobile.Services.Auth;
@@ -22,6 +24,9 @@ public sealed class AuthStateService
             || _tokens.RefreshTokenExpiresAtUtc > DateTimeOffset.UtcNow);
 
     public string? CurrentAccessToken => _tokens?.AccessToken;
+
+    /// <summary>Jornada do usuário lida da claim <c>journey</c> do access token, ou <c>null</c> se ausente.</summary>
+    public Journey? CurrentJourney => JwtClaimsReader.GetJourney(_tokens?.AccessToken);
 
     public string? CurrentRefreshToken => _tokens?.RefreshToken;
 
