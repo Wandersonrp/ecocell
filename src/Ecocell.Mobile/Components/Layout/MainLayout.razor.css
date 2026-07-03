@@ -10,6 +10,7 @@
 .eco-content {
     flex: 1;
     overflow-y: auto;
-    padding: var(--eco-space-lg);
+    /* Sem padding no layout: telas full-bleed (mapa) ocupam as bordas (WND-268);
+       cada página aplica o próprio padding quando precisar. */
     background-color: var(--eco-color-surface);
 }

@@ -35,6 +35,26 @@
     box-shadow: var(--eco-shadow-card);
 }
 
+.eco-map-citysearch__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.eco-map-citysearch__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    /* Margens negativas preservam o touch target de 44px sem inflar o card. */
+    margin: calc(-1 * var(--eco-space-sm)) calc(-1 * var(--eco-space-sm)) calc(-1 * var(--eco-space-sm)) 0;
+    border: none;
+    background: transparent;
+    color: var(--eco-color-text-tertiary);
+    cursor: pointer;
+}
+
 .eco-map-citysearch__label {
     font-size: var(--eco-font-label-size);
     font-weight: var(--eco-font-label-weight);
@@ -81,6 +101,14 @@
     z-index: 15;
     display: flex;
     justify-content: center;
+    /* Avisos informativos (empty state, spinner) não capturam toque:
+       o arraste atravessa para o mapa (WND-269). */
+    pointer-events: none;
+}
+
+/* Variante para overlay com ação (banner de erro) — botão precisa ser clicável. */
+.eco-map-overlay--interactive {
+    pointer-events: auto;
 }
 
 .eco-map-navbar {

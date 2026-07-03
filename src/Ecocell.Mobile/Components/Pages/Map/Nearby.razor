@@ -14,10 +14,18 @@
         <EcoTopBar NotificationCount="0" />
     </div>
 
-    @if (ViewModel.LocationDenied || _showCitySearch)
+    @if (_showCitySearch)
     {
         <div class="eco-map-citysearch">
-            <label class="eco-map-citysearch__label" for="eco-city-input">Cidade</label>
+            <div class="eco-map-citysearch__header">
+                <label class="eco-map-citysearch__label" for="eco-city-input">Cidade</label>
+                <button type="button"
+                        class="eco-map-citysearch__close"
+                        aria-label="Fechar busca por cidade"
+                        @onclick="CloseCitySearch">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </div>
             <EcoTextField id="eco-city-input" @bind-Value="_city" Placeholder="Buscar por cidade" />
             <EcoPrimaryButton Label="Buscar" OnClick="SearchByCityAsync" IsLoading="ViewModel.IsLoading" />
         </div>
@@ -38,7 +46,7 @@
     }
     else if (ViewModel.ErrorMessage is not null)
     {
-        <div class="eco-map-overlay">
+        <div class="eco-map-overlay eco-map-overlay--interactive">
             <EcoErrorBanner Message="@ViewModel.ErrorMessage" ShowRetry="true" OnRetry="RetryAsync" />
         </div>
     }
@@ -85,10 +93,18 @@
             var tileUrl = Configuration["MapSettings:TileUrl"]!;
             var attribution = Configuration["MapSettings:Attribution"]!;
 
+            // Centro inicial: último local persistido (WND-273); fallback padrão só no primeiro uso.
+            var initialCenter = ViewModel.CachedCenter;
+            var lat = initialCenter?.Latitude ?? DefaultLatitude;
+            var lng = initialCenter?.Longitude ?? DefaultLongitude;
+
             _selfRef = DotNetObjectReference.Create(this);
-            await Js.InvokeVoidAsync("ecoMap.init", "eco-map-canvas", DefaultLatitude, DefaultLongitude, tileUrl, attribution);
+            await Js.InvokeVoidAsync("ecoMap.init", "eco-map-canvas", lat, lng, tileUrl, attribution);
 
             await ViewModel.InitializeAsync();
+
+            if (ViewModel.LocationDenied)
+                _showCitySearch = true;
 
             if (ViewModel.Center is not null)
                 await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
@@ -116,7 +132,10 @@
     {
         await ViewModel.SearchByCityAsync(_city);
         if (ViewModel.ErrorMessage is null)
+        {
+            _showCitySearch = false;
             await RenderMarkersAsync();
+        }
     }
 
     private async Task RetryAsync()
@@ -125,6 +144,8 @@
             await ViewModel.SearchByCityAsync(_city);
         else
             await ViewModel.InitializeAsync();
+        if (ViewModel.LocationDenied)
+            _showCitySearch = true;
         if (ViewModel.ErrorMessage is null)
             await RenderMarkersAsync();
     }
@@ -132,6 +153,8 @@
     private async Task RecenterAsync()
     {
         await ViewModel.InitializeAsync();
+        if (ViewModel.LocationDenied)
+            _showCitySearch = true;
         if (ViewModel.Center is not null)
             await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
         if (ViewModel.ErrorMessage is null)
@@ -139,6 +162,8 @@
     }
 
     private void ToggleCitySearch() => _showCitySearch = !_showCitySearch;
+
+    private void CloseCitySearch() => _showCitySearch = false;
 
     private async Task OpenRouteAsync(ResponseNearbyPoint point)
     {
