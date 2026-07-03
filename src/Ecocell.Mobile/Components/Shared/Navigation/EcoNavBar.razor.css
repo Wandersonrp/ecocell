@@ -1,7 +1,7 @@
 .eco-nav-bar {
     display: flex;
     align-items: stretch;
-    height: 4rem;
+    height: 3.25rem;
     background: var(--eco-color-surface);
     border-top: 0.0625rem solid var(--eco-color-divider);
 }
@@ -11,7 +11,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* Ícones ancorados no rodapé da barra (WND-270). */
+    justify-content: flex-end;
+    padding-bottom: var(--eco-space-xs);
     gap: var(--eco-space-xs);
     border: none;
     background: transparent;
