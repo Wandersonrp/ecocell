@@ -5,7 +5,8 @@
 }
 
 .register-header {
-    padding-top: var(--eco-space-auth-top);
+    /* Sem padding-top próprio: o AuthLayout já aplica --eco-space-xxl no topo.
+       O padding duplicado (48px + 54px) causava scroll no Redmi Note 5 (WND-271). */
     margin-bottom: var(--eco-space-xl);
 }
 

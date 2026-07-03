@@ -2,7 +2,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--eco-space-sm) var(--eco-space-md);
+    padding: var(--eco-space-xs) var(--eco-space-md);
     background: var(--eco-color-surface);
     border-radius: var(--eco-radius-full);
     box-shadow: var(--eco-shadow-top-bar);

@@ -8,7 +8,8 @@
     color: var(--eco-color-text-primary);
     border: 1.5px solid var(--eco-color-border);
     border-radius: var(--eco-radius-full);
-    padding: 12.5px 20px;
+    /* -1.5px compensa a borda para alinhar altura com o botão primário. */
+    padding: calc(var(--eco-button-padding-v) - 1.5px) var(--eco-button-padding-h);
     font-family: 'Inter', sans-serif;
     font-size: var(--eco-font-button-size);
     font-weight: var(--eco-font-button-weight);
