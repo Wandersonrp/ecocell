@@ -70,7 +70,7 @@
             if (response.IsSuccessStatusCode && response.Content is not null)
             {
                 await AuthState.SignInAsync(response.Content);
-                Navigation.NavigateTo("/");
+                Navigation.NavigateTo(PostLoginRoute(AuthState.CurrentJourney));
                 return;
             }
 
@@ -85,6 +85,13 @@
             // Página abandonada durante a requisição — descarta sem atualizar estado.
         }
     }
+
+    /// <summary>
+    /// Rota inicial após login conforme a jornada. Depositante vai ao mapa;
+    /// demais jornadas ainda não têm tela dedicada e caem na tela inicial.
+    /// </summary>
+    private static string PostLoginRoute(Journey? journey) =>
+        journey == Journey.Depositor ? "/map" : "/";
 
     private async Task HandleResend()
     {
