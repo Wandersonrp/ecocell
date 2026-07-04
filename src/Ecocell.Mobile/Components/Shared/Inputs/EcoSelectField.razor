@@ -1,0 +1,59 @@
+<label class="eco-select-field @(_focused ? "eco-select-field--focused" : "") @(HasError ? "eco-select-field--error" : "") @CssClass">
+    @if (Icon is not null)
+    {
+        <span class="eco-select-field__icon" aria-hidden="true">@Icon</span>
+    }
+    <select class="eco-select-field__control @(string.IsNullOrEmpty(Value) ? "eco-select-field__control--placeholder" : "")"
+            value="@Value"
+            @onchange="OnChange"
+            @onfocusin="@(() => _focused = true)"
+            @onfocusout="@(() => _focused = false)"
+            @attributes="AdditionalAttributes">
+        <option value="" disabled hidden>@Placeholder</option>
+        @foreach (var opt in Options)
+        {
+            <option value="@opt">@opt</option>
+        }
+    </select>
+    <span class="eco-select-field__chevron" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+        </svg>
+    </span>
+</label>
+
+@code {
+    private bool _focused;
+
+    [Parameter, EditorRequired]
+    public string Placeholder { get; set; } = default!;
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public IEnumerable<string> Options { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? Icon { get; set; }
+
+    [Parameter]
+    public bool HasError { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var v = e.Value?.ToString() ?? string.Empty;
+        Value = v;
+        await ValueChanged.InvokeAsync(v);
+    }
+}
