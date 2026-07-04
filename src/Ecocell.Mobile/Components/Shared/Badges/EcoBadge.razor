@@ -1,4 +1,4 @@
-<span class="eco-badge eco-badge--@Variant.ToString().ToLowerInvariant() @CssClass"
+<span class="@_badgeClass"
       @attributes="AdditionalAttributes">
     @ChildContent
 </span>
@@ -12,6 +12,9 @@
 
     [Parameter]
     public string? CssClass { get; set; }
+
+    private string _badgeClass =>
+        $"eco-badge eco-badge--{Variant.ToString().ToLowerInvariant()}{(CssClass is null ? "" : " " + CssClass)}";
 
     [Parameter(CaptureUnmatchedValues = true)]
     public IDictionary<string, object>? AdditionalAttributes { get; set; }

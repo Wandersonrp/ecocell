@@ -19,6 +19,10 @@
     justify-content: center;
 }
 
+.collect-point-headline {
+    position: relative;
+}
+
 .collect-point-headline h1 {
     margin: 0;
     font-size: var(--eco-font-h1-size);

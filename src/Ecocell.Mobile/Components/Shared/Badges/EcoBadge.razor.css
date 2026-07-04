@@ -3,7 +3,7 @@
     align-items: center;
     padding: var(--eco-space-xs) var(--eco-space-sm);
     font-size: var(--eco-font-caption-size);
-    font-weight: 600;
+    font-weight: var(--eco-font-button-weight);
     line-height: var(--eco-font-caption-lh);
     border-radius: var(--eco-radius-full);
 }

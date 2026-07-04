@@ -6,7 +6,7 @@
 
 .eco-step-indicator__caption {
     font-size: var(--eco-font-caption-size);
-    font-weight: 500;
+    font-weight: var(--eco-font-label-weight);
     line-height: var(--eco-font-caption-lh);
     color: var(--eco-color-text-tertiary);
 }
