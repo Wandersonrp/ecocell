@@ -62,6 +62,61 @@ public class JwtClaimsReaderTests
         journey.ShouldBeNull();
     }
 
+    [Fact]
+    public void GetRole_ShouldReturnAdmin_WhenTokenHasAdminRole()
+    {
+        // Arrange
+        var token = BuildToken("{\"role\":\"Admin\"}");
+
+        // Act
+        var role = JwtClaimsReader.GetRole(token);
+
+        // Assert
+        role.ShouldBe(Role.Admin);
+    }
+
+    [Theory]
+    [InlineData("Support", Role.Support)]
+    [InlineData("User", Role.User)]
+    public void GetRole_ShouldReturnMatchingRole_WhenTokenHasRoleClaim(string claim, Role expected)
+    {
+        // Arrange
+        var token = BuildToken($"{{\"role\":\"{claim}\"}}");
+
+        // Act
+        var role = JwtClaimsReader.GetRole(token);
+
+        // Assert
+        role.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void GetRole_ShouldReturnNull_WhenRoleClaimIsMissing()
+    {
+        // Arrange
+        var token = BuildToken("{\"email\":\"user@ecocell.com\"}");
+
+        // Act
+        var role = JwtClaimsReader.GetRole(token);
+
+        // Assert
+        role.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("not-a-jwt")]
+    [InlineData("header.payload")]
+    public void GetRole_ShouldReturnNull_WhenTokenIsMalformed(string? token)
+    {
+        // Act
+        var role = JwtClaimsReader.GetRole(token);
+
+        // Assert
+        role.ShouldBeNull();
+    }
+
     private static string BuildToken(string payloadJson)
     {
         var header = Base64Url("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");

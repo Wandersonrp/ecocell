@@ -27,6 +27,22 @@ public static class JwtClaimsReader
         return Enum.TryParse<Journey>(journeyClaim.GetString(), out var journey) ? journey : null;
     }
 
+    /// <summary>
+    /// Extrai a claim <c>role</c> do payload do token. Retorna <c>null</c> quando o
+    /// token é nulo/malformado ou a claim está ausente ou não corresponde a um papel conhecido.
+    /// </summary>
+    public static Role? GetRole(string? accessToken)
+    {
+        var payload = DecodePayload(accessToken);
+
+        if (payload is null || !payload.Value.TryGetProperty("role", out var roleClaim))
+        {
+            return null;
+        }
+
+        return Enum.TryParse<Role>(roleClaim.GetString(), out var role) ? role : null;
+    }
+
     private static JsonElement? DecodePayload(string? token)
     {
         if (string.IsNullOrWhiteSpace(token))
