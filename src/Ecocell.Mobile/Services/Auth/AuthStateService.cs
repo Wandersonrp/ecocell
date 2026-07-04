@@ -28,6 +28,9 @@ public sealed class AuthStateService
     /// <summary>Jornada do usuário lida da claim <c>journey</c> do access token, ou <c>null</c> se ausente.</summary>
     public Journey? CurrentJourney => JwtClaimsReader.GetJourney(_tokens?.AccessToken);
 
+    /// <summary>Papel do usuário lido da claim <c>role</c> do access token, ou <c>null</c> se ausente.</summary>
+    public Role? CurrentRole => JwtClaimsReader.GetRole(_tokens?.AccessToken);
+
     public string? CurrentRefreshToken => _tokens?.RefreshToken;
 
     public async Task InitializeAsync() => _tokens = await _store.GetAsync();
