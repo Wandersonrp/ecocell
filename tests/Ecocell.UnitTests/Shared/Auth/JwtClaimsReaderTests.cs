@@ -23,7 +23,6 @@ public class JwtClaimsReaderTests
     [Theory]
     [InlineData("CollectPoint", Journey.CollectPoint)]
     [InlineData("Collector", Journey.Collector)]
-    [InlineData("Responsible", Journey.Responsible)]
     public void GetJourney_ShouldReturnMatchingJourney_WhenTokenHasJourneyClaim(string claim, Journey expected)
     {
         // Arrange

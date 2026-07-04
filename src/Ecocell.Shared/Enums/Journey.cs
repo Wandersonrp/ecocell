@@ -9,5 +9,4 @@ public enum Journey
     Depositor = 1,
     CollectPoint = 2,
     Collector = 3,
-    Responsible = 4,
 }

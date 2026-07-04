@@ -11,6 +11,4 @@ public enum Journey
     CollectPoint = 2,
     /// <summary>Coletor — transporta os resíduos do ponto de coleta.</summary>
     Collector = 3,
-    /// <summary>Responsável — administra uma empresa coletora.</summary>
-    Responsible = 4,
 }
