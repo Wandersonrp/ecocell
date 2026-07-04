@@ -51,3 +51,18 @@
     display: flex;
     justify-content: center;
 }
+
+.profile-selector-soon {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-selector-soon__tag {
+    align-self: center;
+    margin-top: var(--eco-space-xs);
+    font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-caption-weight);
+    line-height: var(--eco-font-caption-lh);
+    color: var(--eco-color-text-tertiary);
+}

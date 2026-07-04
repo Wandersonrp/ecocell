@@ -1,0 +1,29 @@
+.eco-step-indicator {
+    display: flex;
+    flex-direction: column;
+    gap: var(--eco-space-sm);
+}
+
+.eco-step-indicator__caption {
+    font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-label-weight);
+    line-height: var(--eco-font-caption-lh);
+    color: var(--eco-color-text-tertiary);
+}
+
+.eco-step-indicator__track {
+    display: flex;
+    gap: var(--eco-space-xs);
+}
+
+.eco-step-indicator__segment {
+    flex: 1;
+    height: 0.25rem;
+    border-radius: var(--eco-radius-full);
+    background: var(--eco-color-primary-tint);
+    transition: background 160ms ease;
+}
+
+.eco-step-indicator__segment--active {
+    background: var(--eco-color-primary);
+}

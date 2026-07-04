@@ -1,4 +1,4 @@
-﻿namespace Ecocell.Api.Shared.Utils;
+namespace Ecocell.Shared.Utils;
 
 public static class DocumentValidator
 {

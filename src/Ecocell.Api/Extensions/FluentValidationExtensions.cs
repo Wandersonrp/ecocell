@@ -1,4 +1,4 @@
-﻿using Ecocell.Api.Shared.Utils;
+﻿using Ecocell.Shared.Utils;
 using FluentValidation;
 
 namespace Ecocell.Api.Extensions;

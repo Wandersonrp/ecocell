@@ -90,7 +90,7 @@
                               Disabled="@(!IsFormValid)"
                               IsLoading="@_loading" />
             <div class="register-back">
-                <EcoGhostButton Label="Voltar para opções" OnClick="GoBack" />
+                <EcoGhostButton Label="Voltar" OnClick="GoBack" />
             </div>
         </div>
     </div>
@@ -169,7 +169,7 @@
         }
     }
 
-    private void GoBack() => Navigation.NavigateTo("/profile-selector");
+    private void GoBack() => Navigation.NavigateTo("/");
 
     public void Dispose()
     {

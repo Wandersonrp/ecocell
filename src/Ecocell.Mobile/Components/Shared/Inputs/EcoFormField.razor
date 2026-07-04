@@ -1,0 +1,34 @@
+<div class="eco-form-field @CssClass">
+    <label class="eco-form-field__label" for="@For">
+        @Label
+        @if (Optional)
+        {
+            <span class="eco-form-field__optional">(opcional)</span>
+        }
+    </label>
+    @ChildContent
+    @if (Error is not null)
+    {
+        <span class="eco-form-field__error" role="alert">@Error</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = default!;
+
+    [Parameter]
+    public string? For { get; set; }
+
+    [Parameter]
+    public bool Optional { get; set; }
+
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public string? CssClass { get; set; }
+}
