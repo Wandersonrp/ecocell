@@ -1,0 +1,18 @@
+<span class="eco-badge eco-badge--@Variant.ToString().ToLowerInvariant() @CssClass"
+      @attributes="AdditionalAttributes">
+    @ChildContent
+</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public EcoBadgeVariant Variant { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+}
