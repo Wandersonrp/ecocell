@@ -1,0 +1,250 @@
+@page "/register/collect-point"
+@layout AuthLayout
+@inject LegalPersonViewModel Vm
+@inject NavigationManager Navigation
+@inject AuthStateService Auth
+
+<div class="collect-point-screen">
+    @if (_step != WizardStep.Success)
+    {
+        <div class="collect-point-header">
+            <div class="collect-point-wordmark">
+                <EcoWordmark />
+            </div>
+            <EcoStepIndicator Step="@CurrentStepNumber" Total="2" />
+            <div class="collect-point-headline">
+                <h1 @ref="_titleRef" tabindex="-1">@Title</h1>
+                <p>@Subtitle</p>
+                <span class="collect-point-live" aria-live="polite">Passo @CurrentStepNumber de 2: @Title</span>
+            </div>
+        </div>
+    }
+
+    @if (_step == WizardStep.Company)
+    {
+        <div class="collect-point-body">
+            <div class="collect-point-form">
+                <EcoFormField Label="CNPJ" For="cnpj" Error="@Err("cnpj")">
+                    <EcoTextField Placeholder="00.000.000/0000-00" Value="@Vm.Cnpj"
+                                  ValueChanged="@(v => { Vm.Cnpj = v; Clear("cnpj"); })"
+                                  Type="tel" Mask="@_maskCnpj" HasError="@Has("cnpj")"
+                                  id="cnpj" inputmode="numeric">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Business" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="Razão social" For="legalName" Error="@Err("legalName")">
+                    <EcoTextField Placeholder="Nome registrado da empresa" Value="@Vm.LegalName"
+                                  ValueChanged="@(v => { Vm.LegalName = v; Clear("legalName"); })"
+                                  HasError="@Has("legalName")" id="legalName">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Description" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="Nome fantasia" For="tradeName" Error="@Err("tradeName")">
+                    <EcoTextField Placeholder="Como o local é conhecido" Value="@Vm.TradeName"
+                                  ValueChanged="@(v => { Vm.TradeName = v; Clear("tradeName"); })"
+                                  HasError="@Has("tradeName")" id="tradeName">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Storefront" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="E-mail da empresa" For="email" Error="@Err("email")">
+                    <EcoTextField Placeholder="contato@empresa.com" Value="@Vm.Email"
+                                  ValueChanged="@(v => { Vm.Email = v; Clear("email"); })"
+                                  Type="email" HasError="@Has("email")" id="email">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.MailOutline" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+            </div>
+        </div>
+        <div class="collect-point-cta">
+            <EcoPrimaryButton Label="Continuar" OnClick="HandleContinue" />
+            <div class="collect-point-back">
+                <EcoGhostButton Label="Voltar" OnClick="Cancel" />
+            </div>
+        </div>
+    }
+    else if (_step == WizardStep.Address)
+    {
+        <div class="collect-point-body">
+            @if (Vm.BannerMessage is not null)
+            {
+                <div class="collect-point-banner">
+                    <EcoErrorBanner Message="@Vm.BannerMessage" />
+                </div>
+            }
+            <div class="collect-point-form">
+                <EcoFormField Label="CEP" For="zipCode" Error="@Err("zipCode")">
+                    <EcoTextField Placeholder="00000-000" Value="@Vm.ZipCode"
+                                  ValueChanged="@(v => { Vm.ZipCode = v; Clear("zipCode"); })"
+                                  Type="tel" Mask="@_maskCep" HasError="@Has("zipCode")"
+                                  id="zipCode" inputmode="numeric">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.LocationOn" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="Logradouro" For="street" Error="@Err("street")">
+                    <EcoTextField Placeholder="Rua, avenida..." Value="@Vm.Street"
+                                  ValueChanged="@(v => { Vm.Street = v; Clear("street"); })"
+                                  HasError="@Has("street")" id="street">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Signpost" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="Número" For="number" Error="@Err("number")">
+                    <EcoTextField Placeholder="Número" Value="@Vm.Number"
+                                  ValueChanged="@(v => { Vm.Number = v; Clear("number"); })"
+                                  Type="tel" HasError="@Has("number")" id="number" inputmode="numeric">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Tag" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="Complemento" For="complement" Optional="true">
+                    <EcoTextField Placeholder="Sala, bloco, referência..." Value="@Vm.Complement"
+                                  ValueChanged="@(v => Vm.Complement = v)" id="complement">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Notes" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="Bairro" For="neighborhood" Error="@Err("neighborhood")">
+                    <EcoTextField Placeholder="Bairro" Value="@Vm.Neighborhood"
+                                  ValueChanged="@(v => { Vm.Neighborhood = v; Clear("neighborhood"); })"
+                                  HasError="@Has("neighborhood")" id="neighborhood">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Map" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="Cidade" For="city" Error="@Err("city")">
+                    <EcoTextField Placeholder="Cidade" Value="@Vm.City"
+                                  ValueChanged="@(v => { Vm.City = v; Clear("city"); })"
+                                  HasError="@Has("city")" id="city">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.LocationCity" Size="Size.Small" /></Icon>
+                    </EcoTextField>
+                </EcoFormField>
+
+                <EcoFormField Label="UF" For="uf" Error="@Err("uf")">
+                    <EcoSelectField Placeholder="Selecione a UF" Value="@Vm.Uf"
+                                    ValueChanged="@(v => { Vm.Uf = v; Clear("uf"); })"
+                                    Options="_ufs" HasError="@Has("uf")" id="uf">
+                        <Icon><MudIcon Icon="@Icons.Material.Outlined.Public" Size="Size.Small" /></Icon>
+                    </EcoSelectField>
+                </EcoFormField>
+            </div>
+        </div>
+        <div class="collect-point-cta">
+            <EcoPrimaryButton Label="Cadastrar ponto de coleta" OnClick="HandleSubmit" IsLoading="@Vm.IsLoading" />
+            <div class="collect-point-back">
+                <EcoGhostButton Label="Voltar" OnClick="BackToCompany" />
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="collect-point-success">
+            <div class="collect-point-success__body">
+                <div class="collect-point-success__icon">
+                    <MudIcon Icon="@Icons.Material.Filled.Check" />
+                </div>
+                <h1>Cadastro enviado!</h1>
+                <div class="collect-point-success__badge">
+                    <EcoBadge Variant="EcoBadgeVariant.Pending">Aguardando aprovação</EcoBadge>
+                </div>
+                <p>Seu ponto de coleta passará por análise da nossa equipe. Avisaremos por e-mail assim que for aprovado.</p>
+            </div>
+            <div class="collect-point-success__cta">
+                <EcoPrimaryButton Label="Voltar para o início" OnClick="GoHome" />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private enum WizardStep { Company, Address, Success }
+
+    private static readonly string[] _ufs =
+    {
+        "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB",
+        "PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+    };
+
+    private static readonly Func<string, string> _maskCnpj = MaskCnpj;
+    private static readonly Func<string, string> _maskCep = MaskCep;
+
+    private WizardStep _step = WizardStep.Company;
+    private ElementReference _titleRef;
+    private bool _focusTitle;
+
+    private int CurrentStepNumber => _step == WizardStep.Address ? 2 : 1;
+    private string Title => _step == WizardStep.Address ? "Endereço" : "Dados da empresa";
+    private string Subtitle => _step == WizardStep.Address
+        ? "Onde fica o seu ponto de coleta"
+        : "Sobre o seu ponto de coleta";
+
+    protected override void OnInitialized()
+    {
+        if (!Auth.IsAuthenticated)
+            Navigation.NavigateTo("/login");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusTitle)
+        {
+            _focusTitle = false;
+            await _titleRef.FocusAsync();
+        }
+    }
+
+    private bool Has(string key) => Vm.Errors.ContainsKey(key);
+    private string? Err(string key) => Vm.Errors.TryGetValue(key, out var m) ? m : null;
+    private void Clear(string key) => Vm.Errors.Remove(key);
+
+    private void HandleContinue()
+    {
+        if (Vm.ValidateStep1())
+        {
+            _step = WizardStep.Address;
+            _focusTitle = true;
+        }
+    }
+
+    private void BackToCompany()
+    {
+        Vm.Errors.Clear();
+        _step = WizardStep.Company;
+        _focusTitle = true;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (await Vm.SubmitAsync())
+            _step = WizardStep.Success;
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/profile-selector");
+    private void GoHome() => Navigation.NavigateTo("/map");
+
+    private static string Digits(string v) => Regex.Replace(v, @"\D", "");
+
+    private static string MaskCnpj(string v)
+    {
+        var d = Digits(v);
+        if (d.Length > 14) d = d[..14];
+        return d.Length switch
+        {
+            <= 2 => d,
+            <= 5 => $"{d[..2]}.{d[2..]}",
+            <= 8 => $"{d[..2]}.{d[2..5]}.{d[5..]}",
+            <= 12 => $"{d[..2]}.{d[2..5]}.{d[5..8]}/{d[8..]}",
+            _ => $"{d[..2]}.{d[2..5]}.{d[5..8]}/{d[8..12]}-{d[12..]}"
+        };
+    }
+
+    private static string MaskCep(string v)
+    {
+        var d = Digits(v);
+        if (d.Length > 8) d = d[..8];
+        return d.Length <= 5 ? d : $"{d[..5]}-{d[5..]}";
+    }
+}
