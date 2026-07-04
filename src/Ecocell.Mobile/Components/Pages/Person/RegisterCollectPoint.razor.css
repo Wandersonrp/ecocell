@@ -4,7 +4,6 @@
     display: flex;
     flex-direction: column;
     background: var(--eco-color-surface);
-    min-height: 0;
     /* Sem padding lateral/topo próprio: o AuthLayout já aplica (WND-271/WND-276). */
 }
 
@@ -55,7 +54,6 @@
     display: flex;
     flex-direction: column;
     margin-top: var(--eco-space-lg);
-    overflow-y: auto;
 }
 
 .collect-point-banner {
