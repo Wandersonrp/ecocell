@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Ecocell.Mobile.Services.Api;
 using Ecocell.Shared.Enums;
 using Ecocell.Shared.Requests;
+using Ecocell.Shared.Utils;
 
 namespace Ecocell.Mobile.ViewModels;
 
@@ -40,7 +41,7 @@ public sealed class LegalPersonViewModel
     public bool ValidateStep1()
     {
         Errors.Clear();
-        if (Digits(Cnpj).Length != 14) Errors["cnpj"] = "Informe um CNPJ válido.";
+        if (!DocumentValidator.IsCnpj(Cnpj)) Errors["cnpj"] = "Informe um CNPJ válido.";
         if (string.IsNullOrWhiteSpace(LegalName)) Errors["legalName"] = "Informe a razão social.";
         if (string.IsNullOrWhiteSpace(TradeName)) Errors["tradeName"] = "Informe o nome fantasia.";
         if (!Regex.IsMatch(Email.Trim(), @"\S+@\S+\.\S+")) Errors["email"] = "Informe um e-mail válido.";
