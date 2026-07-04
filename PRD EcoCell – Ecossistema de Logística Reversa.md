@@ -68,7 +68,7 @@ Os rankings são segregados para garantir competitividade justa:
 
     - [x] Slice `RegisterNaturalPerson` (PF → Depositante).
 
-    - [ ] Slice `RegisterLegalPerson` (PJ → PC ou Coletor), acessível apenas por PF autenticado.
+    - [x] Slice `RegisterLegalPerson` (PJ → PC ou Coletor), acessível apenas por PF autenticado.
 
     - [ ] Telas de cadastro PF e cadastro PJ no Mobile (Blazor Hybrid).
 
