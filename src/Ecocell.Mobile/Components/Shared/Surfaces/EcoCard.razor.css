@@ -1,0 +1,22 @@
+.eco-card {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--eco-color-surface);
+    border: 1px solid var(--eco-color-divider);
+    border-radius: var(--eco-radius-md);
+    box-shadow: var(--eco-shadow-card);
+    padding: var(--eco-space-md);
+}
+
+.eco-card--interactive {
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 2.75rem;
+    transition: background 120ms ease;
+}
+
+.eco-card--interactive:active {
+    background: var(--eco-color-primary-hover-bg);
+}

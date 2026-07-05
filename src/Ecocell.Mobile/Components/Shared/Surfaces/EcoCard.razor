@@ -1,0 +1,26 @@
+@if (OnClick.HasDelegate)
+{
+    <button type="button" class="eco-card eco-card--interactive @CssClass" @onclick="OnClick" @attributes="AdditionalAttributes">
+        @ChildContent
+    </button>
+}
+else
+{
+    <div class="eco-card @CssClass" @attributes="AdditionalAttributes">
+        @ChildContent
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+}
