@@ -90,3 +90,16 @@
 .eco-partner-card__sk { margin-top: 0.75rem; }
 
 .eco-partners__navbar { flex-shrink: 0; }
+
+.eco-partners__more {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+.eco-partners__count {
+    text-align: center;
+    padding: 0.5rem 0 0.25rem;
+    font-size: 0.75rem;
+    color: var(--eco-color-text-tertiary);
+}
