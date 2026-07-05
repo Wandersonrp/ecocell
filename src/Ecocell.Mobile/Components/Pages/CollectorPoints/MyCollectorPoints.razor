@@ -3,6 +3,7 @@
 @using Ecocell.Mobile.Components.Shared.Badges
 @using Ecocell.Shared.Enums
 @using Ecocell.Shared.Responses
+@using Ecocell.Shared.Utils
 @inject ManagedCollectorPointsViewModel Vm
 @inject NavigationManager Navigation
 
@@ -50,7 +51,7 @@
                         <EcoBadge Variant="StatusVariant(pc.Status)">@StatusLabel(pc.Status)</EcoBadge>
                     </div>
                     <div class="eco-mycp-card__legal">@pc.LegalName</div>
-                    <div class="eco-mycp-card__cnpj">@FormatCnpj(pc.Cnpj)</div>
+                    <div class="eco-mycp-card__cnpj">@DocumentFormatter.FormatCnpj(pc.Cnpj)</div>
                 </EcoCard>
             }
         }
@@ -89,11 +90,4 @@
         _ => status.ToString(),
     };
 
-    private static string FormatCnpj(string cnpj)
-    {
-        var digits = new string(cnpj.Where(char.IsDigit).ToArray());
-        return digits.Length == 14
-            ? $"{digits[..2]}.{digits[2..5]}.{digits[5..8]}/{digits[8..12]}-{digits[12..14]}"
-            : cnpj;
-    }
 }
