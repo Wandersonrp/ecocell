@@ -1,0 +1,16 @@
+.eco-skeleton {
+    display: inline-block;
+    background: linear-gradient(
+        90deg,
+        var(--eco-color-surface-alt) 25%,
+        var(--eco-color-divider) 37%,
+        var(--eco-color-surface-alt) 63%
+    );
+    background-size: 400% 100%;
+    animation: eco-skeleton-shimmer 1400ms ease infinite;
+}
+
+@keyframes eco-skeleton-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}

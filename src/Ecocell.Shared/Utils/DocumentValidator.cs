@@ -6,90 +6,58 @@ public static class DocumentValidator
     {
         if (string.IsNullOrWhiteSpace(cpf)) return false;
 
-        var position = 0;
         Span<int> digits = stackalloc int[11];
+        if (!TryExtractDigits(cpf, digits, out var count) || count != 11) return false;
+        if (AllEqual(digits)) return false;
 
-        foreach (var c in cpf)
-        {
-            if (char.IsDigit(c))
-            {
-                if (position >= 11) return false;
-                digits[position++] = c - '0';
-            }
-        }
+        ReadOnlySpan<int> w1 = [10, 9, 8, 7, 6, 5, 4, 3, 2];
+        if (digits[9] != ComputeCheckDigit(digits[..9], w1)) return false;
 
-        if (position != 11) return false;
-
-        for (var i = 1; i < 11; i++)
-            if (digits[i] != digits[0]) goto checkDigits;
-
-        return false;
-
-        checkDigits:
-        var sum = 0;
-        for (var i = 0; i < 9; i++)
-            sum += digits[i] * (10 - i);
-
-        var remainder = sum % 11;
-        if (digits[9] != (remainder < 2 ? 0 : 11 - remainder)) return false;
-
-        sum = 0;
-        for (var i = 0; i < 10; i++)
-            sum += digits[i] * (11 - i);
-
-        remainder = sum % 11;
-        return digits[10] == (remainder < 2 ? 0 : 11 - remainder);
+        ReadOnlySpan<int> w2 = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
+        return digits[10] == ComputeCheckDigit(digits[..10], w2);
     }
 
     public static bool IsCnpj(string cnpj)
     {
         if (string.IsNullOrWhiteSpace(cnpj)) return false;
 
-        var position = 0;
         Span<int> digits = stackalloc int[14];
+        if (!TryExtractDigits(cnpj, digits, out var count) || count != 14) return false;
+        if (AllEqual(digits)) return false;
+        if (AllEqual(digits[..8])) return false;
 
-        foreach (var c in cnpj)
+        ReadOnlySpan<int> w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        if (digits[12] != ComputeCheckDigit(digits[..12], w1)) return false;
+
+        ReadOnlySpan<int> w2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        return digits[13] == ComputeCheckDigit(digits[..13], w2);
+    }
+
+    private static bool TryExtractDigits(string input, Span<int> buffer, out int count)
+    {
+        count = 0;
+        foreach (var c in input)
         {
-            if (char.IsDigit(c))
-            {
-                if (position >= 14) return false;
-                digits[position++] = c - '0';
-            }
+            if (!char.IsDigit(c)) continue;
+            if (count >= buffer.Length) return false;
+            buffer[count++] = c - '0';
         }
+        return true;
+    }
 
-        if (position != 14) return false;
+    private static bool AllEqual(ReadOnlySpan<int> span)
+    {
+        for (var i = 1; i < span.Length; i++)
+            if (span[i] != span[0]) return false;
+        return true;
+    }
 
-        // Rejeita CNPJs onde todos os 14 dígitos são iguais (ex: 00000000000000).
-        var allSame = true;
-        for (var i = 1; i < 14; i++)
-            if (digits[i] != digits[0]) { allSame = false; break; }
-
-        if (allSame) return false;
-
-        // Rejeita CNPJs onde os 8 primeiros dígitos (base) são todos iguais,
-        // por exemplo 11111111/0001-XX é inválido pela Receita Federal.
-        var allBaseEqual = true;
-        for (var i = 1; i < 8; i++)
-            if (digits[i] != digits[0]) { allBaseEqual = false; break; }
-
-        if (allBaseEqual) return false;
-
-        ReadOnlySpan<int> weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-
+    private static int ComputeCheckDigit(ReadOnlySpan<int> digits, ReadOnlySpan<int> weights)
+    {
         var sum = 0;
-        for (var i = 0; i < 12; i++)
-            sum += digits[i] * weights1[i];
-
+        for (var i = 0; i < weights.Length; i++)
+            sum += digits[i] * weights[i];
         var remainder = sum % 11;
-        if (digits[12] != (remainder < 2 ? 0 : 11 - remainder)) return false;
-
-        ReadOnlySpan<int> weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-
-        sum = 0;
-        for (var i = 0; i < 13; i++)
-            sum += digits[i] * weights2[i];
-
-        remainder = sum % 11;
-        return digits[13] == (remainder < 2 ? 0 : 11 - remainder);
+        return remainder < 2 ? 0 : 11 - remainder;
     }
 }

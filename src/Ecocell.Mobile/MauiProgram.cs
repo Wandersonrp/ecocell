@@ -43,6 +43,10 @@ public static class MauiProgram
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
             .AddHttpMessageHandler<AuthTokenHandler>();
 
+        builder.Services.AddRefitClient<IAdminClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<AuthTokenHandler>();
+
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.LegalPersonViewModel>();
 
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();

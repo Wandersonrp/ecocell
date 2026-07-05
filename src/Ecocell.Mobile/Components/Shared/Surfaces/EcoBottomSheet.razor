@@ -1,0 +1,23 @@
+@if (Open)
+{
+    <div class="eco-sheet @CssClass">
+        <div class="eco-sheet__scrim" @onclick="OnClose"></div>
+        <div class="eco-sheet__panel" role="dialog" aria-modal="true">
+            @ChildContent
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public bool Open { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public string? CssClass { get; set; }
+}

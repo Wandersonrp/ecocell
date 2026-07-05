@@ -1,0 +1,208 @@
+.eco-partners {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--eco-color-surface-alt);
+    overflow: hidden;
+}
+
+.eco-partners__topbar {
+    flex-shrink: 0;
+    padding: 3.375rem var(--eco-space-md) 0.75rem;
+}
+
+.eco-partners__header {
+    flex-shrink: 0;
+    padding: 0 var(--eco-space-md) 0.75rem;
+}
+
+.eco-partners__title {
+    margin: 0 0 0.875rem;
+    font-size: var(--eco-font-h1-size);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--eco-color-text-primary);
+    line-height: 1.25;
+}
+
+.eco-partners__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.25rem var(--eco-space-md) var(--eco-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.eco-partners__error { margin-bottom: 0.75rem; }
+
+.eco-partners__list ::deep .eco-partner-card {
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: visible;
+    padding-block: 1.125rem;
+}
+
+.eco-partner-card__row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.eco-partner-card__trade {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--eco-color-text-primary);
+    line-height: 1.3;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.eco-partner-card__legal {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--eco-color-text-secondary);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.eco-partner-card__meta {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--eco-color-text-tertiary);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.eco-partner-card__date {
+    margin-top: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    font-size: 0.75rem;
+    color: var(--eco-color-text-tertiary);
+    max-width: 100%;
+    min-width: 0;
+}
+
+.eco-partner-card__date span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.eco-partner-card__row ::deep .eco-badge {
+    flex-shrink: 0;
+}
+
+.eco-partner-card__clock { font-size: 0.8125rem; }
+
+.eco-partner-card--skeleton {
+    background: var(--eco-color-surface);
+    border: 1px solid var(--eco-color-divider);
+    border-radius: var(--eco-radius-md);
+    box-shadow: var(--eco-shadow-card);
+    padding: var(--eco-space-md);
+}
+
+.eco-partner-card__sk { margin-top: 0.75rem; }
+
+.eco-partners__navbar { flex-shrink: 0; }
+
+.eco-partners__more {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+.eco-partners__count {
+    text-align: center;
+    padding: 0.5rem 0 0.25rem;
+    font-size: 0.75rem;
+    color: var(--eco-color-text-tertiary);
+}
+
+.eco-sheet-detail__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.eco-sheet-detail__title {
+    margin: 0;
+    font-size: 1.1875rem;
+    font-weight: 700;
+    color: var(--eco-color-text-primary);
+    line-height: 1.3;
+}
+
+.eco-sheet-detail__badge { margin-top: 0.5rem; }
+
+.eco-sheet-detail__close {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    border-radius: 50%;
+    background: var(--eco-color-surface-alt);
+    color: var(--eco-color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.eco-sheet-detail__rows {
+    margin: 0.75rem 0 0;
+}
+
+.eco-sheet-detail__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding: 0.625rem 0;
+    border-top: 1px solid var(--eco-color-divider);
+}
+
+.eco-sheet-detail__row dt {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--eco-color-text-tertiary);
+}
+
+.eco-sheet-detail__row dd {
+    margin: 0;
+    font-size: 0.90625rem;
+    font-weight: 500;
+    color: var(--eco-color-text-primary);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.eco-sheet-detail__actions {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.eco-sheet-detail__reject { margin-top: 1.25rem; }
+
+.eco-sheet-detail__label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--eco-color-text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.eco-sheet-detail__hint {
+    margin: 0.375rem 0.125rem 0;
+    font-size: 0.75rem;
+    color: var(--eco-color-text-tertiary);
+    line-height: 1.4;
+}
