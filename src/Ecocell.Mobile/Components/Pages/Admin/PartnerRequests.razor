@@ -1,0 +1,180 @@
+@page "/admin/solicitacoes"
+@layout MainLayout
+@inject IAdminClient AdminClient
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<div class="eco-partners">
+    <div class="eco-partners__topbar">
+        <EcoTopBar NotificationCount="0" />
+    </div>
+
+    <div class="eco-partners__header">
+        <h1 class="eco-partners__title">Solicitações de Ponto de Coleta</h1>
+        <EcoFilterChips Options="_filterOptions" Value="@_filter.ToString()" OnChange="OnFilterChanged" />
+    </div>
+
+    <div class="eco-partners__list">
+        @if (_error)
+        {
+            <div class="eco-partners__error">
+                <EcoErrorBanner Message="Não foi possível carregar. Tente novamente."
+                                ShowRetry="true" OnRetry="ReloadAsync" />
+            </div>
+        }
+
+        @if (_loading)
+        {
+            @for (var i = 0; i < 5; i++)
+            {
+                <div class="eco-partner-card eco-partner-card--skeleton">
+                    <div class="eco-partner-card__row">
+                        <EcoSkeleton Width="8.75rem" Height="1rem" />
+                        <EcoSkeleton Width="4.5rem" Height="1.375rem" Radius="var(--eco-radius-full)" />
+                    </div>
+                    <EcoSkeleton Width="12.5rem" Height="0.8125rem" CssClass="eco-partner-card__sk" />
+                    <EcoSkeleton Width="15rem" Height="0.6875rem" CssClass="eco-partner-card__sk" />
+                    <EcoSkeleton Width="10rem" Height="0.6875rem" CssClass="eco-partner-card__sk" />
+                </div>
+            }
+        }
+        else if (!_error && _items.Count == 0)
+        {
+            <EcoEmptyState Title="Nenhuma solicitação" Description="@EmptyDescription" />
+        }
+        else
+        {
+            @foreach (var item in _items)
+            {
+                <EcoCard OnClick="() => Select(item)" CssClass="eco-partner-card">
+                    <div class="eco-partner-card__row">
+                        <h3 class="eco-partner-card__trade">@item.TradeName</h3>
+                        <EcoBadge Variant="StatusVariant(item.Status)">@StatusLabel(item.Status)</EcoBadge>
+                    </div>
+                    <div class="eco-partner-card__legal">@item.LegalName</div>
+                    <div class="eco-partner-card__meta">@FormatCnpj(item.Cnpj) · @item.Email</div>
+                    <div class="eco-partner-card__date">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="eco-partner-card__clock" aria-hidden="true" />
+                        <span>Solicitado em @FormatDate(item.CreatedAt)</span>
+                    </div>
+                </EcoCard>
+            }
+        }
+    </div>
+
+    <div class="eco-partners__navbar">
+        <EcoNavBar Items="_navItems" ActiveId="solicitacoes" OnSelect="OnNavSelect" />
+    </div>
+</div>
+
+@code {
+    private const int PageSize = 20;
+
+    private static readonly IReadOnlyList<EcoNavItem> _navItems =
+    [
+        new("solicitacoes", "Solicitações", Icons.Material.Filled.Inbox),
+        new("parceiros", "Parceiros", Icons.Material.Filled.Groups),
+        new("suporte", "Suporte", Icons.Material.Filled.HelpOutline),
+        new("perfil", "Perfil", Icons.Material.Filled.Person),
+    ];
+
+    private static readonly IReadOnlyList<EcoFilterChip> _filterOptions =
+    [
+        new(nameof(PersonStatus.PendingApproval), "Pendentes"),
+        new(nameof(PersonStatus.Active), "Aprovados"),
+        new(nameof(PersonStatus.Refused), "Rejeitados"),
+        new(nameof(PersonStatus.Suspended), "Suspensos"),
+    ];
+
+    private PersonStatus _filter = PersonStatus.PendingApproval;
+    private readonly List<ResponsePartnerItem> _items = new();
+    private Guid? _cursor;
+    private bool _hasMore;
+    private bool _loading = true;
+    private bool _loadingMore;
+    private bool _error;
+
+    private string EmptyDescription => _filter == PersonStatus.PendingApproval
+        ? "Não há pontos de coleta aguardando aprovação no momento."
+        : "Nenhum registro para este filtro.";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState.CurrentRole != Role.Admin)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await ReloadAsync();
+    }
+
+    private async Task OnFilterChanged(string statusId)
+    {
+        if (!Enum.TryParse<PersonStatus>(statusId, out var status) || status == _filter)
+        {
+            return;
+        }
+
+        _filter = status;
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        _error = false;
+        _items.Clear();
+        _cursor = null;
+        _hasMore = false;
+        StateHasChanged();
+
+        var response = await AdminClient.ListPartnersAsync(_filter, Journey.CollectPoint, null, PageSize);
+        if (response.IsSuccessStatusCode && response.Content is not null)
+        {
+            _items.AddRange(response.Content.Items);
+            _cursor = response.Content.NextCursor;
+            _hasMore = response.Content.HasMore;
+        }
+        else
+        {
+            _error = true;
+        }
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    // Abre o bottom sheet de detalhe/ações — implementado na Task 13.
+    private void Select(ResponsePartnerItem item) { }
+
+    // Q1: apenas "solicitacoes" é funcional; demais tabs inertes até terem tela.
+    private void OnNavSelect(string id) { }
+
+    private static EcoBadgeVariant StatusVariant(PersonStatus status) => status switch
+    {
+        PersonStatus.PendingApproval => EcoBadgeVariant.Pending,
+        PersonStatus.Active => EcoBadgeVariant.Success,
+        _ => EcoBadgeVariant.Error,
+    };
+
+    private static string StatusLabel(PersonStatus status) => status switch
+    {
+        PersonStatus.PendingApproval => "Pendente",
+        PersonStatus.Active => "Aprovado",
+        PersonStatus.Refused => "Rejeitado",
+        PersonStatus.Suspended => "Suspenso",
+        _ => status.ToString(),
+    };
+
+    private static string FormatCnpj(string cnpj)
+    {
+        var digits = new string(cnpj.Where(char.IsDigit).ToArray());
+        return digits.Length == 14
+            ? $"{digits[..2]}.{digits[2..5]}.{digits[5..8]}/{digits[8..12]}-{digits[12..14]}"
+            : cnpj;
+    }
+
+    private static string FormatDate(DateTime utc) =>
+        utc.ToLocalTime().ToString("dd MMM yyyy · HH:mm", new System.Globalization.CultureInfo("pt-BR"));
+}
