@@ -117,6 +117,38 @@ public class JwtClaimsReaderTests
         role.ShouldBeNull();
     }
 
+    [Fact]
+    public void GetJourney_ShouldReturnNull_WhenPayloadIsInvalidBase64()
+    {
+        // "!!!" is not valid base64 → FormatException caught inside DecodePayload
+        var journey = JwtClaimsReader.GetJourney("header.!!!invalid!!!.signature");
+
+        journey.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetJourney_ShouldReturnNull_WhenPayloadBase64DecodesTo2ByteJson()
+    {
+        // "{}" = 2 UTF-8 bytes → base64url = "e30" (3 chars, %4==3) → exercises "3 => =" padding branch
+        var token = BuildToken("{}");
+
+        var journey = JwtClaimsReader.GetJourney(token);
+
+        journey.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetJourney_ShouldReturnNull_WhenPayloadBase64DecodesTo1ByteFragment()
+    {
+        // "{" = 1 UTF-8 byte → base64url = "ew" (2 chars, %4==2) → exercises "2 => ==" padding branch
+        // JsonDocument.Parse("{") throws JsonException → caught → returns null
+        var token = BuildToken("{");
+
+        var journey = JwtClaimsReader.GetJourney(token);
+
+        journey.ShouldBeNull();
+    }
+
     private static string BuildToken(string payloadJson)
     {
         var header = Base64Url("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
