@@ -18,5 +18,5 @@
 }
 
 .eco-card--interactive:active {
-    background: var(--eco-color-primary-hover-bg);
+    background: var(--eco-color-primary-tint);
 }
