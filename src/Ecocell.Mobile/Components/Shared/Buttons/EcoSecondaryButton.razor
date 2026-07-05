@@ -1,5 +1,5 @@
 <button type="@Type"
-        class="eco-secondary-btn @CssClass"
+        class="eco-secondary-btn @(Destructive ? "eco-secondary-btn--destructive" : "") @CssClass"
         disabled="@(Disabled || IsLoading)"
         @onclick="OnClick"
         @attributes="AdditionalAttributes">
@@ -26,6 +26,10 @@
 
     [Parameter]
     public bool IsLoading { get; set; }
+
+    /// <summary>Aplica a paleta de erro (borda/texto vermelhos) para ações destrutivas, ex.: rejeitar.</summary>
+    [Parameter]
+    public bool Destructive { get; set; }
 
     [Parameter]
     public string Type { get; set; } = "button";

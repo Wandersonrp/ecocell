@@ -38,3 +38,12 @@
 @keyframes eco-spin {
     to { transform: rotate(360deg); }
 }
+
+.eco-secondary-btn--destructive {
+    color: var(--eco-color-error);
+    border-color: var(--eco-color-error-border);
+}
+
+.eco-secondary-btn--destructive:active {
+    background: var(--eco-color-error-light);
+}
