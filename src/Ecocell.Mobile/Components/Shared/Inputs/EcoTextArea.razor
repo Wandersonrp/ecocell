@@ -1,0 +1,44 @@
+<div class="eco-text-area @(HasError ? "eco-text-area--error" : "") @CssClass">
+    <textarea class="eco-text-area__input"
+              placeholder="@Placeholder"
+              rows="@Rows"
+              value="@Value"
+              @oninput="OnInput"
+              @attributes="AdditionalAttributes"></textarea>
+</div>
+@if (HasError && ErrorText is not null)
+{
+    <span class="eco-text-area__error" role="alert">@ErrorText</span>
+}
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Placeholder { get; set; } = default!;
+
+    [Parameter]
+    public int Rows { get; set; } = 4;
+
+    [Parameter]
+    public bool HasError { get; set; }
+
+    [Parameter]
+    public string? ErrorText { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString() ?? string.Empty;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}
