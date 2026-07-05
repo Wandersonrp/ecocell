@@ -1,0 +1,99 @@
+@page "/meus-pontos-de-coleta"
+@layout MainLayout
+@using Ecocell.Mobile.Components.Shared.Badges
+@using Ecocell.Shared.Enums
+@using Ecocell.Shared.Responses
+@inject ManagedCollectorPointsViewModel Vm
+@inject NavigationManager Navigation
+
+<div class="eco-mycp">
+    <div class="eco-mycp__topbar">
+        <EcoTopBar NotificationCount="0" />
+    </div>
+
+    <div class="eco-mycp__header">
+        <h1 class="eco-mycp__title">Meus Pontos de Coleta</h1>
+    </div>
+
+    <div class="eco-mycp__list">
+        @if (Vm.HasError)
+        {
+            <EcoErrorBanner Message="Não foi possível carregar. Tente novamente."
+                            ShowRetry="true" OnRetry="LoadAsync" />
+        }
+        else if (Vm.IsLoading)
+        {
+            @for (var i = 0; i < 4; i++)
+            {
+                <div class="eco-mycp-card eco-mycp-card--skeleton">
+                    <EcoSkeleton Width="8.75rem" Height="1rem" />
+                    <EcoSkeleton Width="4.5rem" Height="1.375rem" Radius="var(--eco-radius-full)" />
+                </div>
+            }
+        }
+        else if (Vm.Items.Count == 0)
+        {
+            <EcoEmptyState Title="Nenhum ponto de coleta"
+                           Description="Você ainda não é responsável por nenhum ponto de coleta." />
+        }
+        else
+        {
+            @foreach (var pc in Vm.Items)
+            {
+                <EcoCard CssClass="eco-mycp-card"
+                         role="button"
+                         tabindex="0"
+                         aria-disabled="@(Vm.CanEnter(pc) ? "false" : "true")"
+                         OnClick="@(() => Enter(pc))">
+                    <div class="eco-mycp-card__row">
+                        <h3 class="eco-mycp-card__trade">@pc.TradeName</h3>
+                        <EcoBadge Variant="StatusVariant(pc.Status)">@StatusLabel(pc.Status)</EcoBadge>
+                    </div>
+                    <div class="eco-mycp-card__legal">@pc.LegalName</div>
+                    <div class="eco-mycp-card__cnpj">@FormatCnpj(pc.Cnpj)</div>
+                </EcoCard>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        await Vm.LoadAsync();
+        StateHasChanged();
+    }
+
+    private void Enter(ResponseManagedCollectorPoint pc)
+    {
+        if (!Vm.CanEnter(pc)) return;
+        Vm.Enter(pc);
+        Navigation.NavigateTo("/ponto-de-coleta");
+    }
+
+    private static EcoBadgeVariant StatusVariant(PersonStatus status) => status switch
+    {
+        PersonStatus.Active => EcoBadgeVariant.Success,
+        PersonStatus.PendingApproval => EcoBadgeVariant.Pending,
+        _ => EcoBadgeVariant.Error,
+    };
+
+    private static string StatusLabel(PersonStatus status) => status switch
+    {
+        PersonStatus.Active => "Ativo",
+        PersonStatus.PendingApproval => "Pendente",
+        PersonStatus.Refused => "Recusado",
+        PersonStatus.Suspended => "Suspenso",
+        _ => status.ToString(),
+    };
+
+    private static string FormatCnpj(string cnpj)
+    {
+        var digits = new string(cnpj.Where(char.IsDigit).ToArray());
+        return digits.Length == 14
+            ? $"{digits[..2]}.{digits[2..5]}.{digits[5..8]}/{digits[8..12]}-{digits[12..14]}"
+            : cnpj;
+    }
+}
