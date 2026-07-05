@@ -51,7 +51,7 @@ jobs:
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="coverage/**/coverage.opencover.xml" \
           /d:sonar.exclusions="**/appsettings.Example.json,**/appsettings.Testing.json,**/Migrations/**" \
-          /d:sonar.coverage.exclusions="**/appsettings.Example.json,**/appsettings.Testing.json,**/Migrations/**"
+          /d:sonar.coverage.exclusions="**/appsettings.Example.json,**/appsettings.Testing.json,**/Migrations/**,**/Ecocell.Mobile/**"
 
     - name: Build
       run: dotnet build Ecocell.Backend.slnf --no-restore
