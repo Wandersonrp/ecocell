@@ -1,5 +1,7 @@
+using Carter;
 using Ecocell.Api.Database;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
 using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Responses;
@@ -59,5 +61,24 @@ public static class ListMyManagedCollectorPoints
             return ResultT<ResponseManagedCollectorPointList>.Success(
                 new ResponseManagedCollectorPointList { Items = items });
         }
+    }
+}
+
+public class ListMyManagedCollectorPointsEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapGet("api/collector-points/me", async (ISender sender) =>
+        {
+            var result = await sender.Send(new ListMyManagedCollectorPoints.Query());
+            return result.ToProcessResult(StatusCodes.Status200OK);
+        })
+        .WithTags("CollectorPoint")
+        .WithName("ListMyManagedCollectorPoints")
+        .WithSummary("Lista os pontos de coleta que a pessoa física autenticada gerencia.")
+        .RequireAuthorization(AuthorizationPolicies.Authenticated)
+        .Produces<ResponseManagedCollectorPointList>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces(StatusCodes.Status403Forbidden);
     }
 }
