@@ -43,14 +43,20 @@ public static class MauiProgram
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
             .AddHttpMessageHandler<AuthTokenHandler>();
 
+        builder.Services.AddRefitClient<ICollectorPointClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<AuthTokenHandler>();
+
         builder.Services.AddRefitClient<IAdminClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
             .AddHttpMessageHandler<AuthTokenHandler>();
 
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.LegalPersonViewModel>();
+        builder.Services.AddTransient<Ecocell.Mobile.ViewModels.ManagedCollectorPointsViewModel>();
 
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<AuthStateService>();
+        builder.Services.AddSingleton<Ecocell.Mobile.Services.Context.ActiveContextService>();
         builder.Services.AddTransient<AuthTokenHandler>();
         builder.Services.AddSingleton<Ecocell.Mobile.Services.Location.ILocationService,
                                       Ecocell.Mobile.Services.Location.LocationService>();
