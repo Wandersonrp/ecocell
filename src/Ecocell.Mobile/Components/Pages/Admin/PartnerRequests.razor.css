@@ -37,11 +37,19 @@
 
 .eco-partners__error { margin-bottom: 0.75rem; }
 
+.eco-partners__list ::deep .eco-partner-card {
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: visible;
+    padding-block: 1.125rem;
+}
+
 .eco-partner-card__row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
+    min-width: 0;
 }
 
 .eco-partner-card__trade {
@@ -51,6 +59,7 @@
     color: var(--eco-color-text-primary);
     line-height: 1.3;
     min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .eco-partner-card__legal {
@@ -58,6 +67,7 @@
     font-size: 0.875rem;
     color: var(--eco-color-text-secondary);
     line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
 .eco-partner-card__meta {
@@ -65,7 +75,7 @@
     font-size: 0.75rem;
     color: var(--eco-color-text-tertiary);
     line-height: 1.5;
-    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .eco-partner-card__date {
@@ -75,6 +85,17 @@
     gap: 0.3125rem;
     font-size: 0.75rem;
     color: var(--eco-color-text-tertiary);
+    max-width: 100%;
+    min-width: 0;
+}
+
+.eco-partner-card__date span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.eco-partner-card__row ::deep .eco-badge {
+    flex-shrink: 0;
 }
 
 .eco-partner-card__clock { font-size: 0.8125rem; }

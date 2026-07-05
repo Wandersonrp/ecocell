@@ -49,7 +49,10 @@
         {
             @foreach (var item in _items)
             {
-                <EcoCard OnClick="() => Select(item)" CssClass="eco-partner-card">
+                <EcoCard CssClass="eco-partner-card"
+                         role="button"
+                         tabindex="0"
+                         OnClick="@(() => Select(item))">
                     <div class="eco-partner-card__row">
                         <h3 class="eco-partner-card__trade">@item.TradeName</h3>
                         <EcoBadge Variant="StatusVariant(item.Status)">@StatusLabel(item.Status)</EcoBadge>
