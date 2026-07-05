@@ -4,6 +4,7 @@
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 @inject IJSRuntime Js
+@inject ISnackbar Snackbar
 @implements IAsyncDisposable
 
 <div class="eco-partners">
@@ -83,6 +84,69 @@
     <div class="eco-partners__navbar">
         <EcoNavBar Items="_navItems" ActiveId="solicitacoes" OnSelect="OnNavSelect" />
     </div>
+
+    <EcoBottomSheet Open="_selected is not null" OnClose="CloseSheet">
+        @if (_selected is not null)
+        {
+            <div class="eco-sheet-detail">
+                <div class="eco-sheet-detail__head">
+                    <div class="eco-sheet-detail__headinfo">
+                        <h2 class="eco-sheet-detail__title">@_selected.TradeName</h2>
+                        <div class="eco-sheet-detail__badge">
+                            <EcoBadge Variant="StatusVariant(_selected.Status)">@StatusLabel(_selected.Status)</EcoBadge>
+                        </div>
+                    </div>
+                    <button type="button" class="eco-sheet-detail__close" aria-label="Fechar" @onclick="CloseSheet">
+                        <MudIcon Icon="@Icons.Material.Filled.Close" />
+                    </button>
+                </div>
+
+                <dl class="eco-sheet-detail__rows">
+                    <div class="eco-sheet-detail__row">
+                        <dt>Razão social</dt><dd>@_selected.LegalName</dd>
+                    </div>
+                    <div class="eco-sheet-detail__row">
+                        <dt>CNPJ</dt><dd>@FormatCnpj(_selected.Cnpj)</dd>
+                    </div>
+                    <div class="eco-sheet-detail__row">
+                        <dt>E-mail</dt><dd>@_selected.Email</dd>
+                    </div>
+                    <div class="eco-sheet-detail__row">
+                        <dt>Solicitado em</dt><dd>@FormatDate(_selected.CreatedAt)</dd>
+                    </div>
+                </dl>
+
+                @if (_selected.Status == PersonStatus.PendingApproval)
+                {
+                    @if (!_rejecting)
+                    {
+                        <div class="eco-sheet-detail__actions">
+                            <EcoPrimaryButton Label="Aprovar" OnClick="ApproveAsync" IsLoading="_approveBusy" />
+                            <EcoSecondaryButton Label="Rejeitar" Destructive="true"
+                                                OnClick="() => _rejecting = true" Disabled="_approveBusy" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="eco-sheet-detail__reject">
+                            <label class="eco-sheet-detail__label" for="reject-reason">Motivo da rejeição</label>
+                            <EcoTextArea id="reject-reason"
+                                         Value="@_reason"
+                                         ValueChanged="OnReasonChanged"
+                                         Placeholder="Explique por que a solicitação foi rejeitada. O parceiro será notificado por e-mail."
+                                         Rows="4" />
+                            <p class="eco-sheet-detail__hint">Obrigatório — até 500 caracteres.</p>
+                            <div class="eco-sheet-detail__actions">
+                                <EcoSecondaryButton Label="Confirmar rejeição" Destructive="true"
+                                                    OnClick="RejectAsync" IsLoading="_rejectBusy" Disabled="!ReasonValid" />
+                                <EcoSecondaryButton Label="Voltar" OnClick="() => _rejecting = false" Disabled="_rejectBusy" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </EcoBottomSheet>
 </div>
 
 @code {
@@ -111,7 +175,14 @@
     private bool _loading = true;
     private bool _loadingMore;
     private bool _error;
+    private ResponsePartnerItem? _selected;
+    private bool _rejecting;
+    private string _reason = string.Empty;
+    private bool _approveBusy;
+    private bool _rejectBusy;
     private DotNetObjectReference<PartnerRequests>? _selfRef;
+
+    private bool ReasonValid => !string.IsNullOrWhiteSpace(_reason) && _reason.Trim().Length <= 500;
 
     private string EmptyDescription => _filter == PersonStatus.PendingApproval
         ? "Não há pontos de coleta aguardando aprovação no momento."
@@ -219,7 +290,69 @@
     }
 
     // Abre o bottom sheet de detalhe/ações — implementado na Task 13.
-    private void Select(ResponsePartnerItem item) { }
+    private void Select(ResponsePartnerItem item)
+    {
+        _selected = item;
+        _rejecting = false;
+        _reason = string.Empty;
+    }
+
+    private void CloseSheet()
+    {
+        _selected = null;
+        _rejecting = false;
+        _reason = string.Empty;
+    }
+
+    private void OnReasonChanged(string value) => _reason = value;
+
+    private async Task ApproveAsync()
+    {
+        if (_selected is null || _approveBusy)
+        {
+            return;
+        }
+
+        _approveBusy = true;
+        var response = await AdminClient.ApprovePartnerAsync(_selected.ExternalId);
+        _approveBusy = false;
+
+        if (response.IsSuccessStatusCode)
+        {
+            _items.RemoveAll(x => x.ExternalId == _selected.ExternalId);
+            CloseSheet();
+            Snackbar.Add("Parceiro aprovado.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Não foi possível aprovar. Tente novamente.", Severity.Error);
+        }
+    }
+
+    private async Task RejectAsync()
+    {
+        if (_selected is null || _rejectBusy || !ReasonValid)
+        {
+            return;
+        }
+
+        _rejectBusy = true;
+        var response = await AdminClient.RejectPartnerAsync(
+            _selected.ExternalId,
+            new RequestRejectPartner { Reason = _reason.Trim() });
+        _rejectBusy = false;
+
+        if (response.IsSuccessStatusCode)
+        {
+            _items.RemoveAll(x => x.ExternalId == _selected.ExternalId);
+            CloseSheet();
+            Snackbar.Add("Parceiro rejeitado.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Não foi possível rejeitar. Tente novamente.", Severity.Error);
+        }
+    }
 
     // Q1: apenas "solicitacoes" é funcional; demais tabs inertes até terem tela.
     private void OnNavSelect(string id) { }
