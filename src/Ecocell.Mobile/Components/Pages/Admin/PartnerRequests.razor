@@ -1,5 +1,6 @@
 @page "/admin/solicitacoes"
 @layout MainLayout
+@using Ecocell.Shared.Utils
 @inject IAdminClient AdminClient
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
@@ -58,7 +59,7 @@
                         <EcoBadge Variant="StatusVariant(item.Status)">@StatusLabel(item.Status)</EcoBadge>
                     </div>
                     <div class="eco-partner-card__legal">@item.LegalName</div>
-                    <div class="eco-partner-card__meta">@FormatCnpj(item.Cnpj) · @item.Email</div>
+                    <div class="eco-partner-card__meta">@DocumentFormatter.FormatCnpj(item.Cnpj) · @item.Email</div>
                     <div class="eco-partner-card__date">
                         <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="eco-partner-card__clock" aria-hidden="true" />
                         <span>Solicitado em @FormatDate(item.CreatedAt)</span>
@@ -109,7 +110,7 @@
                         <dt>Razão social</dt><dd>@_selected.LegalName</dd>
                     </div>
                     <div class="eco-sheet-detail__row">
-                        <dt>CNPJ</dt><dd>@FormatCnpj(_selected.Cnpj)</dd>
+                        <dt>CNPJ</dt><dd>@DocumentFormatter.FormatCnpj(_selected.Cnpj)</dd>
                     </div>
                     <div class="eco-sheet-detail__row">
                         <dt>E-mail</dt><dd>@_selected.Email</dd>
@@ -375,14 +376,6 @@
         PersonStatus.Suspended => "Suspenso",
         _ => status.ToString(),
     };
-
-    private static string FormatCnpj(string cnpj)
-    {
-        var digits = new string(cnpj.Where(char.IsDigit).ToArray());
-        return digits.Length == 14
-            ? $"{digits[..2]}.{digits[2..5]}.{digits[5..8]}/{digits[8..12]}-{digits[12..14]}"
-            : cnpj;
-    }
 
     private static string FormatDate(DateTime utc) =>
         utc.ToLocalTime().ToString("dd MMM yyyy · HH:mm", new System.Globalization.CultureInfo("pt-BR"));

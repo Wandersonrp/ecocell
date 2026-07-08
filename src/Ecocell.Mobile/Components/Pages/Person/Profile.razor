@@ -1,0 +1,49 @@
+@page "/perfil"
+@layout MainLayout
+@inject NavigationManager Navigation
+
+<div class="eco-profile">
+    <div class="eco-profile__topbar">
+        <EcoTopBar NotificationCount="0" />
+    </div>
+
+    <div class="eco-profile__header">
+        <h1 class="eco-profile__title">Perfil</h1>
+    </div>
+
+    <div class="eco-profile__menu">
+        <EcoCard CssClass="eco-profile__item"
+                 role="button"
+                 tabindex="0"
+                 OnClick="GoToMyCollectorPoints">
+            <div class="eco-profile__item-row">
+                <MudIcon Icon="@Icons.Material.Filled.Storefront" Class="eco-profile__item-icon" aria-hidden="true" />
+                <span class="eco-profile__item-label">Meus Pontos de Coleta</span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="eco-profile__item-chevron" aria-hidden="true" />
+            </div>
+        </EcoCard>
+    </div>
+
+    <div class="eco-profile__navbar">
+        <EcoNavBar Items="_navItems" ActiveId="perfil" OnSelect="OnNavSelect" />
+    </div>
+</div>
+
+@code {
+    // Só rotas existentes recebem Href; itens sem tela ainda ficam inertes.
+    private static readonly IReadOnlyList<EcoNavItem> _navItems =
+    [
+        new("inicio", "Início", Icons.Material.Filled.Home, "/map"),
+        new("descartar", "Descartar", Icons.Material.Filled.Recycling),
+        new("ranking", "Ranking", Icons.Material.Filled.EmojiEvents),
+        new("perfil", "Perfil", Icons.Material.Filled.Person, "/perfil"),
+    ];
+
+    private void GoToMyCollectorPoints() => Navigation.NavigateTo("/meus-pontos-de-coleta");
+
+    private void OnNavSelect(string id)
+    {
+        var target = _navItems.FirstOrDefault(i => i.Id == id)?.Href;
+        if (!string.IsNullOrEmpty(target)) Navigation.NavigateTo(target);
+    }
+}

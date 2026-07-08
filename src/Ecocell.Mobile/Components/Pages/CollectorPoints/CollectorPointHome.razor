@@ -1,0 +1,89 @@
+@page "/ponto-de-coleta"
+@layout MainLayout
+@using Ecocell.Mobile.Services.Context
+@using Ecocell.Mobile.Services.Navigation
+@inject ActiveContextService Context
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="eco-pc-home">
+    <div class="eco-pc-home__topbar">
+        <button type="button" class="eco-pc-home__switcher" @onclick="OpenSwitcher"
+                aria-label="Trocar de contexto">
+            <MudIcon Icon="@Icons.Material.Filled.Storefront" aria-hidden="true" />
+            <span class="eco-pc-home__pcname">@Context.Current.DisplayName</span>
+            <MudIcon Icon="@Icons.Material.Filled.UnfoldMore" aria-hidden="true" />
+        </button>
+    </div>
+
+    <main class="eco-pc-home__body">
+        <h1 class="eco-pc-home__title">Modo Ponto de Coleta</h1>
+        <p class="eco-pc-home__hint">
+            Você está atuando como <strong>@Context.Current.DisplayName</strong>.
+            As telas de materiais, cupons e selos aparecerão aqui.
+        </p>
+    </main>
+
+    <div class="eco-pc-home__navbar">
+        <EcoNavBar Items="_navItems" ActiveId="@NavIds.CollectorPointHome" OnSelect="OnNavSelect" />
+    </div>
+
+    <EcoBottomSheet Open="_switcherOpen" OnClose="CloseSwitcher">
+        <div class="eco-pc-switcher">
+            <h2 class="eco-pc-switcher__title">Trocar de contexto</h2>
+            <button type="button" class="eco-pc-switcher__item" @onclick="ReturnToSelf">
+                <MudIcon Icon="@Icons.Material.Filled.Person" aria-hidden="true" />
+                <span>Voltar para o meu perfil</span>
+            </button>
+            <button type="button" class="eco-pc-switcher__item" @onclick="GoToList">
+                <MudIcon Icon="@Icons.Material.Filled.Storefront" aria-hidden="true" />
+                <span>Trocar de ponto de coleta</span>
+            </button>
+        </div>
+    </EcoBottomSheet>
+</div>
+
+@code {
+    private bool _switcherOpen;
+    private IReadOnlyList<Ecocell.Mobile.Components.Shared.Navigation.EcoNavItem> _navItems = [];
+
+    protected override void OnInitialized()
+    {
+        // Contexto perdido em modo não persistido volta para o mapa, home do Depositante.
+        if (!Context.Current.IsCollectPoint)
+        {
+            Navigation.NavigateTo("/map");
+            return;
+        }
+
+        _navItems = NavItemsResolver.Resolve(Context.Current);
+        Context.ContextChanged += OnContextChanged;
+    }
+
+    private void OnContextChanged()
+    {
+        _navItems = NavItemsResolver.Resolve(Context.Current);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenSwitcher() => _switcherOpen = true;
+
+    private void CloseSwitcher() => _switcherOpen = false;
+
+    private void ReturnToSelf()
+    {
+        _switcherOpen = false;
+        Context.ReturnToSelf();
+        Navigation.NavigateTo("/map");
+    }
+
+    private void GoToList()
+    {
+        _switcherOpen = false;
+        Navigation.NavigateTo("/meus-pontos-de-coleta");
+    }
+
+    private void OnNavSelect(string id) { }
+
+    public void Dispose() => Context.ContextChanged -= OnContextChanged;
+}
