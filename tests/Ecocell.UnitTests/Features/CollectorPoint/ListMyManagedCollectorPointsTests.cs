@@ -133,4 +133,25 @@ public class ListMyManagedCollectorPointsTests : TestBase
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(ErrorCodes.ForbiddenCodeError);
     }
+
+    [Fact]
+    public async Task Handle_ShouldReturnForbidden_WhenPersonTypeIsNotNaturalPerson()
+    {
+        AddCollectPoint(_responsibleId);
+        _currentUserMock
+            .Setup(s => s.GetCurrentUserAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CurrentUserDto
+            {
+                Id = _responsibleId,
+                Role = Role.User,
+                PersonStatus = PersonStatus.Active,
+                PersonType = PersonType.LegalPerson,
+                Email = new Faker().Internet.Email(),
+            });
+
+        var result = await _handler.Handle(new ListMyManagedCollectorPoints.Query(), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ErrorCodes.ForbiddenCodeError);
+    }
 }
