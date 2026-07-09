@@ -1,6 +1,33 @@
-﻿<Router AppAssembly="typeof(MauiProgram).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+@using Ecocell.Mobile.Services.Auth
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<Router AppAssembly="typeof(MauiProgram).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
+
+@code {
+    protected override void OnInitialized() => AuthState.AuthStateChanged += OnAuthStateChanged;
+
+    /// <summary>
+    /// Única navegação pós-logout do app: reage a sign-out forçado (refresh token
+    /// expirado, tratado em AuthTokenHandler) e a sign-out manual (botão Sair em
+    /// Profile.razor). Fica em Routes.razor (raiz sempre montada) e não em
+    /// MainLayout, porque telas sob AuthLayout (ex.: RegisterCollectPoint) também
+    /// fazem chamadas autenticadas e precisam ser cobertas pelo mesmo listener.
+    /// Ambos os chamadores de SignOutAsync só limpam a sessão — não navegam.
+    /// </summary>
+    private void OnAuthStateChanged()
+    {
+        if (!AuthState.IsAuthenticated)
+        {
+            InvokeAsync(() => Navigation.NavigateTo("/", replace: true));
+        }
+    }
+
+    public void Dispose() => AuthState.AuthStateChanged -= OnAuthStateChanged;
+}

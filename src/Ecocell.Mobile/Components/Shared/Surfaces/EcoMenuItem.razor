@@ -1,5 +1,5 @@
 @* src/Ecocell.Mobile/Components/Shared/Surfaces/EcoMenuItem.razor *@
-<EcoCard CssClass="eco-menu-item" role="button" tabindex="0" OnClick="OnClick">
+<EcoCard CssClass="eco-menu-item" role="button" tabindex="0" OnClick="OnClick" @attributes="AdditionalAttributes">
     <div class="eco-menu-item__row">
         <MudIcon Icon="@Icon" Class="eco-menu-item__icon" aria-hidden="true" />
         <span class="eco-menu-item__label">@Label</span>
@@ -22,4 +22,7 @@
 
     [Parameter]
     public EventCallback OnClick { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
 }
