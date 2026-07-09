@@ -1,4 +1,8 @@
 @inherits LayoutComponentBase
+@using Ecocell.Mobile.Services.Auth
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <MudThemeProvider Theme="EcocellTheme.Theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -13,4 +17,21 @@
 
 @code {
     private bool _isDarkMode = false;
+
+    protected override void OnInitialized() => AuthState.AuthStateChanged += OnAuthStateChanged;
+
+    /// <summary>
+    /// Única navegação pós-logout do app: reage a sign-out forçado (refresh token
+    /// expirado, tratado em AuthTokenHandler) e a sign-out manual (botão Sair em
+    /// Profile.razor). Ambos só chamam AuthState.SignOutAsync() — não navegam.
+    /// </summary>
+    private void OnAuthStateChanged()
+    {
+        if (!AuthState.IsAuthenticated)
+        {
+            InvokeAsync(() => Navigation.NavigateTo("/", replace: true));
+        }
+    }
+
+    public void Dispose() => AuthState.AuthStateChanged -= OnAuthStateChanged;
 }
