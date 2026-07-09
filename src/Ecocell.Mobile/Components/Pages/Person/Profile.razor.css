@@ -29,29 +29,6 @@
     padding: var(--eco-space-md) var(--eco-space-lg);
 }
 
-.eco-profile__item-row {
-    display: flex;
-    align-items: center;
-    gap: var(--eco-space-sm);
-    min-height: 2.75rem;
-}
-
-.eco-profile__item-icon {
-    color: var(--eco-color-primary);
-}
-
-.eco-profile__item-label {
-    flex: 1;
-    font-size: var(--eco-font-body-lg-size);
-    font-weight: var(--eco-font-body-lg-weight);
-    line-height: var(--eco-font-body-lg-lh);
-    color: var(--eco-color-text-primary);
-}
-
-.eco-profile__item-chevron {
-    color: var(--eco-color-text-tertiary);
-}
-
 .eco-profile__navbar {
     position: sticky;
     bottom: 0;

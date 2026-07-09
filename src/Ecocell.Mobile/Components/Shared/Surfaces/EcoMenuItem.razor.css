@@ -1,0 +1,22 @@
+.eco-menu-item__row {
+    display: flex;
+    align-items: center;
+    gap: var(--eco-space-sm);
+    min-height: 2.75rem;
+}
+
+.eco-menu-item__icon {
+    color: var(--eco-color-primary);
+}
+
+.eco-menu-item__label {
+    flex: 1;
+    font-size: var(--eco-font-body-lg-size);
+    font-weight: var(--eco-font-body-lg-weight);
+    line-height: var(--eco-font-body-lg-lh);
+    color: var(--eco-color-text-primary);
+}
+
+.eco-menu-item__chevron {
+    color: var(--eco-color-text-tertiary);
+}
