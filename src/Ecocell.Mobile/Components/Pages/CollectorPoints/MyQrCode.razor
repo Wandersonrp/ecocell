@@ -1,0 +1,106 @@
+@page "/ponto-de-coleta/qr"
+@layout MainLayout
+@using Ecocell.Mobile.Components.Shared.Navigation
+@using Ecocell.Mobile.Services.Context
+@using Ecocell.Mobile.Services.Navigation
+@using Ecocell.Mobile.Theme
+@using Ecocell.Mobile.ViewModels
+@using MudBlazor
+@using QRCoder
+@inject MyQrCodeViewModel ViewModel
+@inject ActiveContextService Context
+@inject NavigationManager Navigation
+
+<div class="eco-qr">
+    <div class="eco-qr__topbar">
+        <button type="button" class="eco-qr__back" @onclick="GoHome" aria-label="Voltar">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" aria-hidden="true" />
+        </button>
+        <span class="eco-qr__pcname">@(_pointName ?? "Ponto de coleta")</span>
+        <span class="eco-qr__spacer"></span>
+    </div>
+
+    <main class="eco-qr__body">
+        @switch (ViewModel.State)
+        {
+            case MyQrCodeViewModel.QrState.Loading:
+                <div class="eco-qr__center">
+                    <EcoSpinner Label="Carregando QR Code..." />
+                </div>
+                break;
+
+            case MyQrCodeViewModel.QrState.Active:
+                <h1 class="eco-qr__title">Meu QR Code</h1>
+                <p class="eco-qr__subtitle">Mostre este código para o depositante escanear e registrar o descarte.</p>
+                <EcoCard CssClass="eco-qr__card">
+                    <div class="eco-qr__code">@_qrSvg</div>
+                    <h2 class="eco-qr__pointtitle">@_pointName</h2>
+                    <p class="eco-qr__caption">Aponte a câmera do app para este código</p>
+                </EcoCard>
+                break;
+
+            case MyQrCodeViewModel.QrState.Unavailable:
+                <div class="eco-qr__center">
+                    <EcoEmptyState Title="Ponto indisponível para emissão de QR Code"
+                                   Description="Verifique com a equipe EcoCell a situação do ponto de coleta." />
+                </div>
+                break;
+
+            case MyQrCodeViewModel.QrState.Error:
+                <div class="eco-qr__center">
+                    <EcoErrorBanner Message="Não foi possível carregar o QR Code. Verifique sua conexão."
+                                    ShowRetry="true" OnRetry="Reload" />
+                </div>
+                break;
+        }
+    </main>
+
+    <div class="eco-qr__navbar">
+        <EcoNavBar Items="_navItems" ActiveId="@NavIds.CollectorPointHome" OnSelect="OnNavSelect" />
+    </div>
+</div>
+
+@code {
+    private IReadOnlyList<EcoNavItem> _navItems = [];
+    private string? _pointName;
+    private MarkupString _qrSvg;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Context.Current is not { IsCollectPoint: true, CollectPointId: not null })
+        {
+            Navigation.NavigateTo("/map");
+            return;
+        }
+
+        _navItems = NavItemsResolver.Resolve(Context.Current);
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        await ViewModel.LoadAsync();
+        _pointName = ViewModel.PointName;
+
+        if (ViewModel.State == MyQrCodeViewModel.QrState.Active && ViewModel.Qr is not null)
+            _qrSvg = BuildQrSvg(ViewModel.Qr);
+
+        StateHasChanged();
+    }
+
+    private static MarkupString BuildQrSvg(string content)
+    {
+        using var generator = new QRCodeGenerator();
+        using var data = generator.CreateQrCode(content, QRCodeGenerator.ECCLevel.M);
+        var svg = new SvgQRCode(data).GetGraphic(5, ThemeTokens.ColorPrimary, ThemeTokens.ColorSurface);
+        return (MarkupString)svg;
+    }
+
+    private void GoHome() => Navigation.NavigateTo("/ponto-de-coleta");
+
+    private void OnNavSelect(string id)
+    {
+        if (id == NavIds.CollectorPointHome)
+            Navigation.NavigateTo("/ponto-de-coleta");
+    }
+}
