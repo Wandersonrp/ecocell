@@ -1,6 +1,5 @@
 @page "/login"
 @layout AuthLayout
-@using Refit
 @implements IDisposable
 @inject IAccountClient Api
 @inject NavigationManager Navigation
@@ -60,7 +59,9 @@
 
         try
         {
-            var response = await RequestLoginCodeWithRetryAsync();
+            var response = await Api.RequestLoginCodeAsync(
+                new RequestRequestLoginCode { Email = _email.Trim() },
+                _cts.Token);
 
             if (response.IsSuccessStatusCode)
             {
@@ -80,27 +81,10 @@
         catch (Exception)
         {
             // Falha de rede (HttpRequestException, timeout) não pode derrubar o circuito
-            // Blazor — vira erro inline com retry manual.
+            // Blazor — vira erro inline com retry manual. O retry automático de falha
+            // transitória (warm-up do GMS na 1ª conexão) vive no TransientRetryHandler.
             _errorMessage = "Falha de conexão. Verifique sua internet e tente novamente.";
             _loading = false;
-        }
-    }
-
-    /// <summary>
-    /// No Android, a primeira conexão HTTPS do processo pode falhar durante o warm-up
-    /// do provedor de segurança do Google Play Services (DEVELOPER_ERROR no logcat);
-    /// a repetição imediata funciona. Retry único apenas para falha de transporte.
-    /// </summary>
-    private async Task<IApiResponse> RequestLoginCodeWithRetryAsync()
-    {
-        var request = new RequestRequestLoginCode { Email = _email.Trim() };
-        try
-        {
-            return await Api.RequestLoginCodeAsync(request, _cts.Token);
-        }
-        catch (HttpRequestException)
-        {
-            return await Api.RequestLoginCodeAsync(request, _cts.Token);
         }
     }
 
