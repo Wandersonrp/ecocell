@@ -72,6 +72,7 @@
     private DotNetObjectReference<Nearby>? _selfRef;
     private string _city = string.Empty;
     private bool _showCitySearch;
+    private bool _disposed;
 
     private static readonly IReadOnlyList<EcoNavItem> _navItems =
     [
@@ -103,11 +104,19 @@
 
             await ViewModel.InitializeAsync();
 
+            // Usuário pode navegar para outra tela enquanto o GPS resolve; após o
+            // dispose, interop com _selfRef lança ObjectDisposedException.
+            if (_disposed)
+                return;
+
             if (ViewModel.LocationDenied)
                 _showCitySearch = true;
 
             if (ViewModel.Center is not null)
+            {
                 await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
+                await Js.InvokeVoidAsync("ecoMap.setUserLocation", ViewModel.Center.Latitude, ViewModel.Center.Longitude);
+            }
 
             await RenderMarkersAsync();
             StateHasChanged();
@@ -116,6 +125,9 @@
 
     private async Task RenderMarkersAsync()
     {
+        if (_disposed || _selfRef is null)
+            return;
+
         await Js.InvokeVoidAsync("ecoMap.setMarkers", ViewModel.Points, _selfRef);
     }
 
@@ -156,7 +168,10 @@
         if (ViewModel.LocationDenied)
             _showCitySearch = true;
         if (ViewModel.Center is not null)
+        {
             await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
+            await Js.InvokeVoidAsync("ecoMap.setUserLocation", ViewModel.Center.Latitude, ViewModel.Center.Longitude);
+        }
         if (ViewModel.ErrorMessage is null)
             await RenderMarkersAsync();
     }
@@ -180,6 +195,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         _selfRef?.Dispose();
         await Task.CompletedTask;
     }

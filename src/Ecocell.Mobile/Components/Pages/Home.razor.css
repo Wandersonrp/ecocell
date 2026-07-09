@@ -49,3 +49,10 @@
     flex-direction: column;
     gap: var(--eco-space-form-gap);
 }
+
+.welcome-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}

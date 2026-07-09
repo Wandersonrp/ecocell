@@ -24,6 +24,12 @@
         </p>
     </main>
 
+    <div class="eco-pc-home__fab">
+        <EcoFab Icon="@Icons.Material.Filled.QrCode2"
+                AriaLabel="Emitir QR Code"
+                OnClick="GoToQr" />
+    </div>
+
     <div class="eco-pc-home__navbar">
         <EcoNavBar Items="_navItems" ActiveId="@NavIds.CollectorPointHome" OnSelect="OnNavSelect" />
     </div>
@@ -82,6 +88,8 @@
         _switcherOpen = false;
         Navigation.NavigateTo("/meus-pontos-de-coleta");
     }
+
+    private void GoToQr() => Navigation.NavigateTo("/ponto-de-coleta/qr");
 
     private void OnNavSelect(string id) { }
 

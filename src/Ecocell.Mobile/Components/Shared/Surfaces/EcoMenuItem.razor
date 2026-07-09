@@ -1,0 +1,28 @@
+@* src/Ecocell.Mobile/Components/Shared/Surfaces/EcoMenuItem.razor *@
+<EcoCard CssClass="eco-menu-item" role="button" tabindex="0" OnClick="OnClick" @attributes="AdditionalAttributes">
+    <div class="eco-menu-item__row">
+        <MudIcon Icon="@Icon" Class="eco-menu-item__icon" aria-hidden="true" />
+        <span class="eco-menu-item__label">@Label</span>
+        @if (ShowChevron)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="eco-menu-item__chevron" aria-hidden="true" />
+        }
+    </div>
+</EcoCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Icon { get; set; } = default!;
+
+    [Parameter]
+    public bool ShowChevron { get; set; } = true;
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+}

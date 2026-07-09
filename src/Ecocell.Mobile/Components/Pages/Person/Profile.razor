@@ -1,5 +1,7 @@
 @page "/perfil"
 @layout MainLayout
+@using Ecocell.Mobile.Services.Auth
+@inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
 <div class="eco-profile">
@@ -12,16 +14,13 @@
     </div>
 
     <div class="eco-profile__menu">
-        <EcoCard CssClass="eco-profile__item"
-                 role="button"
-                 tabindex="0"
-                 OnClick="GoToMyCollectorPoints">
-            <div class="eco-profile__item-row">
-                <MudIcon Icon="@Icons.Material.Filled.Storefront" Class="eco-profile__item-icon" aria-hidden="true" />
-                <span class="eco-profile__item-label">Meus Pontos de Coleta</span>
-                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="eco-profile__item-chevron" aria-hidden="true" />
-            </div>
-        </EcoCard>
+        <EcoMenuItem Label="Meus Pontos de Coleta"
+                     Icon="@Icons.Material.Filled.Storefront"
+                     OnClick="GoToMyCollectorPoints" />
+        <EcoMenuItem Label="Sair"
+                     Icon="@Icons.Material.Filled.Logout"
+                     ShowChevron="false"
+                     OnClick="HandleLogout" />
     </div>
 
     <div class="eco-profile__navbar">
@@ -40,6 +39,12 @@
     ];
 
     private void GoToMyCollectorPoints() => Navigation.NavigateTo("/meus-pontos-de-coleta");
+
+    /// <summary>
+    /// Só limpa a sessão — a navegação pra Welcome é responsabilidade única do
+    /// MainLayout (assina AuthStateChanged), evitando navegação duplicada.
+    /// </summary>
+    private async Task HandleLogout() => await AuthState.SignOutAsync();
 
     private void OnNavSelect(string id)
     {

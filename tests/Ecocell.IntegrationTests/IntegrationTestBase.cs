@@ -193,4 +193,66 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
         return legalPerson;
     }
+
+    /// <summary>
+    /// Semeia uma pessoa jurídica CollectPoint já <c>Active</c> (aprovada), vinculada ao responsável.
+    /// </summary>
+    protected async Task<LegalPerson> CreateActiveCollectorPointAsync(Guid responsiblePersonId)
+    {
+        var faker = new Faker("pt_BR");
+
+        var legalPerson = new LegalPerson(
+            legalName: faker.Company.CompanyName(),
+            tradeName: faker.Company.CompanyName(),
+            cnpj: faker.Company.Cnpj(includeFormatSymbols: false),
+            email: faker.Internet.Email(),
+            journey: ApiEnums.Journey.CollectPoint,
+            responsiblePersonId: responsiblePersonId);
+
+        legalPerson.Approve(ApiEnums.Role.Admin); // PendingApproval -> Active
+
+        await using var scope = Fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.People.Add(legalPerson);
+        await db.SaveChangesAsync();
+
+        return legalPerson;
+    }
+
+    /// <summary>Resolve o Id da pessoa pelo e-mail (para vincular pontos ao responsável logado).</summary>
+    protected async Task<Guid> GetPersonIdByEmailAsync(string email)
+    {
+        await using var scope = Fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var person = await db.People.FirstAsync(p => p.Email == email);
+        return person.Id;
+    }
+
+    /// <summary>
+    /// Semeia uma pessoa física com a role informada (Admin/Support), confirma e faz login.
+    /// Espelha <c>CreateAdminAndLoginAsync</c> para permitir testar 403 por role insuficiente.
+    /// </summary>
+    protected async Task<(string email, string jwt)> CreatePrivilegedUserAndLoginAsync(ApiEnums.Role role)
+    {
+        var faker = new Faker("pt_BR");
+        var email = faker.Internet.Email();
+
+        await using (var scope = Fixture.Factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var user = new NaturalPerson(
+                fullName: faker.Name.FullName(),
+                cpf: faker.Person.Cpf(includeFormatSymbols: false),
+                birthDate: DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)),
+                role: role,
+                email: email,
+                journey: ApiEnums.Journey.None);
+            user.Confirm();
+            db.People.Add(user);
+            await db.SaveChangesAsync();
+        }
+
+        var jwt = await LoginAsync(email);
+        return (email, jwt);
+    }
 }

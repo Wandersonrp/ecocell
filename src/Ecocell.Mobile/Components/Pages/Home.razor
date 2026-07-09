@@ -1,24 +1,62 @@
 @page "/"
 @layout AuthLayout
+@using Ecocell.Mobile.Services.Auth
+@using Ecocell.Mobile.Services.Navigation
+@inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
-<div class="welcome-screen">
-    <div class="welcome-body">
-        <EcoLogoLockup Size="EcoLogoSize.Lg" />
+@if (_checkingSession)
+{
+    <div class="welcome-loading">
+        <EcoSpinner Label="Carregando..." />
+    </div>
+}
+else
+{
+    <div class="welcome-screen">
+        <div class="welcome-body">
+            <EcoLogoLockup Size="EcoLogoSize.Lg" />
 
-        <div class="welcome-headline">
-            <h1>Bem-vindo ao EcoCell</h1>
-            <p>Cadastre-se ou faça login</p>
+            <div class="welcome-headline">
+                <h1>Bem-vindo ao EcoCell</h1>
+                <p>Cadastre-se ou faça login</p>
+            </div>
+        </div>
+
+        <div class="welcome-actions">
+            <EcoPrimaryButton Label="Cadastrar" OnClick="OnSignUp" />
+            <EcoSecondaryButton Label="Entrar" OnClick="OnSignIn" />
         </div>
     </div>
-
-    <div class="welcome-actions">
-        <EcoPrimaryButton Label="Cadastrar" OnClick="OnSignUp" />
-        <EcoSecondaryButton Label="Entrar" OnClick="OnSignIn" />
-    </div>
-</div>
+}
 
 @code {
+    private bool _checkingSession = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Idempotente: App.xaml.cs já dispara isso no boot (fire-and-forget); repetir
+        // aqui cobre a corrida em que o WebView monta antes daquela leitura terminar.
+        await AuthState.InitializeAsync();
+
+        if (AuthState.IsAuthenticated)
+        {
+            // Guarda contra self-loop: jornadas sem tela dedicada (CollectPoint,
+            // Collector, None) resolvem pra "/" — como "/" agora É o boot gate,
+            // navegar pra "/" a partir de "/" reentraria em loop infinito. Nesses
+            // casos cai pro Welcome normal (mesmo comportamento de hoje pra essas
+            // jornadas — só não regride).
+            var target = PostLoginRouteResolver.Resolve(AuthState.CurrentRole, AuthState.CurrentJourney);
+            if (target != "/")
+            {
+                Navigation.NavigateTo(target, replace: true);
+                return;
+            }
+        }
+
+        _checkingSession = false;
+    }
+
     private void OnSignUp() => Navigation.NavigateTo("/register/natural-person");
     private void OnSignIn() => Navigation.NavigateTo("/login");
 }
