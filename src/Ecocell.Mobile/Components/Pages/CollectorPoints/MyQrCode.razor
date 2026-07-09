@@ -74,6 +74,7 @@
         }
 
         _navItems = NavItemsResolver.Resolve(Context.Current);
+        _pointName = Context.Current.DisplayName;
         await Reload();
     }
 
