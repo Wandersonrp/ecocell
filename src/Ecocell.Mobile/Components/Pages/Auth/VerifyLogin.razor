@@ -1,6 +1,7 @@
 @page "/login/verify"
 @layout AuthLayout
 @implements IDisposable
+@using Ecocell.Mobile.Services.Navigation
 @inject IAccountClient AccountClient
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
@@ -70,7 +71,7 @@
             if (response.IsSuccessStatusCode && response.Content is not null)
             {
                 await AuthState.SignInAsync(response.Content);
-                Navigation.NavigateTo(PostLoginRoute(AuthState.CurrentRole, AuthState.CurrentJourney));
+                Navigation.NavigateTo(PostLoginRouteResolver.Resolve(AuthState.CurrentRole, AuthState.CurrentJourney));
                 return;
             }
 
@@ -91,20 +92,6 @@
             _verifying = false;
             await _otp.ClearAsync();
         }
-    }
-
-    /// <summary>
-    /// Rota inicial após login. Admin vai à área de solicitações; Depositante ao mapa;
-    /// demais jornadas ainda não têm tela dedicada e caem na tela inicial.
-    /// </summary>
-    private static string PostLoginRoute(Role? role, Journey? journey)
-    {
-        if (role == Role.Admin)
-        {
-            return "/admin/solicitacoes";
-        }
-
-        return journey == Journey.Depositor ? "/map" : "/";
     }
 
     private async Task HandleResend()
