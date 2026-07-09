@@ -113,7 +113,10 @@
                 _showCitySearch = true;
 
             if (ViewModel.Center is not null)
+            {
                 await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
+                await Js.InvokeVoidAsync("ecoMap.setUserLocation", ViewModel.Center.Latitude, ViewModel.Center.Longitude);
+            }
 
             await RenderMarkersAsync();
             StateHasChanged();
@@ -165,7 +168,10 @@
         if (ViewModel.LocationDenied)
             _showCitySearch = true;
         if (ViewModel.Center is not null)
+        {
             await Js.InvokeVoidAsync("ecoMap.flyTo", ViewModel.Center.Latitude, ViewModel.Center.Longitude, 14);
+            await Js.InvokeVoidAsync("ecoMap.setUserLocation", ViewModel.Center.Latitude, ViewModel.Center.Longitude);
+        }
         if (ViewModel.ErrorMessage is null)
             await RenderMarkersAsync();
     }
