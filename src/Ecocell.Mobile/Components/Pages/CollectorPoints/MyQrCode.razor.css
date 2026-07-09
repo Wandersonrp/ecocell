@@ -9,7 +9,7 @@
     display: flex;
     align-items: center;
     gap: var(--eco-space-sm);
-    padding: var(--eco-space-md) var(--eco-space-md) var(--eco-space-sm);
+    padding: var(--eco-space-sm) var(--eco-space-md);
     background: var(--eco-color-surface);
     box-shadow: var(--eco-shadow-top-bar);
 }

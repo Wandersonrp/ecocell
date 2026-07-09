@@ -80,9 +80,16 @@
             _verifying = false;
             await _otp.ClearAsync();
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (_cts.IsCancellationRequested)
         {
             // Página abandonada durante a requisição — descarta sem atualizar estado.
+        }
+        catch (Exception)
+        {
+            // Falha de rede não pode derrubar o circuito Blazor — erro inline com retry.
+            _errorMessage = "Falha de conexão. Tente novamente.";
+            _verifying = false;
+            await _otp.ClearAsync();
         }
     }
 
@@ -110,9 +117,13 @@
                 new RequestRequestLoginCode { Email = Email ?? string.Empty },
                 _cts.Token);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (_cts.IsCancellationRequested)
         {
             // Página abandonada — descarta.
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Falha de conexão. Tente novamente.";
         }
     }
 

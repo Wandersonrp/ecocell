@@ -93,7 +93,11 @@
     {
         using var generator = new QRCodeGenerator();
         using var data = generator.CreateQrCode(content, QRCodeGenerator.ECCLevel.M);
-        var svg = new SvgQRCode(data).GetGraphic(5, ThemeTokens.ColorPrimary, ThemeTokens.ColorSurface);
+        // ViewBoxAttribute: sem viewBox o SVG não escala e o QR fica ancorado no
+        // canto do container em vez de centralizado.
+        var svg = new SvgQRCode(data).GetGraphic(
+            5, ThemeTokens.ColorPrimary, ThemeTokens.ColorSurface,
+            sizingMode: SvgQRCode.SizingMode.ViewBoxAttribute);
         return (MarkupString)svg;
     }
 
