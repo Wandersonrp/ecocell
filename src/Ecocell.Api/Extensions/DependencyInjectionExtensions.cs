@@ -131,7 +131,7 @@ public static class DependencyInjectionExtensions
     /// </summary>
     private static void AddServices(IServiceCollection services, IHostEnvironment environment)
     {
-        if (environment.IsProduction() || environment.IsStaging() || environment.IsDevelopment())
+        if (environment.IsProduction() || environment.IsStaging())
             services.AddScoped<IEmailSender, MailKitEmailSender>();
         else
             services.AddSingleton<IEmailSender, LoggingEmailSender>();
