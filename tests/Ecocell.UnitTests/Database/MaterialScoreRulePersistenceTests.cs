@@ -14,17 +14,21 @@ public class MaterialScoreRulePersistenceTests : TestBase
         new(2026, 9, 14, 12, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public async Task Save_ShouldRoundTripRuleAndStoreEnumsAsStrings()
+    public async Task Save_ShouldRoundTripRuleAndStoreEnumsAsStrings_WhenRuleIsValid()
     {
+        // Arrange
         var collectPoint = CreateCollectPoint();
         var rule = CreateRule(collectPoint.Id);
         DbContext.LegalPeople.Add(collectPoint);
         DbContext.MaterialScoreRules.Add(rule);
 
+        // Act
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         var persisted = await DbContext.MaterialScoreRules.SingleAsync(x => x.Id == rule.Id);
+
+        // Assert
         persisted.LegalPersonId.ShouldBe(collectPoint.Id);
         persisted.Material.ShouldBe(ElectronicMaterial.Battery);
         persisted.Points.ShouldBe(10.25m);
@@ -47,15 +51,19 @@ public class MaterialScoreRulePersistenceTests : TestBase
     }
 
     [Fact]
-    public void Model_ShouldConfigureLengthsAndPointsPrecision()
+    public void Model_ShouldConfigureLengthsAndPointsPrecision_WhenEntityPropertiesAreConfigured()
     {
+        // Arrange
         var entityType = DbContext.Model.FindEntityType(typeof(MaterialScoreRule));
+
+        // Act
         entityType.ShouldNotBeNull();
 
         var material = entityType.FindProperty(nameof(MaterialScoreRule.Material));
         var unit = entityType.FindProperty(nameof(MaterialScoreRule.Unit));
         var points = entityType.FindProperty(nameof(MaterialScoreRule.Points));
 
+        // Assert
         material.ShouldNotBeNull();
         unit.ShouldNotBeNull();
         points.ShouldNotBeNull();
@@ -66,20 +74,23 @@ public class MaterialScoreRulePersistenceTests : TestBase
     }
 
     [Fact]
-    public async Task Save_ShouldRejectTwoOpenRulesForSameCollectPointAndMaterial()
+    public async Task Save_ShouldRejectTwoOpenRulesForSameCollectPointAndMaterial_WhenTwoOpenRulesShareCollectPointAndMaterial()
     {
+        // Arrange
         var collectPoint = CreateCollectPoint();
         DbContext.LegalPeople.Add(collectPoint);
         DbContext.MaterialScoreRules.AddRange(
             CreateRule(collectPoint.Id),
             CreateRule(collectPoint.Id, 20m, ValidFrom.AddMinutes(1)));
 
+        // Act & Assert
         await Should.ThrowAsync<DbUpdateException>(() => DbContext.SaveChangesAsync());
     }
 
     [Fact]
-    public async Task Save_ShouldAcceptNewVersionAfterPreviousRuleIsClosed()
+    public async Task Save_ShouldAcceptNewVersionAfterPreviousRuleIsClosed_WhenPreviousRuleIsClosed()
     {
+        // Arrange
         var collectPoint = CreateCollectPoint();
         var firstRule = CreateRule(collectPoint.Id);
         DbContext.LegalPeople.Add(collectPoint);
@@ -89,8 +100,11 @@ public class MaterialScoreRulePersistenceTests : TestBase
         var changedAt = ValidFrom.AddHours(1);
         firstRule.Close(changedAt);
         DbContext.MaterialScoreRules.Add(CreateRule(collectPoint.Id, 20m, changedAt));
+
+        // Act
         await DbContext.SaveChangesAsync();
 
+        // Assert
         (await DbContext.MaterialScoreRules.CountAsync()).ShouldBe(2);
         (await DbContext.MaterialScoreRules.CountAsync(x => x.ValidTo == null)).ShouldBe(1);
     }
@@ -98,6 +112,7 @@ public class MaterialScoreRulePersistenceTests : TestBase
     [Fact]
     public async Task DeleteLegalPerson_ShouldFail_WhenRuleReferencesIt()
     {
+        // Arrange
         var collectPoint = CreateCollectPoint();
         DbContext.LegalPeople.Add(collectPoint);
         DbContext.MaterialScoreRules.Add(CreateRule(collectPoint.Id));
@@ -107,23 +122,28 @@ public class MaterialScoreRulePersistenceTests : TestBase
         var persistedPoint = await DbContext.LegalPeople.SingleAsync(x => x.Id == collectPoint.Id);
         DbContext.LegalPeople.Remove(persistedPoint);
 
+        // Act & Assert
         await Should.ThrowAsync<DbUpdateException>(() => DbContext.SaveChangesAsync());
     }
 
     [Fact]
-    public async Task Database_ShouldRejectNonPositivePoints()
+    public async Task Database_ShouldRejectNonPositivePoints_WhenPointsAreZero()
     {
+        // Arrange
         var collectPoint = await PersistCollectPointAsync();
 
+        // Act & Assert
         await Should.ThrowAsync<SqliteException>(() =>
             InsertRawRuleAsync(collectPoint.Id, 0m, ValidFrom, null));
     }
 
     [Fact]
-    public async Task Database_ShouldRejectValidToNotAfterValidFrom()
+    public async Task Database_ShouldRejectValidToNotAfterValidFrom_WhenValidToEqualsValidFrom()
     {
+        // Arrange
         var collectPoint = await PersistCollectPointAsync();
 
+        // Act & Assert
         await Should.ThrowAsync<SqliteException>(() =>
             InsertRawRuleAsync(collectPoint.Id, 10m, ValidFrom, ValidFrom));
     }
