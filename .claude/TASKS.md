@@ -490,7 +490,7 @@ flowchart LR
 ### US011 — Tabela de pontuação por material · RF008 · Importante
 
 **Dependências:** US001-PJ.
-**Estado atual:** enum `EletronicMaterials` existe (✓).
+**Estado atual:** o enum de materiais ainda não existe; será criado pela US011.A como `ElectronicMaterial` nos projetos API e Shared.
 
 **US011.A — Entidade e migration**
 
