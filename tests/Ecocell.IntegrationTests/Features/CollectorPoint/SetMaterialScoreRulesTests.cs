@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
+using Bogus;
+using Bogus.Extensions.Brazil;
 using Ecocell.Api.Database;
+using Ecocell.Api.Entities;
 using Ecocell.Shared.Requests.CollectorPoints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -112,6 +115,38 @@ public class SetMaterialScoreRulesTests : IntegrationTestBase
 
         var response = await authClient.PutAsJsonAsync(
             $"api/collector-points/{collectorPoint.Id}/score-rules",
+            Request(Rule(SharedEnums.ElectronicMaterial.Battery, 10m, SharedEnums.MaterialScoreUnit.PerUnit)));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Put_ShouldReturn404_WhenOwnedLegalPersonHasAnotherJourney()
+    {
+        var (email, jwt) = await CreateAndLoginNaturalPersonAsync();
+        var responsibleId = await GetPersonIdByEmailAsync(email);
+        var faker = new Faker("pt_BR");
+        Guid legalPersonId;
+
+        await using (var scope = Fixture.Factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var legalPerson = new LegalPerson(
+                faker.Company.CompanyName(),
+                faker.Company.CompanyName(),
+                faker.Company.Cnpj(includeFormatSymbols: false),
+                faker.Internet.Email(),
+                ApiEnums.Journey.Depositor,
+                responsiblePersonId: responsibleId);
+            db.LegalPeople.Add(legalPerson);
+            await db.SaveChangesAsync();
+            legalPersonId = legalPerson.Id;
+        }
+
+        using var authClient = CreateAuthenticatedClient(jwt);
+
+        var response = await authClient.PutAsJsonAsync(
+            $"api/collector-points/{legalPersonId}/score-rules",
             Request(Rule(SharedEnums.ElectronicMaterial.Battery, 10m, SharedEnums.MaterialScoreUnit.PerUnit)));
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
