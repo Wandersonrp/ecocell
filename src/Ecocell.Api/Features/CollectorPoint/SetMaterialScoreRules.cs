@@ -1,11 +1,15 @@
+using Carter;
 using Ecocell.Api.Database;
 using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
 using Ecocell.Api.Services.CollectorPoints;
 using Ecocell.Api.Shared;
+using Ecocell.Shared.Requests.CollectorPoints;
 using FluentValidation;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
 namespace Ecocell.Api.Features.CollectorPoint;
@@ -213,5 +217,40 @@ public static class SetMaterialScoreRules
             exception.InnerException is PostgresException postgresException
             && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
             && postgresException.ConstraintName == OpenRuleIndexName;
+    }
+}
+
+public sealed class SetMaterialScoreRulesEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapPut(
+            "api/collector-points/{collectorPointId:guid}/score-rules",
+            async (
+                Guid collectorPointId,
+                [FromBody] RequestSetMaterialScoreRulesJson request,
+                ISender sender) =>
+            {
+                var rules = request.Rules?.Select(rule =>
+                        new SetMaterialScoreRules.RuleInput(
+                            (ElectronicMaterial)(int)rule.Material,
+                            rule.Points,
+                            (MaterialScoreUnit)(int)rule.Unit))
+                    .ToList();
+
+                var result = await sender.Send(
+                    new SetMaterialScoreRules.Command(collectorPointId, rules));
+                return result.ToProcessResult(StatusCodes.Status204NoContent);
+            })
+            .WithTags("CollectorPoint")
+            .WithName("SetMaterialScoreRules")
+            .WithSummary("Substitui a tabela vigente de pontuação de um Ponto de Coleta.")
+            .RequireAuthorization(AuthorizationPolicies.Authenticated)
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
     }
 }
