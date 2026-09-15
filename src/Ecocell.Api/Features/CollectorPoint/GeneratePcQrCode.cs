@@ -1,13 +1,10 @@
 using Carter;
-using Ecocell.Api.Database;
-using Ecocell.Api.Enums;
 using Ecocell.Api.Extensions;
-using Ecocell.Api.Services.CurrentUser;
+using Ecocell.Api.Services.CollectorPoints;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Responses;
 using FluentValidation;
 using Mediator;
-using Microsoft.EntityFrameworkCore;
 
 namespace Ecocell.Api.Features.CollectorPoint;
 
@@ -27,58 +24,48 @@ public static class GeneratePcQrCode
 
     public sealed class Handler : IRequestHandler<Query, ResultT<ResponseCollectorPointQrCode>>
     {
-        private readonly AppDbContext _dbContext;
         private readonly ILogger<Handler> _logger;
         private readonly IValidator<Query> _validator;
-        private readonly ICurrentUserService _currentUserService;
+        private readonly ICollectorPointAccessGuard _accessGuard;
 
         public Handler(
-            AppDbContext dbContext,
             ILogger<Handler> logger,
             IValidator<Query> validator,
-            ICurrentUserService currentUserService)
+            ICollectorPointAccessGuard accessGuard)
         {
-            _dbContext = dbContext;
             _logger = logger;
             _validator = validator;
-            _currentUserService = currentUserService;
+            _accessGuard = accessGuard;
         }
 
-        public async ValueTask<ResultT<ResponseCollectorPointQrCode>> Handle(Query request, CancellationToken ct)
+        public async ValueTask<ResultT<ResponseCollectorPointQrCode>> Handle(
+            Query request,
+            CancellationToken cancellationToken)
         {
-            var validation = await _validator.ValidateAsync(request, ct);
+            var validation = await _validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid)
             {
                 var messages = validation.Errors.Select(e => e.ErrorMessage).ToList();
                 return ResultT<ResponseCollectorPointQrCode>.Failure(Error.ErrorOnValidation(messages));
             }
 
-            var currentUser = await _currentUserService.GetCurrentUserAsync(ct);
-            if (currentUser is null
-                || currentUser.PersonType != PersonType.NaturalPerson
-                || currentUser.PersonStatus != PersonStatus.Active
-                || currentUser.Role != Role.User)
+            var access = await _accessGuard.EnsureResponsibleActiveAsync(
+                request.CollectorPointId,
+                cancellationToken);
+            if (access.IsFailure)
             {
-                _logger.LogWarning("Chamador inelegível ao gerar QR de ponto de coleta.");
-                return ResultT<ResponseCollectorPointQrCode>.Failure(Error.Forbidden());
+                _logger.LogWarning(
+                    "Acesso negado ao gerar QR do Ponto de Coleta {CollectorPointId}. Código: {Code}.",
+                    request.CollectorPointId,
+                    access.Error.Code);
+                return ResultT<ResponseCollectorPointQrCode>.Failure(access.Error);
             }
 
-            var collectPoint = await _dbContext.LegalPeople
-                .AsNoTracking()
-                .FirstOrDefaultAsync(
-                    lp => lp.Id == request.CollectorPointId && lp.Journey == Journey.CollectPoint,
-                    ct);
-
-            if (collectPoint is null || collectPoint.ResponsiblePersonId != currentUser.Id)
-                return ResultT<ResponseCollectorPointQrCode>.Failure(
-                    Error.NotFound("Ponto de coleta não encontrado."));
-
-            if (collectPoint.PersonStatus != PersonStatus.Active)
-                return ResultT<ResponseCollectorPointQrCode>.Failure(
-                    Error.Conflict("Ponto de coleta não está disponível para emitir QR Code."));
-
             return ResultT<ResponseCollectorPointQrCode>.Success(
-                new ResponseCollectorPointQrCode { Qr = $"ecocell://pc/{collectPoint.Id}" });
+                new ResponseCollectorPointQrCode
+                {
+                    Qr = $"ecocell://pc/{request.CollectorPointId}",
+                });
         }
     }
 }
