@@ -7,6 +7,7 @@ using Ecocell.Api.Enums;
 using Ecocell.Api.Shared;
 using Ecocell.Api.Database;
 using Ecocell.Api.Services.Authentication;
+using Ecocell.Api.Services.CollectorPoints;
 using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.External;
@@ -48,6 +49,8 @@ public static class DependencyInjectionExtensions
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICollectorPointAccessGuard, CollectorPointAccessGuard>();
+        services.AddSingleton(TimeProvider.System);
 
         var assembly = typeof(Program).Assembly;
         services.AddValidatorsFromAssembly(assembly);
