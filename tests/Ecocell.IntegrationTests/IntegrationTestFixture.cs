@@ -5,6 +5,7 @@ using Ecocell.IntegrationTests.Stubs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -77,7 +78,28 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         });
     }
 
-    private void ConfigureTestServices(IServiceCollection services)
+    public WebApplicationFactory<Program> CreateDbInterceptedFactory(DbCommandInterceptor interceptor)
+    {
+        return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration(configuration =>
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["RateLimit:Enabled"] = "false",
+                });
+            });
+            builder.ConfigureServices(services => ConfigureTestServices(services, interceptor));
+        });
+    }
+
+    private void ConfigureTestServices(IServiceCollection services) =>
+        ConfigureTestServices(services, interceptor: null);
+
+    private void ConfigureTestServices(
+        IServiceCollection services,
+        DbCommandInterceptor? interceptor)
     {
         // Substitui AppDbContext pelo container Postgres dinâmico
         var dbDescriptors = services
@@ -86,7 +108,11 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
             .ToList();
         foreach (var d in dbDescriptors) services.Remove(d);
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(_postgres.GetConnectionString()));
+        {
+            options.UseNpgsql(_postgres.GetConnectionString());
+            if (interceptor is not null)
+                options.AddInterceptors(interceptor);
+        });
 
         // Substitui IConnectionMultiplexer pelo container Redis dinâmico
         var redisDescriptors = services

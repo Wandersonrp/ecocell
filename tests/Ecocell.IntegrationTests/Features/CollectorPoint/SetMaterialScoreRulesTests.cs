@@ -1,9 +1,11 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Bogus;
 using Bogus.Extensions.Brazil;
 using Ecocell.Api.Database;
 using Ecocell.Api.Entities;
+using Ecocell.IntegrationTests.Infrastructure;
 using Ecocell.Shared.Requests.CollectorPoints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -207,6 +209,46 @@ public class SetMaterialScoreRulesTests : IntegrationTestBase
             .Points.ShouldBe(25m);
         rules.Single(x => x.Material == ApiEnums.ElectronicMaterial.CellPhone && x.ValidTo is null)
             .Points.ShouldBe(15m);
+    }
+
+    [Fact]
+    public async Task Put_ShouldReturnOne204AndOne409_WhenTwoWritesStartFromSameState()
+    {
+        var (email, jwt) = await CreateAndLoginNaturalPersonAsync();
+        var responsibleId = await GetPersonIdByEmailAsync(email);
+        var collectorPoint = await CreateActiveCollectorPointAsync(responsibleId);
+        var interceptor = new MaterialScoreRuleInsertBarrierInterceptor();
+        using var factory = Fixture.CreateDbInterceptedFactory(interceptor);
+        using var firstClient = factory.CreateClient();
+        using var secondClient = factory.CreateClient();
+        firstClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", jwt);
+        secondClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", jwt);
+
+        var firstCall = firstClient.PutAsJsonAsync(
+            $"api/collector-points/{collectorPoint.Id}/score-rules",
+            Request(Rule(SharedEnums.ElectronicMaterial.Battery, 10m, SharedEnums.MaterialScoreUnit.PerUnit)));
+        var secondCall = secondClient.PutAsJsonAsync(
+            $"api/collector-points/{collectorPoint.Id}/score-rules",
+            Request(Rule(SharedEnums.ElectronicMaterial.Battery, 20m, SharedEnums.MaterialScoreUnit.PerUnit)));
+
+        var responses = await Task.WhenAll(firstCall, secondCall);
+
+        responses.Count(response => response.StatusCode == HttpStatusCode.NoContent).ShouldBe(1);
+        responses.Count(response => response.StatusCode == HttpStatusCode.Conflict).ShouldBe(1);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var persisted = await db.MaterialScoreRules
+            .AsNoTracking()
+            .Where(x => x.LegalPersonId == collectorPoint.Id)
+            .ToListAsync();
+        persisted.Count.ShouldBe(1);
+        persisted.Single().ValidTo.ShouldBeNull();
+        new[] { 10m, 20m }.ShouldContain(persisted.Single().Points);
+
+        foreach (var response in responses)
+            response.Dispose();
     }
 
     private static RequestSetMaterialScoreRulesJson Request(
