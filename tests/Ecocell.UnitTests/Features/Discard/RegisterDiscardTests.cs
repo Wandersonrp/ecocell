@@ -42,6 +42,15 @@ public class RegisterDiscardTests
     }
 
     [Fact]
+    public async Task Validate_ShouldFail_WhenItemsAreNull()
+    {
+        var result = await new RegisterDiscard.Validator()
+            .ValidateAsync(ValidCommand() with { Items = null! }, CancellationToken.None);
+
+        result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Validate_ShouldFail_WhenMaterialIsDuplicated()
     {
         var item = ValidCommand().Items[0];

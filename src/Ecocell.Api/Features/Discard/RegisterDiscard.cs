@@ -35,7 +35,8 @@ public static class RegisterDiscard
                 .WithMessage("Informe ao menos um item.");
 
             RuleFor(value => value.Items)
-                .Must(items => items.Select(item => item.Material).Distinct().Count() == items.Count)
+                .Must(items => items is not null
+                    && items.Select(item => item.Material).Distinct().Count() == items.Count)
                 .WithMessage("Cada material pode aparecer somente uma vez.");
 
             RuleForEach(value => value.Items).ChildRules(item =>
