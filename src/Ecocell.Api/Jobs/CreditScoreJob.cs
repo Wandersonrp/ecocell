@@ -34,7 +34,49 @@ public sealed class CreditScoreJob
             .Include(value => value.Discard)
                 .ThenInclude(value => value.Items)
                     .ThenInclude(value => value.MaterialScoreRule)
-            .SingleAsync(value => value.Id == creditScoreRequestId, cancellationToken);
+            .SingleOrDefaultAsync(value => value.Id == creditScoreRequestId, cancellationToken);
+
+        if (request is null || request.DispatchedAt is not null)
+            return;
+
+        if (request.Discard.Status != DiscardStatus.Confirmed)
+        {
+            _logger.LogError(
+                "Solicitação {CreditScoreRequestId} referencia descarte não confirmado {DiscardId}.",
+                request.Id,
+                request.DiscardId);
+            throw new InvalidOperationException(
+                "Somente descartes confirmados podem gerar crédito de pontuação.");
+        }
+
+        var dispatchedAt = _timeProvider.GetUtcNow().UtcDateTime;
+        var transactionExists = await _dbContext.DepositorScoreTransactions.AnyAsync(
+            value => value.DiscardId == request.DiscardId,
+            cancellationToken);
+        if (transactionExists)
+        {
+            request.MarkAsDispatched(dispatchedAt);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            _logger.LogInformation(
+                "Solicitação {CreditScoreRequestId} recuperada para descarte já creditado {DiscardId}.",
+                request.Id,
+                request.DiscardId);
+            return;
+        }
+
+        if (request.Discard.Depositor.Role is Role.Admin or Role.Support)
+        {
+            request.MarkAsDispatched(dispatchedAt);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            _logger.LogInformation(
+                "Crédito suprimido pela RN013. Solicitação: {CreditScoreRequestId}; descarte: {DiscardId}; role: {Role}.",
+                request.Id,
+                request.DiscardId,
+                request.Discard.Depositor.Role);
+            return;
+        }
 
         var points = request.Discard.Items.Sum(CalculatePoints);
         var total = await _dbContext.DepositorTotalScores.SingleOrDefaultAsync(
@@ -57,7 +99,7 @@ public sealed class CreditScoreJob
             total.Credit(points);
         }
 
-        request.MarkAsDispatched(_timeProvider.GetUtcNow().UtcDateTime);
+        request.MarkAsDispatched(dispatchedAt);
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
