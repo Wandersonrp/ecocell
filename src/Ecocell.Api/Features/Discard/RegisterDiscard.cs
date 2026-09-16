@@ -1,8 +1,11 @@
+using Carter;
 using Ecocell.Api.Database;
 using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
 using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Shared;
+using Ecocell.Shared.Requests.Discards;
 using Ecocell.Shared.Responses;
 using FluentValidation;
 using Mediator;
@@ -197,5 +200,45 @@ public static class RegisterDiscard
         return path.Length == 37
             && path[0] == '/'
             && Guid.TryParseExact(path[1..], "D", out id);
+    }
+}
+
+public sealed class RegisterDiscardEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapPost(
+            "api/v1/discards",
+            async (
+                RequestRegisterDiscardJson request,
+                ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new RegisterDiscard.Command
+                {
+                    QrCode = request.QrCode,
+                    Items = (request.Items ?? [])
+                        .Select(item => new RegisterDiscard.ItemCommand
+                        {
+                            Material = (ElectronicMaterial)(int)item.Material,
+                            Quantity = item.Quantity,
+                            ApproximateWeightKg = item.ApproximateWeightKg,
+                        })
+                        .ToArray(),
+                };
+
+                var result = await sender.Send(command, ct);
+                return result.ToProcessResult(StatusCodes.Status201Created);
+            })
+            .WithTags("Discard")
+            .WithName("RegisterDiscard")
+            .WithSummary("Abre um descarte pendente a partir do QR Code de um Ponto de Coleta.")
+            .RequireAuthorization(AuthorizationPolicies.Authenticated)
+            .Produces<ResponseRegisterDiscardJson>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
     }
 }
