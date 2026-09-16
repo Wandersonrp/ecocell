@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<LegalPerson> LegalPeople { get; set; }
     public DbSet<Address> Addresses { get; set; }
     public DbSet<MaterialScoreRule> MaterialScoreRules { get; set; }
+    public DbSet<Discard> Discards { get; set; }
+    public DbSet<DiscardItem> DiscardItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
