@@ -1,8 +1,13 @@
+using Ecocell.Api.Database;
+using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Responses;
 using FluentValidation;
 using Mediator;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Ecocell.Api.Features.Discard;
 
@@ -52,6 +57,124 @@ public static class RegisterDiscard
                     .GreaterThan(0)
                     .WithMessage("O peso aproximado deve ser maior que zero.");
             });
+        }
+    }
+
+    public sealed class Handler : IRequestHandler<Command, ResultT<ResponseRegisterDiscardJson>>
+    {
+        private readonly AppDbContext _dbContext;
+        private readonly ILogger<Handler> _logger;
+        private readonly IValidator<Command> _validator;
+        private readonly ICurrentUserService _currentUserService;
+
+        public Handler(
+            AppDbContext dbContext,
+            ILogger<Handler> logger,
+            IValidator<Command> validator,
+            ICurrentUserService currentUserService)
+        {
+            _dbContext = dbContext;
+            _logger = logger;
+            _validator = validator;
+            _currentUserService = currentUserService;
+        }
+
+        public async ValueTask<ResultT<ResponseRegisterDiscardJson>> Handle(
+            Command request,
+            CancellationToken ct)
+        {
+            var validation = await _validator.ValidateAsync(request, ct);
+            if (!validation.IsValid)
+            {
+                return ResultT<ResponseRegisterDiscardJson>.Failure(
+                    Error.ErrorOnValidation(
+                        validation.Errors.Select(value => value.ErrorMessage).ToList()));
+            }
+
+            var currentUser = await _currentUserService.GetCurrentUserAsync(ct);
+            if (currentUser is null
+                || currentUser.PersonType != PersonType.NaturalPerson
+                || currentUser.PersonStatus != PersonStatus.Active
+                || currentUser.Journey != Journey.Depositor)
+            {
+                return ResultT<ResponseRegisterDiscardJson>.Failure(Error.Forbidden());
+            }
+
+            TryGetCollectorPointId(request.QrCode, out var collectorPointId);
+
+            var collectorPoint = await _dbContext.LegalPeople
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    value => value.Id == collectorPointId
+                        && value.Journey == Journey.CollectPoint,
+                    ct);
+
+            if (collectorPoint is null)
+            {
+                return ResultT<ResponseRegisterDiscardJson>.Failure(
+                    Error.NotFound("Ponto de Coleta não encontrado."));
+            }
+
+            if (collectorPoint.PersonStatus != PersonStatus.Active)
+            {
+                return ResultT<ResponseRegisterDiscardJson>.Failure(
+                    Error.Conflict("Ponto de Coleta não está ativo."));
+            }
+
+            var openedAt = DateTime.UtcNow;
+            var materials = request.Items.Select(value => value.Material).ToArray();
+
+            var rules = await _dbContext.MaterialScoreRules
+                .AsNoTracking()
+                .Where(value => value.LegalPersonId == collectorPoint.Id
+                    && materials.Contains(value.Material)
+                    && value.ValidFrom <= openedAt
+                    && (value.ValidTo == null || value.ValidTo > openedAt))
+                .ToListAsync(ct);
+
+            var rulesByMaterial = rules.ToDictionary(value => value.Material);
+            var unsupported = materials
+                .Where(value => !rulesByMaterial.ContainsKey(value))
+                .Distinct()
+                .Order()
+                .ToArray();
+
+            if (unsupported.Length > 0)
+            {
+                return ResultT<ResponseRegisterDiscardJson>.Failure(
+                    Error.Conflict(
+                        $"Materiais não aceitos pelo Ponto de Coleta: {string.Join(", ", unsupported)}."));
+            }
+
+            var items = request.Items
+                .Select(value => new DiscardItem(
+                    value.Material,
+                    value.Quantity,
+                    value.ApproximateWeightKg,
+                    rulesByMaterial[value.Material].Id))
+                .ToArray();
+
+            var discard = new Ecocell.Api.Entities.Discard(
+                currentUser.Id,
+                collectorPoint.Id,
+                items);
+
+            _dbContext.Discards.Add(discard);
+            await _dbContext.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "Descarte {DiscardId} aberto pelo depositante {DepositorId} no ponto {CollectorPointId}.",
+                discard.Id,
+                currentUser.Id,
+                collectorPoint.Id);
+
+            return ResultT<ResponseRegisterDiscardJson>.Success(
+                new ResponseRegisterDiscardJson
+                {
+                    Id = discard.Id,
+                    Status = (Ecocell.Shared.Enums.DiscardStatus)(int)discard.Status,
+                    CreatedAt = discard.CreatedAt,
+                });
         }
     }
 
