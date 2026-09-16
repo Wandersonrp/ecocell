@@ -5,6 +5,7 @@ using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Shouldly;
 
 namespace Ecocell.IntegrationTests.Database;
@@ -26,8 +27,10 @@ public class CreditScorePersistenceTests : IntegrationTestBase
             new CreditScoreRequest(seeded.DiscardId),
             new CreditScoreRequest(seeded.DiscardId));
 
-        await Should.ThrowAsync<DbUpdateException>(async () =>
+        var exception = await Should.ThrowAsync<DbUpdateException>(async () =>
             await db.SaveChangesAsync());
+
+        AssertUniqueViolation(exception, "IX_CreditScoreRequests_DiscardId");
     }
 
     [Fact]
@@ -40,8 +43,10 @@ public class CreditScorePersistenceTests : IntegrationTestBase
             new DepositorScoreTransaction(seeded.DiscardId, seeded.DepositorId, 10m),
             new DepositorScoreTransaction(seeded.DiscardId, seeded.DepositorId, 10m));
 
-        await Should.ThrowAsync<DbUpdateException>(async () =>
+        var exception = await Should.ThrowAsync<DbUpdateException>(async () =>
             await db.SaveChangesAsync());
+
+        AssertUniqueViolation(exception, "IX_DepositorScoreTransactions_DiscardId");
     }
 
     [Fact]
@@ -54,8 +59,10 @@ public class CreditScorePersistenceTests : IntegrationTestBase
             new DepositorTotalScore(seeded.DepositorId, 10m),
             new DepositorTotalScore(seeded.DepositorId, 20m));
 
-        await Should.ThrowAsync<DbUpdateException>(async () =>
+        var exception = await Should.ThrowAsync<DbUpdateException>(async () =>
             await db.SaveChangesAsync());
+
+        AssertUniqueViolation(exception, "IX_DepositorTotalScores_DepositorId");
     }
 
     private async Task<PersistenceSeed> SeedGraphAsync()
@@ -94,4 +101,13 @@ public class CreditScorePersistenceTests : IntegrationTestBase
     }
 
     private sealed record PersistenceSeed(Guid DepositorId, Guid DiscardId);
+
+    private static void AssertUniqueViolation(
+        DbUpdateException exception,
+        string expectedConstraintName)
+    {
+        var postgresException = exception.InnerException.ShouldBeOfType<PostgresException>();
+        postgresException.SqlState.ShouldBe(PostgresErrorCodes.UniqueViolation);
+        postgresException.ConstraintName.ShouldBe(expectedConstraintName);
+    }
 }
