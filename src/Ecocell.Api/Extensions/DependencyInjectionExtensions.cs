@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading.RateLimiting;
 using Carter;
 using Ecocell.Api.Configurations;
+using Ecocell.Api.Jobs;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Shared;
 using Ecocell.Api.Database;
@@ -43,6 +44,7 @@ public static class DependencyInjectionExtensions
         AddSettings(services, configuration);
         AddRedis(services, configuration);
         AddServices(services, environment);
+        AddScoreProcessing(services, environment);
         AddGeocoding(services, configuration);
         AddJwtAuthentication(services, configuration);
         AddRateLimiting(services, configuration);
@@ -140,6 +142,20 @@ public static class DependencyInjectionExtensions
             services.AddSingleton<IEmailSender, LoggingEmailSender>();
 
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+    }
+
+    private static void AddScoreProcessing(
+        IServiceCollection services,
+        IHostEnvironment environment)
+    {
+        services.AddScoped<CreditScoreJob>();
+        services.AddSingleton<CreditScoreDispatcher>();
+
+        if (!environment.IsEnvironment("Testing"))
+        {
+            services.AddHostedService(provider =>
+                provider.GetRequiredService<CreditScoreDispatcher>());
+        }
     }
 
     /// <summary>
