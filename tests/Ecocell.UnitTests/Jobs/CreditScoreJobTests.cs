@@ -87,6 +87,105 @@ public class CreditScoreJobTests : TestBase
             .TotalPoints.ShouldBe(21.50000m);
     }
 
+    [Theory]
+    [InlineData(Role.Admin)]
+    [InlineData(Role.Support)]
+    public async Task Execute_ShouldNotCreditPoints_WhenPersonIsAdminOrSupport(Role role)
+    {
+        var request = await AddScoreRequestAsync(
+            role,
+            confirmed: true,
+            new ScoreItemSeed(
+                ElectronicMaterial.Battery,
+                10m,
+                MaterialScoreUnit.PerUnit,
+                2,
+                0.250m));
+
+        await CreateJob().ExecuteAsync(request.Id, CancellationToken.None);
+
+        (await DbContext.DepositorScoreTransactions.CountAsync()).ShouldBe(0);
+        (await DbContext.DepositorTotalScores.CountAsync()).ShouldBe(0);
+        (await DbContext.CreditScoreRequests.SingleAsync()).DispatchedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Execute_ShouldReturnWithoutChanges_WhenRequestDoesNotExist()
+    {
+        await CreateJob().ExecuteAsync(Guid.NewGuid(), CancellationToken.None);
+
+        (await DbContext.DepositorScoreTransactions.CountAsync()).ShouldBe(0);
+        (await DbContext.DepositorTotalScores.CountAsync()).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldReturnWithoutChanges_WhenRequestWasDispatched()
+    {
+        var request = await AddScoreRequestAsync(
+            Role.User,
+            confirmed: true,
+            new ScoreItemSeed(
+                ElectronicMaterial.Battery,
+                10m,
+                MaterialScoreUnit.PerUnit,
+                1,
+                0.250m));
+        request.MarkAsDispatched(DateTime.UtcNow);
+        await DbContext.SaveChangesAsync();
+
+        await CreateJob().ExecuteAsync(request.Id, CancellationToken.None);
+
+        (await DbContext.DepositorScoreTransactions.CountAsync()).ShouldBe(0);
+        (await DbContext.DepositorTotalScores.CountAsync()).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldMarkRequestDispatchedWithoutChangingBalance_WhenTransactionExists()
+    {
+        var request = await AddScoreRequestAsync(
+            Role.User,
+            confirmed: true,
+            new ScoreItemSeed(
+                ElectronicMaterial.Battery,
+                10m,
+                MaterialScoreUnit.PerUnit,
+                2,
+                0.250m));
+        var discard = await DbContext.Discards.SingleAsync();
+        DbContext.DepositorScoreTransactions.Add(
+            new DepositorScoreTransaction(discard.Id, discard.DepositorId, 20m));
+        DbContext.DepositorTotalScores.Add(
+            new DepositorTotalScore(discard.DepositorId, 20m));
+        await DbContext.SaveChangesAsync();
+
+        await CreateJob().ExecuteAsync(request.Id, CancellationToken.None);
+
+        (await DbContext.DepositorScoreTransactions.CountAsync()).ShouldBe(1);
+        (await DbContext.DepositorTotalScores.SingleAsync()).TotalPoints.ShouldBe(20m);
+        (await DbContext.CreditScoreRequests.SingleAsync()).DispatchedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Execute_ShouldRollbackAndKeepRequestPending_WhenDiscardIsNotConfirmed()
+    {
+        var request = await AddScoreRequestAsync(
+            Role.User,
+            confirmed: false,
+            new ScoreItemSeed(
+                ElectronicMaterial.Battery,
+                10m,
+                MaterialScoreUnit.PerUnit,
+                2,
+                0.250m));
+
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            CreateJob().ExecuteAsync(request.Id, CancellationToken.None));
+
+        (await DbContext.DepositorScoreTransactions.CountAsync()).ShouldBe(0);
+        (await DbContext.DepositorTotalScores.CountAsync()).ShouldBe(0);
+        (await DbContext.CreditScoreRequests.SingleAsync()).DispatchedAt.ShouldBeNull();
+    }
+
     private CreditScoreJob CreateJob() =>
         new(
             DbContext,
