@@ -29,13 +29,31 @@ internal sealed class CreditScoreDispatcher : BackgroundService
     {
         try
         {
-            await DispatchPendingAsync(stoppingToken);
+            await DispatchCycleAsync(stoppingToken);
             using var timer = new PeriodicTimer(PollingInterval);
             while (await timer.WaitForNextTickAsync(stoppingToken))
-                await DispatchPendingAsync(stoppingToken);
+                await DispatchCycleAsync(stoppingToken);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
+        }
+    }
+
+    private async Task DispatchCycleAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await DispatchPendingAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Falha no ciclo de processamento de créditos; novo ciclo tentará novamente.");
         }
     }
 
