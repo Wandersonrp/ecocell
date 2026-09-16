@@ -146,6 +146,17 @@ public class RegisterDiscardTests : TestBase
         discard.Items.Single().MaterialScoreRuleId.ShouldBe(rule.Id);
     }
 
+    [Fact]
+    public async Task Handle_ShouldReturnValidationError_WhenRequestIsInvalid()
+    {
+        var result = await CreateHandler()
+            .Handle(ValidCommand() with { QrCode = "invalid" }, CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ErrorCodes.ErrorOnValidation);
+        (await DbContext.Discards.CountAsync()).ShouldBe(0);
+    }
+
     [Theory]
     [InlineData(PersonStatus.Suspended, PersonType.NaturalPerson, Journey.Depositor)]
     [InlineData(PersonStatus.Active, PersonType.LegalPerson, Journey.Depositor)]
