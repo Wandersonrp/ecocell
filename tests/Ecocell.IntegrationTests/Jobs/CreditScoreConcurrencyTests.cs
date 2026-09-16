@@ -7,6 +7,7 @@ using Ecocell.Api.Jobs;
 using Ecocell.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Shouldly;
 
 namespace Ecocell.IntegrationTests.Jobs;
@@ -32,6 +33,12 @@ public class CreditScoreConcurrencyTests : IntegrationTestBase
 
         outcomes.Count(exception => exception is null).ShouldBe(1);
         outcomes.Count(exception => exception is DbUpdateException).ShouldBe(1);
+        var duplicateViolation = outcomes
+            .Single(exception => exception is not null)
+            .ShouldBeOfType<DbUpdateException>();
+        AssertUniqueViolation(
+            duplicateViolation,
+            "IX_DepositorScoreTransactions_DiscardId");
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -194,4 +201,13 @@ public class CreditScoreConcurrencyTests : IntegrationTestBase
     private sealed record ConcurrentRequestSeed(
         Guid FirstRequestId,
         Guid SecondRequestId);
+
+    private static void AssertUniqueViolation(
+        DbUpdateException exception,
+        string expectedConstraintName)
+    {
+        var postgresException = exception.InnerException.ShouldBeOfType<PostgresException>();
+        postgresException.SqlState.ShouldBe(PostgresErrorCodes.UniqueViolation);
+        postgresException.ConstraintName.ShouldBe(expectedConstraintName);
+    }
 }
