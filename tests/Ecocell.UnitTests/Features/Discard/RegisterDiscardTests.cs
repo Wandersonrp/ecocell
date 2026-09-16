@@ -53,6 +53,36 @@ public class RegisterDiscardTests : TestBase
         result.IsValid.ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("ecocell://pc/x/../018f3f2a-7b4c-7c91-8d31-5f7a2b6c9e10")]
+    [InlineData("ecocell://pc/%30018f3f2a-7b4c-7c91-8d31-5f7a2b6c9e10")]
+    [InlineData("ecocell://pc/018F3F2A-7B4C-7C91-8D31-5F7A2B6C9E10")]
+    public async Task Validate_ShouldFail_WhenQrCodeIsNotCanonical(string qrCode)
+    {
+        // Act
+        var result = await new RegisterDiscard.Validator()
+            .ValidateAsync(ValidCommand() with { QrCode = qrCode }, CancellationToken.None);
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Validate_ShouldSucceed_WhenQrCodeSchemeAndHostHaveDifferentCasing()
+    {
+        // Act
+        var result = await new RegisterDiscard.Validator()
+            .ValidateAsync(
+                ValidCommand() with
+                {
+                    QrCode = "EcOcElL://PC/018f3f2a-7b4c-7c91-8d31-5f7a2b6c9e10",
+                },
+                CancellationToken.None);
+
+        // Assert
+        result.IsValid.ShouldBeTrue();
+    }
+
     [Fact]
     public async Task Validate_ShouldFail_WhenItemsAreEmpty()
     {
@@ -78,6 +108,17 @@ public class RegisterDiscardTests : TestBase
         var result = await new RegisterDiscard.Validator()
             .ValidateAsync(ValidCommand() with { Items = [item, item] }, CancellationToken.None);
 
+        result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Validate_ShouldFail_WhenItemIsNull()
+    {
+        // Act
+        var result = await new RegisterDiscard.Validator()
+            .ValidateAsync(ValidCommand() with { Items = [null!] }, CancellationToken.None);
+
+        // Assert
         result.IsValid.ShouldBeFalse();
     }
 
@@ -109,6 +150,27 @@ public class RegisterDiscardTests : TestBase
             .ValidateAsync(command, CancellationToken.None);
 
         result.IsValid.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("0.0001")]
+    [InlineData("10000000.000")]
+    public async Task Validate_ShouldFail_WhenWeightDoesNotFitNumericTenThree(string weight)
+    {
+        // Arrange
+        var command = ValidCommand();
+        command.Items[0].ApproximateWeightKg = decimal.Parse(
+            weight,
+            System.Globalization.CultureInfo.InvariantCulture);
+
+        // Act
+        var result = await new RegisterDiscard.Validator()
+            .ValidateAsync(command, CancellationToken.None);
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(
+            value => value.ErrorMessage == "O peso aproximado deve ter até 10 dígitos totais e 3 casas decimais.");
     }
 
     [Fact]
@@ -152,6 +214,19 @@ public class RegisterDiscardTests : TestBase
         var result = await CreateHandler()
             .Handle(ValidCommand() with { QrCode = "invalid" }, CancellationToken.None);
 
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ErrorCodes.ErrorOnValidation);
+        (await DbContext.Discards.CountAsync()).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldReturnValidationError_WhenItemIsNull()
+    {
+        // Act
+        var result = await CreateHandler()
+            .Handle(ValidCommand() with { Items = [null!] }, CancellationToken.None);
+
+        // Assert
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(ErrorCodes.ErrorOnValidation);
         (await DbContext.Discards.CountAsync()).ShouldBe(0);

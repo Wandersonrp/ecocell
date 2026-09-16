@@ -44,8 +44,13 @@ public static class RegisterDiscard
 
             RuleFor(value => value.Items)
                 .Must(items => items is not null
-                    && items.Select(item => item.Material).Distinct().Count() == items.Count)
+                    && items.All(item => item is not null)
+                    && items.Select(item => item!.Material).Distinct().Count() == items.Count)
                 .WithMessage("Cada material pode aparecer somente uma vez.");
+
+            RuleForEach(value => value.Items)
+                .NotNull()
+                .WithMessage("O item do descarte é obrigatório.");
 
             RuleForEach(value => value.Items).ChildRules(item =>
             {
@@ -58,7 +63,9 @@ public static class RegisterDiscard
                     .WithMessage("A quantidade deve ser maior que zero.");
                 item.RuleFor(value => value.ApproximateWeightKg)
                     .GreaterThan(0)
-                    .WithMessage("O peso aproximado deve ser maior que zero.");
+                    .WithMessage("O peso aproximado deve ser maior que zero.")
+                    .PrecisionScale(10, 3, false)
+                    .WithMessage("O peso aproximado deve ter até 10 dígitos totais e 3 casas decimais.");
             });
         }
     }
@@ -184,22 +191,18 @@ public static class RegisterDiscard
     internal static bool TryGetCollectorPointId(string qrCode, out Guid id)
     {
         id = Guid.Empty;
+        const string prefix = "ecocell://pc/";
 
-        if (!Uri.TryCreate(qrCode, UriKind.Absolute, out var uri)
-            || !uri.Scheme.Equals("ecocell", StringComparison.OrdinalIgnoreCase)
-            || !uri.Host.Equals("pc", StringComparison.OrdinalIgnoreCase)
-            || uri.Port != -1
-            || uri.UserInfo.Length != 0
-            || uri.Query.Length != 0
-            || uri.Fragment.Length != 0)
+        if (string.IsNullOrWhiteSpace(qrCode)
+            || !qrCode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
 
-        var path = uri.AbsolutePath;
-        return path.Length == 37
-            && path[0] == '/'
-            && Guid.TryParseExact(path[1..], "D", out id);
+        var rawId = qrCode[prefix.Length..];
+        return rawId.Length == 36
+            && Guid.TryParseExact(rawId, "D", out id)
+            && rawId == id.ToString("D");
     }
 }
 
@@ -218,12 +221,14 @@ public sealed class RegisterDiscardEndpoint : ICarterModule
                 {
                     QrCode = request.QrCode,
                     Items = (request.Items ?? [])
-                        .Select(item => new RegisterDiscard.ItemCommand
-                        {
-                            Material = (ElectronicMaterial)(int)item.Material,
-                            Quantity = item.Quantity,
-                            ApproximateWeightKg = item.ApproximateWeightKg,
-                        })
+                        .Select(item => item is null
+                            ? null!
+                            : new RegisterDiscard.ItemCommand
+                            {
+                                Material = (ElectronicMaterial)(int)item.Material,
+                                Quantity = item.Quantity,
+                                ApproximateWeightKg = item.ApproximateWeightKg,
+                            })
                         .ToArray(),
                 };
 

@@ -119,6 +119,29 @@ public class RegisterDiscardTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Post_ShouldReturn400_WhenItemsContainNull()
+    {
+        // Arrange
+        var (email, jwt) = await CreateAndLoginNaturalPersonAsync();
+        var depositorId = await GetPersonIdByEmailAsync(email);
+        var point = await CreateActiveCollectorPointAsync(depositorId);
+        using var authClient = CreateAuthenticatedClient(jwt);
+        var request = JsonContent.Create(
+            new
+            {
+                qrCode = $"ecocell://pc/{point.Id:D}",
+                items = new object?[] { null },
+            });
+
+        // Act
+        var response = await authClient.PostAsync("api/v1/discards", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await CountDiscardsAsync()).ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Post_ShouldReturn403_WhenPersonIsNotDepositor()
     {
         // Arrange
