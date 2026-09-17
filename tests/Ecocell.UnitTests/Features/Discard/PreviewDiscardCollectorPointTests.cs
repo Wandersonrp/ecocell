@@ -90,6 +90,7 @@ public class PreviewDiscardCollectorPointTests : TestBase
         AddRule(point.Id, ElectronicMaterial.Notebook, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
         AddRule(point.Id, ElectronicMaterial.CellPhone, DateTime.UtcNow.AddDays(1));
         AddRule(point.Id, ElectronicMaterial.Notebook, DateTime.UtcNow.AddDays(-1));
+        AddRule(point.Id, ElectronicMaterial.Notebook, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(1));
         AddRule(point.Id, ElectronicMaterial.Battery, DateTime.UtcNow.AddDays(-1));
 
         var result = await CreateHandler().Handle(
