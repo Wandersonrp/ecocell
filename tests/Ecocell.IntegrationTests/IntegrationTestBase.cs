@@ -201,18 +201,28 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     {
         var faker = new Faker("pt_BR");
 
+        var address = new Address(
+            faker.Address.StreetName(),
+            faker.Address.BuildingNumber(),
+            faker.Address.SecondaryAddress(),
+            faker.Address.City(),
+            faker.Address.StateAbbr(),
+            faker.Address.ZipCode("########"));
+
         var legalPerson = new LegalPerson(
             legalName: faker.Company.CompanyName(),
             tradeName: faker.Company.CompanyName(),
             cnpj: faker.Company.Cnpj(includeFormatSymbols: false),
             email: faker.Internet.Email(),
             journey: ApiEnums.Journey.CollectPoint,
+            addressId: address.Id,
             responsiblePersonId: responsiblePersonId);
 
         legalPerson.Approve(ApiEnums.Role.Admin); // PendingApproval -> Active
 
         await using var scope = Fixture.Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Addresses.Add(address);
         db.People.Add(legalPerson);
         await db.SaveChangesAsync();
 
