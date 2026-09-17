@@ -1,10 +1,14 @@
+using Carter;
 using Ecocell.Api.Database;
 using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
 using Ecocell.Api.Services.CollectorPoints;
 using Ecocell.Api.Shared;
+using Ecocell.Shared.Requests.Discards;
 using FluentValidation;
 using Mediator;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -167,5 +171,48 @@ public static class ConfirmDiscard
                 discard.CollectorPointId);
             return Result.Success();
         }
+    }
+}
+
+public sealed class ConfirmDiscardEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapPost(
+            "api/v1/discards/{id:guid}/confirm",
+            async (
+                Guid id,
+                [FromBody] RequestConfirmDiscardJson request,
+                ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new ConfirmDiscard.Command
+                {
+                    DiscardId = id,
+                    Items = (request.Items ?? [])
+                        .Select(item => item is null
+                            ? null!
+                            : new ConfirmDiscard.ItemCommand
+                            {
+                                Material = (ElectronicMaterial)(int)item.Material,
+                                Quantity = item.Quantity,
+                                ApproximateWeightKg = item.ApproximateWeightKg,
+                            })
+                        .ToArray(),
+                };
+
+                var result = await sender.Send(command, ct);
+                return result.ToProcessResult(StatusCodes.Status204NoContent);
+            })
+            .WithTags("Discard")
+            .WithName("ConfirmDiscard")
+            .WithSummary("Confirma um descarte pendente com a composição final validada pelo Ponto de Coleta.")
+            .RequireAuthorization(AuthorizationPolicies.Authenticated)
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
     }
 }

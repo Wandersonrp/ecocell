@@ -1,5 +1,7 @@
+using Carter;
 using Ecocell.Api.Database;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
 using Ecocell.Api.Services.CollectorPoints;
 using Ecocell.Api.Shared;
 using FluentValidation;
@@ -86,5 +88,29 @@ public static class RejectDiscard
                 discard.CollectorPointId);
             return Result.Success();
         }
+    }
+}
+
+public sealed class RejectDiscardEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapPost(
+            "api/v1/discards/{id:guid}/reject",
+            async (Guid id, ISender sender, CancellationToken ct) =>
+            {
+                var result = await sender.Send(new RejectDiscard.Command(id), ct);
+                return result.ToProcessResult(StatusCodes.Status204NoContent);
+            })
+            .WithTags("Discard")
+            .WithName("RejectDiscard")
+            .WithSummary("Rejeita um descarte pendente pertencente ao Ponto de Coleta.")
+            .RequireAuthorization(AuthorizationPolicies.Authenticated)
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
     }
 }

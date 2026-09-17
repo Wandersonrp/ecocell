@@ -219,6 +219,40 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         return legalPerson;
     }
 
+    /// <summary>
+    /// Semeia um descarte pendente com regras vigentes para os materiais informados.
+    /// </summary>
+    protected async Task<Discard> CreatePendingDiscardAsync(
+        Guid depositorId,
+        Guid collectorPointId,
+        params ApiEnums.ElectronicMaterial[] materials)
+    {
+        if (materials.Length == 0)
+            throw new ArgumentException("Informe ao menos um material.", nameof(materials));
+
+        var validFrom = DateTime.UtcNow.AddDays(-1);
+        var rules = materials
+            .Distinct()
+            .Select(material => new MaterialScoreRule(
+                collectorPointId,
+                material,
+                10m,
+                ApiEnums.MaterialScoreUnit.PerUnit,
+                validFrom))
+            .ToArray();
+        var items = rules
+            .Select(rule => new DiscardItem(rule.Material, 1, 0.250m, rule.Id))
+            .ToArray();
+        var discard = new Discard(depositorId, collectorPointId, items);
+
+        await using var scope = Fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.MaterialScoreRules.AddRange(rules);
+        db.Discards.Add(discard);
+        await db.SaveChangesAsync();
+        return discard;
+    }
+
     /// <summary>Resolve o Id da pessoa pelo e-mail (para vincular pontos ao responsável logado).</summary>
     protected async Task<Guid> GetPersonIdByEmailAsync(string email)
     {
