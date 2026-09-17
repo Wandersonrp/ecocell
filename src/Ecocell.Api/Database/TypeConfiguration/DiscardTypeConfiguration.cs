@@ -14,7 +14,8 @@ public sealed class DiscardTypeConfiguration : BaseEntityTypeConfiguration<Disca
         builder.Property(value => value.Status)
             .HasConversion<string>()
             .HasMaxLength(20)
-            .IsRequired();
+            .IsRequired()
+            .IsConcurrencyToken();
 
         builder.HasOne(value => value.Depositor)
             .WithMany()
