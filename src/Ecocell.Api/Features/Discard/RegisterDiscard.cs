@@ -7,6 +7,7 @@ using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Shared;
 using Ecocell.Shared.Requests.Discards;
 using Ecocell.Shared.Responses;
+using Ecocell.Shared.Utils;
 using FluentValidation;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +36,7 @@ public static class RegisterDiscard
         {
             RuleFor(value => value.QrCode)
                 .NotEmpty()
-                .Must(value => TryGetCollectorPointId(value, out _))
+                .Must(value => CollectorPointQrCode.TryParse(value, out _))
                 .WithMessage("O QR Code do Ponto de Coleta é inválido.");
 
             RuleFor(value => value.Items)
@@ -110,7 +111,7 @@ public static class RegisterDiscard
                 return ResultT<ResponseRegisterDiscardJson>.Failure(Error.Forbidden());
             }
 
-            TryGetCollectorPointId(request.QrCode, out var collectorPointId);
+            CollectorPointQrCode.TryParse(request.QrCode, out var collectorPointId);
 
             var collectorPoint = await _dbContext.LegalPeople
                 .AsNoTracking()
@@ -188,22 +189,6 @@ public static class RegisterDiscard
         }
     }
 
-    internal static bool TryGetCollectorPointId(string qrCode, out Guid id)
-    {
-        id = Guid.Empty;
-        const string prefix = "ecocell://pc/";
-
-        if (string.IsNullOrWhiteSpace(qrCode)
-            || !qrCode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        var rawId = qrCode[prefix.Length..];
-        return rawId.Length == 36
-            && Guid.TryParseExact(rawId, "D", out id)
-            && rawId == id.ToString("D");
-    }
 }
 
 public sealed class RegisterDiscardEndpoint : ICarterModule
