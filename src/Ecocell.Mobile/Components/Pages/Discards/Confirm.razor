@@ -32,7 +32,7 @@
         else if (ViewModel.State == ConfirmState.Error)
         {
             <div class="eco-confirm__center">
-                <EcoErrorBanner Message="@ViewModel.ErrorMessage!" ShowRetry="true" OnRetry="LoadAsync" />
+                <EcoErrorBanner Message="@(ViewModel.ErrorMessage!)" ShowRetry="true" OnRetry="@(() => LoadAsync())" />
             </div>
         }
         else if (ViewModel.State is ConfirmState.List or ConfirmState.Detail or ConfirmState.Submitting)

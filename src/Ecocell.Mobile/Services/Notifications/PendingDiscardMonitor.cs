@@ -152,7 +152,7 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
 
     public void DismissNotificationPrompt() => Preferences.Default.Set(ExplainedKey, true);
 
-    public bool TryTakeNotificationTarget(out Guid collectorPointId)
+    public bool TryGetNotificationTarget(out Guid collectorPointId)
     {
         if (_notificationTarget is not { } target)
         {
@@ -160,9 +160,14 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
             return false;
         }
 
-        _notificationTarget = null;
         collectorPointId = target;
         return true;
+    }
+
+    public void ClearNotificationTarget(Guid collectorPointId)
+    {
+        if (_notificationTarget == collectorPointId)
+            _notificationTarget = null;
     }
 
     public async ValueTask DisposeAsync()
