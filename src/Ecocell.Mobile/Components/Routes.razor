@@ -18,6 +18,8 @@
 </Router>
 
 @code {
+    private readonly SemaphoreSlim _notificationTargetGate = new(1, 1);
+
     protected override void OnInitialized()
     {
         AuthState.AuthStateChanged += OnAuthStateChanged;
@@ -53,28 +55,36 @@
 
     private async Task OpenNotificationTargetAsync()
     {
-        if (!AuthState.IsAuthenticated
-            || !Monitor.TryGetNotificationTarget(out var collectorPointId))
+        await _notificationTargetGate.WaitAsync();
+        try
         {
-            return;
+            if (!AuthState.IsAuthenticated
+                || !Monitor.TryGetNotificationTarget(out var collectorPointId))
+            {
+                return;
+            }
+
+            var sessionGeneration = AuthState.SessionGeneration;
+            var response = await CollectorPointClient.ListMineAsync();
+            if (!AuthState.IsAuthenticated || AuthState.SessionGeneration != sessionGeneration)
+                return;
+
+            var point = response.IsSuccessStatusCode
+                ? response.Content?.Items.FirstOrDefault(value =>
+                    value.Id == collectorPointId && value.Status == PersonStatus.Active)
+                : null;
+
+            if (point is null)
+                return;
+
+            Context.EnterCollectPoint(point.Id, point.TradeName);
+            Navigation.NavigateTo("/ponto-de-coleta/descartes-pendentes");
+            Monitor.ClearNotificationTarget(collectorPointId);
         }
-
-        var sessionGeneration = AuthState.SessionGeneration;
-        var response = await CollectorPointClient.ListMineAsync();
-        if (!AuthState.IsAuthenticated || AuthState.SessionGeneration != sessionGeneration)
-            return;
-
-        var point = response.IsSuccessStatusCode
-            ? response.Content?.Items.FirstOrDefault(value =>
-                value.Id == collectorPointId && value.Status == PersonStatus.Active)
-            : null;
-
-        if (point is null)
-            return;
-
-        Context.EnterCollectPoint(point.Id, point.TradeName);
-        Navigation.NavigateTo("/ponto-de-coleta/descartes-pendentes");
-        Monitor.ClearNotificationTarget(collectorPointId);
+        finally
+        {
+            _notificationTargetGate.Release();
+        }
     }
 
     public void Dispose()
