@@ -69,10 +69,11 @@ public static class ListPendingDiscards
                     .ToArray(),
             }).ToArray();
 
-            logger.LogInformation(
-                "Ponto de Coleta {CollectorPointId} possui {Count} descartes pendentes.",
-                request.CollectorPointId,
-                items.Length);
+            if (logger.IsEnabled(LogLevel.Information))
+                logger.LogInformation(
+                    "Ponto de Coleta {CollectorPointId} possui {Count} descartes pendentes.",
+                    request.CollectorPointId,
+                    items.Length);
 
             return ResultT<ResponsePendingDiscardListJson>.Success(
                 new ResponsePendingDiscardListJson { Items = items });

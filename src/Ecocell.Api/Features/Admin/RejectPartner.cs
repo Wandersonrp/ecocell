@@ -55,7 +55,7 @@ public static class RejectPartner
             _emailSender = emailSender;
         }
 
-        public async ValueTask<Result> Handle(Command request, CancellationToken ct)
+        public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -64,7 +64,7 @@ public static class RejectPartner
                 return Result.Failure(Error.ErrorOnValidation(errors));
             }
 
-            var currentUser = await _currentUserService.GetCurrentUserAsync(ct);
+            var currentUser = await _currentUserService.GetCurrentUserAsync(cancellationToken);
 
             if (currentUser is null || currentUser.PersonStatus != PersonStatus.Active)
             {
@@ -79,7 +79,7 @@ public static class RejectPartner
             }
 
             var partner = await _dbContext.LegalPeople
-                .FirstOrDefaultAsync(lp => lp.Id == request.PartnerId, ct);
+                .FirstOrDefaultAsync(lp => lp.Id == request.PartnerId, cancellationToken);
 
             if (partner is null)
             {
@@ -95,16 +95,17 @@ public static class RejectPartner
             }
 
             partner.Reject(currentUser.Role);
-            await _dbContext.SaveChangesAsync(ct);
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             await _emailSender.SendAsync(
                 partner.Email,
                 EmailType.PartnerRejection,
                 new Dictionary<string, string> { ["reason"] = request.Reason },
-                ct);
+                cancellationToken);
 
-            _logger.LogInformation("Parceiro {PartnerId} rejeitado pelo admin {AdminId}. Motivo: {Reason}",
-                request.PartnerId, currentUser.Id, request.Reason);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Parceiro {PartnerId} rejeitado pelo admin {AdminId}. Motivo: {Reason}",
+                    request.PartnerId, currentUser.Id, request.Reason);
             return Result.Success();
         }
     }

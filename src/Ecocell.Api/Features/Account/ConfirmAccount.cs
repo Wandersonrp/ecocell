@@ -69,7 +69,8 @@ public static class ConfirmAccount
         /// <returns><see cref="Result"/> indicando sucesso ou o erro encontrado.</returns>
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processando confirmação de conta para {Email}", request.Email);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Processando confirmação de conta para {Email}", request.Email);
 
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -128,7 +129,8 @@ public static class ConfirmAccount
             await _dbContext.SaveChangesAsync(cancellationToken);
             await _store.DeleteAsync(key, cancellationToken);
 
-            _logger.LogInformation("Conta confirmada com sucesso para {Email}", request.Email);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Conta confirmada com sucesso para {Email}", request.Email);
             return Result.Success();
         }
     }

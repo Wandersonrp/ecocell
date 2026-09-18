@@ -148,10 +148,11 @@ public static class SetMaterialScoreRules
 
             if (toClose.Count == 0 && toCreate.Count == 0)
             {
-                _logger.LogInformation(
-                    "Tabela de pontuação do PC {CollectorPointId} já estava atual. Inalteradas: {UnchangedCount}.",
-                    request.CollectorPointId,
-                    unchangedCount);
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Tabela de pontuação do PC {CollectorPointId} já estava atual. Inalteradas: {UnchangedCount}.",
+                        request.CollectorPointId,
+                        unchangedCount);
                 return Result.Success();
             }
 
@@ -202,13 +203,14 @@ public static class SetMaterialScoreRules
                     "A tabela foi alterada por outra operação. Recarregue e tente novamente."));
             }
 
-            _logger.LogInformation(
-                "Tabela do PC {CollectorPointId} atualizada. Novas: {CreatedCount}; substituídas: {ReplacedCount}; encerradas: {ClosedCount}; inalteradas: {UnchangedCount}.",
-                request.CollectorPointId,
-                createdCount,
-                replacedCount,
-                closedCount,
-                unchangedCount);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Tabela do PC {CollectorPointId} atualizada. Novas: {CreatedCount}; substituídas: {ReplacedCount}; encerradas: {ClosedCount}; inalteradas: {UnchangedCount}.",
+                    request.CollectorPointId,
+                    createdCount,
+                    replacedCount,
+                    closedCount,
+                    unchangedCount);
 
             return Result.Success();
         }

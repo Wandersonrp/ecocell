@@ -58,10 +58,11 @@ public sealed class CreditScoreJob
             request.MarkAsDispatched(dispatchedAt);
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            _logger.LogInformation(
-                "Solicitação {CreditScoreRequestId} recuperada para descarte já creditado {DiscardId}.",
-                request.Id,
-                request.DiscardId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Solicitação {CreditScoreRequestId} recuperada para descarte já creditado {DiscardId}.",
+                    request.Id,
+                    request.DiscardId);
             return;
         }
 
@@ -70,11 +71,12 @@ public sealed class CreditScoreJob
             request.MarkAsDispatched(dispatchedAt);
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            _logger.LogInformation(
-                "Crédito suprimido pela RN013. Solicitação: {CreditScoreRequestId}; descarte: {DiscardId}; role: {Role}.",
-                request.Id,
-                request.DiscardId,
-                request.Discard.Depositor.Role);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Crédito suprimido pela RN013. Solicitação: {CreditScoreRequestId}; descarte: {DiscardId}; role: {Role}.",
+                    request.Id,
+                    request.DiscardId,
+                    request.Discard.Depositor.Role);
             return;
         }
 
@@ -103,11 +105,12 @@ public sealed class CreditScoreJob
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        _logger.LogInformation(
-            "Crédito processado. Solicitação: {CreditScoreRequestId}; descarte: {DiscardId}; pontos: {Points}.",
-            request.Id,
-            request.DiscardId,
-            points);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation(
+                "Crédito processado. Solicitação: {CreditScoreRequestId}; descarte: {DiscardId}; pontos: {Points}.",
+                request.Id,
+                request.DiscardId,
+                points);
     }
 
     private static decimal CalculatePoints(DiscardItem item) =>

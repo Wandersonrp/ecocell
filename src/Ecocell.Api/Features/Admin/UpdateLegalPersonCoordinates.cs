@@ -45,7 +45,8 @@ public static class UpdateLegalPersonCoordinates
 
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Atualizando coordenadas da pessoa jurídica {LegalPersonId}", request.LegalPersonId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Atualizando coordenadas da pessoa jurídica {LegalPersonId}", request.LegalPersonId);
 
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -73,7 +74,8 @@ public static class UpdateLegalPersonCoordinates
             legalPerson.Address.UpdateCoordinates(request.Latitude, request.Longitude);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Coordenadas da pessoa jurídica {LegalPersonId} atualizadas com sucesso", request.LegalPersonId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Coordenadas da pessoa jurídica {LegalPersonId} atualizadas com sucesso", request.LegalPersonId);
             return Result.Success();
         }
     }

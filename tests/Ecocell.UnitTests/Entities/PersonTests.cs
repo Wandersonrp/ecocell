@@ -8,7 +8,7 @@ namespace Ecocell.UnitTests.Entities;
 
 public class PersonTests
 {
-    private LegalPerson CreatePendingPartner() =>
+    private static LegalPerson CreatePendingPartner() =>
         new LegalPerson(
             new Faker().Company.CompanyName(),
             new Faker().Company.CompanyName(),
@@ -16,7 +16,7 @@ public class PersonTests
             new Faker().Internet.Email(),
             Journey.CollectPoint);
 
-    private NaturalPerson CreateNaturalPerson() =>
+    private static NaturalPerson CreateNaturalPerson() =>
         new NaturalPerson(
             new Faker().Name.FullName(),
             new Faker().Person.Cpf(includeFormatSymbols: false),

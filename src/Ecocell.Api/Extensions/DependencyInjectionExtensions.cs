@@ -30,6 +30,11 @@ namespace Ecocell.Api.Extensions;
 /// </summary>
 public static class DependencyInjectionExtensions
 {
+    private static readonly JsonSerializerOptions CamelCaseJsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     /// <summary>
     /// Registra todos os serviços necessários para a execução da API.
     /// </summary>
@@ -206,15 +211,12 @@ public static class DependencyInjectionExtensions
                 };
             });
 
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy(AuthorizationPolicies.Authenticated, policy =>
-                policy.RequireAuthenticatedUser());
-
-            options.AddPolicy(AuthorizationPolicies.Admin, policy =>
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthorizationPolicies.Authenticated, policy =>
+                policy.RequireAuthenticatedUser())
+            .AddPolicy(AuthorizationPolicies.Admin, policy =>
                 policy.RequireAuthenticatedUser()
-                      .RequireClaim("role", Ecocell.Api.Enums.Role.Admin.ToString()));
-        });
+                    .RequireClaim("role", Ecocell.Api.Enums.Role.Admin.ToString()));
     }
 
     /// <summary>
@@ -255,7 +257,7 @@ public static class DependencyInjectionExtensions
                 ctx.HttpContext.Response.ContentType = "application/json";
                 var body = JsonSerializer.Serialize(
                     new ResponseError("Limite de requisições excedido. Tente novamente em instantes."),
-                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                    CamelCaseJsonSerializerOptions);
                 await ctx.HttpContext.Response.WriteAsync(body, ct);
             };
         });

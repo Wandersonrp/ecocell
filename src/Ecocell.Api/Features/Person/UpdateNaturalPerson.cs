@@ -79,7 +79,8 @@ public static class UpdateNaturalPerson
         /// <returns><see cref="ResultT{T}"/> com o perfil atualizado ou o erro encontrado.</returns>
         public async ValueTask<ResultT<ResponseNaturalPersonProfile>> Handle(Command request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Atualizando perfil da pessoa física {PersonId}", request.PersonId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Atualizando perfil da pessoa física {PersonId}", request.PersonId);
 
             var validation = _validator.Validate(request);
             if (!validation.IsValid)
@@ -108,7 +109,8 @@ public static class UpdateNaturalPerson
             person.Update(request.FullName);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Perfil da pessoa física {PersonId} atualizado com sucesso.", request.PersonId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Perfil da pessoa física {PersonId} atualizado com sucesso.", request.PersonId);
 
             var profile = new ResponseNaturalPersonProfile
             {

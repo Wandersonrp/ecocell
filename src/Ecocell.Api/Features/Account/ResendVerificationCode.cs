@@ -72,7 +72,8 @@ public static class ResendVerificationCode
         /// <returns><see cref="Result"/> indicando sucesso ou o erro encontrado.</returns>
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processando reenvio de código OTP para {Email}", request.Email);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Processando reenvio de código OTP para {Email}", request.Email);
 
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -112,7 +113,8 @@ public static class ResendVerificationCode
                 new Dictionary<string, string> { ["code"] = code },
                 cancellationToken);
 
-            _logger.LogInformation("Novo código OTP enviado para {Email}", request.Email);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Novo código OTP enviado para {Email}", request.Email);
             return Result.Success();
         }
     }

@@ -65,7 +65,8 @@ public static class GetNaturalPersonProfile
         /// <returns><see cref="ResultT{T}"/> com o perfil ou o erro encontrado.</returns>
         public async ValueTask<ResultT<ResponseNaturalPersonProfile>> Handle(Query request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Buscando perfil da pessoa física {PersonId}", request.PersonId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Buscando perfil da pessoa física {PersonId}", request.PersonId);
 
             var validation = _validator.Validate(request);
             if (!validation.IsValid)
@@ -100,7 +101,8 @@ public static class GetNaturalPersonProfile
                     Error.NotFound($"Pessoa física {request.PersonId} não encontrada."));
             }
 
-            _logger.LogInformation("Perfil da pessoa física {PersonId} carregado com sucesso.", request.PersonId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Perfil da pessoa física {PersonId} carregado com sucesso.", request.PersonId);
             return ResultT<ResponseNaturalPersonProfile>.Success(profile);
         }
     }

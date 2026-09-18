@@ -173,11 +173,12 @@ public static class RegisterDiscard
             _dbContext.Discards.Add(discard);
             await _dbContext.SaveChangesAsync(ct);
 
-            _logger.LogInformation(
-                "Descarte {DiscardId} aberto pelo depositante {DepositorId} no ponto {CollectorPointId}.",
-                discard.Id,
-                currentUser.Id,
-                collectorPoint.Id);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Descarte {DiscardId} aberto pelo depositante {DepositorId} no ponto {CollectorPointId}.",
+                    discard.Id,
+                    currentUser.Id,
+                    collectorPoint.Id);
 
             return ResultT<ResponseRegisterDiscardJson>.Success(
                 new ResponseRegisterDiscardJson

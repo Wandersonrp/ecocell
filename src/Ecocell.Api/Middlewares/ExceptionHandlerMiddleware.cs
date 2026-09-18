@@ -22,11 +22,11 @@ public class ExceptionHandlerMiddleware
         catch (Exception ex) 
         {
             _logger.LogError(ex, "Ocorreu um erro ao fazer a solicitação: {@Error}", ex);
-            await HandleException(httpContext, ex);
+            await HandleException(httpContext);
         }
     }
 
-    private Task HandleException(HttpContext httpContext, Exception exception)
+    private static Task HandleException(HttpContext httpContext)
     {
         var errorMessage = new ResponseError("Ocorreu um erro desconhecido no servidor.");
         httpContext.Response.ContentType = "application/json";

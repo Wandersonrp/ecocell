@@ -8,9 +8,9 @@ namespace Ecocell.Api.Entities;
 /// </summary>
 public class LegalPerson : Person
 {
-    public string LegalName { get; private set; } = string.Empty;
-    public string TradeName { get; private set; } = string.Empty;
-    public string Cnpj { get; private set; } = string.Empty;
+    public string LegalName { get; private set; }
+    public string TradeName { get; private set; }
+    public string Cnpj { get; private set; }
     public string? Cnae { get; private set; }
 
     public Guid? ResponsiblePersonId { get; private set; }

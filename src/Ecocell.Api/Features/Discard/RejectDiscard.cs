@@ -82,10 +82,11 @@ public static class RejectDiscard
                     "O descarte foi alterado por outra operação."));
             }
 
-            _logger.LogInformation(
-                "Descarte {DiscardId} rejeitado pelo Ponto de Coleta {CollectorPointId}.",
-                discard.Id,
-                discard.CollectorPointId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Descarte {DiscardId} rejeitado pelo Ponto de Coleta {CollectorPointId}.",
+                    discard.Id,
+                    discard.CollectorPointId);
             return Result.Success();
         }
     }

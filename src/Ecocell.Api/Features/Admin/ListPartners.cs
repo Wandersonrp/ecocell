@@ -51,7 +51,7 @@ public static class ListPartners
             _currentUserService = currentUserService;
         }
 
-        public async ValueTask<ResultT<ResponsePartnerList>> Handle(Command request, CancellationToken ct)
+        public async ValueTask<ResultT<ResponsePartnerList>> Handle(Command request, CancellationToken cancellationToken)
         {
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -60,7 +60,7 @@ public static class ListPartners
                 return ResultT<ResponsePartnerList>.Failure(Error.ErrorOnValidation(errors));
             }
 
-            var currentUser = await _currentUserService.GetCurrentUserAsync(ct);
+            var currentUser = await _currentUserService.GetCurrentUserAsync(cancellationToken);
 
             if (currentUser is null || currentUser.PersonStatus != PersonStatus.Active)
             {
@@ -93,13 +93,14 @@ public static class ListPartners
                     Journey = (Ecocell.Shared.Enums.Journey)lp.Journey,
                     CreatedAt = lp.CreatedAt
                 })
-                .ToListAsync(ct);
+                .ToListAsync(cancellationToken);
 
             var hasMore = items.Count > request.PageSize;
             if (hasMore) items.RemoveAt(items.Count - 1);
-            var nextCursor = hasMore ? items.Last().ExternalId : (Guid?)null;
+            var nextCursor = hasMore ? items[^1].ExternalId : (Guid?)null;
 
-            _logger.LogInformation("Listagem de parceiros retornou {Count} itens.", items.Count);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Listagem de parceiros retornou {Count} itens.", items.Count);
 
             return ResultT<ResponsePartnerList>.Success(new ResponsePartnerList
             {
@@ -133,7 +134,7 @@ public class ListPartnersEndpoint : ICarterModule
             .WithTags("Admin")
             .WithName("ListPartners")
             .WithSummary("Lista parceiros PJ com filtros e paginação por cursor.")
-            .Produces(StatusCodes.Status200OK, typeof(ResponsePartnerList))
+            .Produces<ResponsePartnerList>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);

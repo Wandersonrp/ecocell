@@ -90,7 +90,8 @@ public static class VerifyLoginCode
         /// </returns>
         public async ValueTask<ResultT<ResponseLogin>> Handle(Command request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processando verificação de código OTP de login para {Email}", request.Email);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Processando verificação de código OTP de login para {Email}", request.Email);
 
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -160,7 +161,8 @@ public static class VerifyLoginCode
                 RefreshTokenExpiresAtUtc = refreshTokenResult.ExpiresAtUtc,
             };
 
-            _logger.LogInformation("Login realizado com sucesso para {Email}", request.Email);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Login realizado com sucesso para {Email}", request.Email);
             return ResultT<ResponseLogin>.Success(response);
         }
     }

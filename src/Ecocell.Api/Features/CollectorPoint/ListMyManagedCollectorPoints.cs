@@ -27,9 +27,9 @@ public static class ListMyManagedCollectorPoints
             _currentUserService = currentUserService;
         }
 
-        public async ValueTask<ResultT<ResponseManagedCollectorPointList>> Handle(Query request, CancellationToken ct)
+        public async ValueTask<ResultT<ResponseManagedCollectorPointList>> Handle(Query request, CancellationToken cancellationToken)
         {
-            var currentUser = await _currentUserService.GetCurrentUserAsync(ct);
+            var currentUser = await _currentUserService.GetCurrentUserAsync(cancellationToken);
 
             if (currentUser is null
                 || currentUser.PersonStatus != PersonStatus.Active
@@ -52,11 +52,12 @@ public static class ListMyManagedCollectorPoints
                     Cnpj = lp.Cnpj,
                     Status = (Ecocell.Shared.Enums.PersonStatus)(int)lp.PersonStatus,
                 })
-                .ToListAsync(ct);
+                .ToListAsync(cancellationToken);
 
-            _logger.LogInformation(
-                "Responsável {ResponsibleId} tem {Count} pontos de coleta.",
-                currentUser.Id, items.Count);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation(
+                    "Responsável {ResponsibleId} tem {Count} pontos de coleta.",
+                    currentUser.Id, items.Count);
 
             return ResultT<ResponseManagedCollectorPointList>.Success(
                 new ResponseManagedCollectorPointList { Items = items });

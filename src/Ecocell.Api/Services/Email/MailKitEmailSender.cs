@@ -31,7 +31,8 @@ public sealed class MailKitEmailSender : IEmailSender
         var (subject, body) = BuildContent(type, variables);
         var message = BuildMessage(email, subject, body);
         await SendAsync(message, ct);
-        _logger.LogInformation("E-mail {Type} enviado para {Email}", type, email);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("E-mail {Type} enviado para {Email}", type, email);
     }
 
     private static (string Subject, string Body) BuildContent(EmailType type, IReadOnlyDictionary<string, string>? vars) => type switch
