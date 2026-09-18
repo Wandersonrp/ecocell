@@ -46,7 +46,7 @@ public static class RegisterDiscard
             RuleFor(value => value.Items)
                 .Must(items => items is not null
                     && items.All(item => item is not null)
-                    && items.Select(item => item!.Material).Distinct().Count() == items.Count)
+                    && items.Select(item => item.Material).Distinct().Count() == items.Count)
                 .WithMessage("Cada material pode aparecer somente uma vez.");
 
             RuleForEach(value => value.Items)
@@ -92,9 +92,9 @@ public static class RegisterDiscard
 
         public async ValueTask<ResultT<ResponseRegisterDiscardJson>> Handle(
             Command request,
-            CancellationToken ct)
+            CancellationToken cancellationToken)
         {
-            var validation = await _validator.ValidateAsync(request, ct);
+            var validation = await _validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid)
             {
                 return ResultT<ResponseRegisterDiscardJson>.Failure(
@@ -102,7 +102,7 @@ public static class RegisterDiscard
                         validation.Errors.Select(value => value.ErrorMessage).ToList()));
             }
 
-            var currentUser = await _currentUserService.GetCurrentUserAsync(ct);
+            var currentUser = await _currentUserService.GetCurrentUserAsync(cancellationToken);
             if (currentUser is null
                 || currentUser.PersonType != PersonType.NaturalPerson
                 || currentUser.PersonStatus != PersonStatus.Active
@@ -111,14 +111,18 @@ public static class RegisterDiscard
                 return ResultT<ResponseRegisterDiscardJson>.Failure(Error.Forbidden());
             }
 
-            CollectorPointQrCode.TryParse(request.QrCode, out var collectorPointId);
+            if (!CollectorPointQrCode.TryParse(request.QrCode, out var collectorPointId))
+            {
+                return ResultT<ResponseRegisterDiscardJson>.Failure(
+                    Error.ErrorOnValidation(["O QR Code do Ponto de Coleta é inválido."]));
+            }
 
             var collectorPoint = await _dbContext.LegalPeople
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
                     value => value.Id == collectorPointId
                         && value.Journey == Journey.CollectPoint,
-                    ct);
+                    cancellationToken);
 
             if (collectorPoint is null)
             {
@@ -141,7 +145,7 @@ public static class RegisterDiscard
                     && materials.Contains(value.Material)
                     && value.ValidFrom <= openedAt
                     && (value.ValidTo == null || value.ValidTo > openedAt))
-                .ToListAsync(ct);
+                .ToListAsync(cancellationToken);
 
             var rulesByMaterial = rules.ToDictionary(value => value.Material);
             var unsupported = materials
@@ -171,7 +175,7 @@ public static class RegisterDiscard
                 items);
 
             _dbContext.Discards.Add(discard);
-            await _dbContext.SaveChangesAsync(ct);
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation(

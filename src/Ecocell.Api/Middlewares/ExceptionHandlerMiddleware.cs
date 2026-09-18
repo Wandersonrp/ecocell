@@ -31,6 +31,6 @@ public class ExceptionHandlerMiddleware
         var errorMessage = new ResponseError("Ocorreu um erro desconhecido no servidor.");
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        return httpContext.Response.WriteAsJsonAsync(errorMessage);
+        return httpContext.Response.WriteAsJsonAsync(errorMessage, httpContext.RequestAborted);
     }    
 }

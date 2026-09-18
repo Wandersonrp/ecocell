@@ -245,7 +245,8 @@ public class SetMaterialScoreRulesTests : IntegrationTestBase
             .ToListAsync();
         persisted.Count.ShouldBe(1);
         persisted.Single().ValidTo.ShouldBeNull();
-        new[] { 10m, 20m }.ShouldContain(persisted.Single().Points);
+        var acceptedPoints = new[] { 10m, 20m };
+        acceptedPoints.ShouldContain(persisted.Single().Points);
 
         foreach (var response in responses)
             response.Dispose();

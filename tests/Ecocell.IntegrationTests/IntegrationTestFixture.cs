@@ -16,13 +16,13 @@ namespace Ecocell.IntegrationTests;
 
 public sealed class IntegrationTestFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
         .WithDatabase("ecocell_test")
         .WithUsername("ecocell")
         .WithPassword("ecocell_test_pass")
         .Build();
 
-    private readonly RedisContainer _redis = new RedisBuilder()
+    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine")
         .Build();
 
     public WebApplicationFactory<Program> Factory { get; private set; } = null!;

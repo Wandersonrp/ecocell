@@ -11,11 +11,13 @@ public class GeneratePcQrCodeTests : TestBase
     private readonly Mock<ICollectorPointAccessGuard> _guard = new();
     private readonly GeneratePcQrCode.Handler _handler;
 
-    public static TheoryData<Error> AccessErrors => new()
+    public static TheoryData<int> AccessErrors => new() { 0, 1, 2 };
+
+    private static Error CreateAccessError(int errorType) => errorType switch
     {
-        Error.Forbidden(),
-        Error.NotFound("Ponto de coleta não encontrado."),
-        Error.Conflict("Ponto de coleta não está ativo."),
+        0 => Error.Forbidden(),
+        1 => Error.NotFound("Ponto de coleta não encontrado."),
+        _ => Error.Conflict("Ponto de coleta não está ativo."),
     };
 
     public GeneratePcQrCodeTests()
@@ -49,8 +51,9 @@ public class GeneratePcQrCodeTests : TestBase
 
     [Theory]
     [MemberData(nameof(AccessErrors))]
-    public async Task Handle_ShouldPropagateAccessError_WhenGuardFails(Error error)
+    public async Task Handle_ShouldPropagateAccessError_WhenGuardFails(int errorType)
     {
+        var error = CreateAccessError(errorType);
         _guard.Setup(x => x.EnsureResponsibleActiveAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()))

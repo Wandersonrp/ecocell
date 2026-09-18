@@ -36,6 +36,7 @@ internal sealed class CreditScoreDispatcher : BackgroundService
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
+            return;
         }
     }
 

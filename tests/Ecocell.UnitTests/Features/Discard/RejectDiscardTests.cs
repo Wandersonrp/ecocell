@@ -23,11 +23,13 @@ public class RejectDiscardTests : TestBase
             .ReturnsAsync(Result.Success());
     }
 
-    public static TheoryData<Error> AccessErrors => new()
+    public static TheoryData<int> AccessErrors => new() { 0, 1, 2 };
+
+    private static Error CreateAccessError(int errorType) => errorType switch
     {
-        Error.Forbidden(),
-        Error.NotFound("Ponto de coleta não encontrado."),
-        Error.Conflict("Ponto de coleta não está ativo."),
+        0 => Error.Forbidden(),
+        1 => Error.NotFound("Ponto de coleta não encontrado."),
+        _ => Error.Conflict("Ponto de coleta não está ativo."),
     };
 
     [Fact]
@@ -74,8 +76,9 @@ public class RejectDiscardTests : TestBase
 
     [Theory]
     [MemberData(nameof(AccessErrors))]
-    public async Task Handle_ShouldPropagateAccessError_WhenGuardFails(Error error)
+    public async Task Handle_ShouldPropagateAccessError_WhenGuardFails(int errorType)
     {
+        var error = CreateAccessError(errorType);
         var discard = AddPendingDiscard();
         _guard.Setup(value => value.EnsureResponsibleActiveAsync(
                 discard.CollectorPointId,

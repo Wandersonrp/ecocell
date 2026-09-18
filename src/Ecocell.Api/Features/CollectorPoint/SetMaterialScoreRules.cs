@@ -110,41 +110,25 @@ public static class SetMaterialScoreRules
                 .ToListAsync(cancellationToken);
             var currentByMaterial = currentRules.ToDictionary(rule => rule.Material);
             var requestedByMaterial = request.Rules!.ToDictionary(rule => rule.Material);
-            var toClose = new List<MaterialScoreRule>();
-            var toCreate = new List<RuleInput>();
-            var unchangedCount = 0;
-            var replacedCount = 0;
-            var closedCount = 0;
-            var createdCount = 0;
-
-            foreach (var current in currentRules)
-            {
-                if (!requestedByMaterial.TryGetValue(current.Material, out var requested))
-                {
-                    toClose.Add(current);
-                    closedCount++;
-                    continue;
-                }
-
-                if (current.Points == requested.Points && current.Unit == requested.Unit)
-                {
-                    unchangedCount++;
-                    continue;
-                }
-
-                toClose.Add(current);
-                toCreate.Add(requested);
-                replacedCount++;
-            }
-
-            foreach (var requested in requestedByMaterial.Values)
-            {
-                if (!currentByMaterial.ContainsKey(requested.Material))
-                {
-                    toCreate.Add(requested);
-                    createdCount++;
-                }
-            }
+            var unchanged = currentRules
+                .Where(current => requestedByMaterial.TryGetValue(current.Material, out var requested)
+                    && current.Points == requested.Points
+                    && current.Unit == requested.Unit)
+                .ToArray();
+            var toClose = currentRules
+                .Where(current => !requestedByMaterial.TryGetValue(current.Material, out var requested)
+                    || current.Points != requested.Points
+                    || current.Unit != requested.Unit)
+                .ToList();
+            var toCreate = requestedByMaterial.Values
+                .Where(requested => !currentByMaterial.TryGetValue(requested.Material, out var current)
+                    || current.Points != requested.Points
+                    || current.Unit != requested.Unit)
+                .ToList();
+            var unchangedCount = unchanged.Length;
+            var closedCount = currentRules.Count(current => !requestedByMaterial.ContainsKey(current.Material));
+            var replacedCount = toClose.Count - closedCount;
+            var createdCount = toCreate.Count;
 
             if (toClose.Count == 0 && toCreate.Count == 0)
             {

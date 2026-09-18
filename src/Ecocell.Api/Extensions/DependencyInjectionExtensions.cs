@@ -200,7 +200,7 @@ public static class DependencyInjectionExtensions
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = jwtSettings!.Issuer,
+                    ValidIssuer = jwtSettings.Issuer,
                     ValidateAudience = true,
                     ValidAudience = jwtSettings.Audience,
                     ValidateLifetime = true,

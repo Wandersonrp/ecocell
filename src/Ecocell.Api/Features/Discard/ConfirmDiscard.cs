@@ -44,7 +44,7 @@ public static class ConfirmDiscard
             RuleFor(value => value.Items)
                 .Must(items => items is not null
                     && items.All(item => item is not null)
-                    && items.Select(item => item!.Material).Distinct().Count() == items.Count)
+                    && items.Select(item => item.Material).Distinct().Count() == items.Count)
                 .WithMessage("Cada material pode aparecer somente uma vez.");
 
             RuleForEach(value => value.Items)
@@ -88,9 +88,9 @@ public static class ConfirmDiscard
             _accessGuard = accessGuard;
         }
 
-        public async ValueTask<Result> Handle(Command request, CancellationToken ct)
+        public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            var validation = await _validator.ValidateAsync(request, ct);
+            var validation = await _validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid)
             {
                 return Result.Failure(Error.ErrorOnValidation(
@@ -99,14 +99,14 @@ public static class ConfirmDiscard
 
             var discard = await _dbContext.Discards
                 .Include(value => value.Items)
-                .SingleOrDefaultAsync(value => value.Id == request.DiscardId, ct);
+                .SingleOrDefaultAsync(value => value.Id == request.DiscardId, cancellationToken);
 
             if (discard is null)
                 return Result.Failure(Error.NotFound("Descarte não encontrado."));
 
             var access = await _accessGuard.EnsureResponsibleActiveAsync(
                 discard.CollectorPointId,
-                ct);
+                cancellationToken);
             if (access.IsFailure)
                 return access;
 
@@ -121,7 +121,7 @@ public static class ConfirmDiscard
                     && materials.Contains(value.Material)
                     && value.ValidFrom <= discard.CreatedAt
                     && (value.ValidTo == null || value.ValidTo > discard.CreatedAt))
-                .ToListAsync(ct);
+                .ToListAsync(cancellationToken);
             var rulesByMaterial = rules.ToDictionary(value => value.Material);
             var unsupported = materials
                 .Where(value => !rulesByMaterial.ContainsKey(value))
@@ -143,20 +143,20 @@ public static class ConfirmDiscard
                     rulesByMaterial[value.Material].Id))
                 .ToArray();
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(ct);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
                 _dbContext.DiscardItems.RemoveRange(discard.Items);
-                await _dbContext.SaveChangesAsync(ct);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 discard.Confirm(finalItems);
                 _dbContext.CreditScoreRequests.Add(new CreditScoreRequest(discard.Id));
-                await _dbContext.SaveChangesAsync(ct);
-                await transaction.CommitAsync(ct);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException exception)
             {
-                await transaction.RollbackAsync(ct);
+                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogWarning(
                     exception,
                     "Conflito concorrente ao confirmar o descarte {DiscardId}.",

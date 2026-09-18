@@ -14,10 +14,8 @@ public sealed class DiscardItem : BaseEntity
     {
         if (Convert.ToInt32(material) <= 0)
             throw new ArgumentOutOfRangeException(nameof(material));
-        if (quantity <= 0)
-            throw new ArgumentOutOfRangeException(nameof(quantity));
-        if (approximateWeightKg <= 0)
-            throw new ArgumentOutOfRangeException(nameof(approximateWeightKg));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(approximateWeightKg);
         if (materialScoreRuleId == Guid.Empty)
             throw new ArgumentException("A regra de pontuação é obrigatória.", nameof(materialScoreRuleId));
 
@@ -27,7 +25,7 @@ public sealed class DiscardItem : BaseEntity
         MaterialScoreRuleId = materialScoreRuleId;
     }
 
-    public Guid DiscardId { get; private set; }
+    public Guid DiscardId { get; private set; } // NOSONAR: EF Core materializes this foreign key through the private setter.
     public Discard Discard { get; private set; } = null!;
     public ElectronicMaterial Material { get; private set; }
     public int Quantity { get; private set; }

@@ -44,9 +44,9 @@ public static class RejectDiscard
             _accessGuard = accessGuard;
         }
 
-        public async ValueTask<Result> Handle(Command request, CancellationToken ct)
+        public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            var validation = await _validator.ValidateAsync(request, ct);
+            var validation = await _validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid)
             {
                 return Result.Failure(Error.ErrorOnValidation(
@@ -54,13 +54,13 @@ public static class RejectDiscard
             }
 
             var discard = await _dbContext.Discards
-                .SingleOrDefaultAsync(value => value.Id == request.DiscardId, ct);
+                .SingleOrDefaultAsync(value => value.Id == request.DiscardId, cancellationToken);
             if (discard is null)
                 return Result.Failure(Error.NotFound("Descarte não encontrado."));
 
             var access = await _accessGuard.EnsureResponsibleActiveAsync(
                 discard.CollectorPointId,
-                ct);
+                cancellationToken);
             if (access.IsFailure)
                 return access;
 
@@ -70,7 +70,7 @@ public static class RejectDiscard
             discard.Reject();
             try
             {
-                await _dbContext.SaveChangesAsync(ct);
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException exception)
             {

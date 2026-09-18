@@ -18,10 +18,12 @@ public class CreditScoreDispatcherTests
 
         await dispatcher.StartAsync(CancellationToken.None);
         await scopeFactory.DbContextResolution.Task;
+        var executeTask = dispatcher.ExecuteTask
+            ?? throw new InvalidOperationException("A tarefa do dispatcher não foi iniciada.");
         await dispatcher.StopAsync(CancellationToken.None);
 
-        dispatcher.ExecuteTask.ShouldNotBeNull();
-        dispatcher.ExecuteTask.IsFaulted.ShouldBeFalse();
+        await executeTask;
+        executeTask.IsFaulted.ShouldBeFalse();
     }
 
     private sealed class FailingScopeFactory : IServiceScopeFactory

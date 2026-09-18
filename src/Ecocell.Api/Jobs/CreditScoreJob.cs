@@ -29,11 +29,9 @@ public sealed class CreditScoreJob
             .BeginTransactionAsync(cancellationToken);
 
         var request = await _dbContext.CreditScoreRequests
-            .Include(value => value.Discard)
-                .ThenInclude(value => value.Depositor)
-            .Include(value => value.Discard)
-                .ThenInclude(value => value.Items)
-                    .ThenInclude(value => value.MaterialScoreRule)
+            .Include(value => value.Discard.Depositor)
+            .Include(value => value.Discard.Items)
+                .ThenInclude(value => value.MaterialScoreRule)
             .SingleOrDefaultAsync(value => value.Id == creditScoreRequestId, cancellationToken);
 
         if (request is null || request.DispatchedAt is not null)

@@ -30,16 +30,20 @@ public static class ListPendingDiscards
         ICollectorPointAccessGuard accessGuard)
         : IRequestHandler<Query, ResultT<ResponsePendingDiscardListJson>>
     {
-        public async ValueTask<ResultT<ResponsePendingDiscardListJson>> Handle(Query request, CancellationToken ct)
+        public async ValueTask<ResultT<ResponsePendingDiscardListJson>> Handle(
+            Query request,
+            CancellationToken cancellationToken)
         {
-            var validation = await validator.ValidateAsync(request, ct);
+            var validation = await validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid)
             {
                 return ResultT<ResponsePendingDiscardListJson>.Failure(
                     Error.ErrorOnValidation(validation.Errors.Select(value => value.ErrorMessage).ToList()));
             }
 
-            var access = await accessGuard.EnsureResponsibleActiveAsync(request.CollectorPointId, ct);
+            var access = await accessGuard.EnsureResponsibleActiveAsync(
+                request.CollectorPointId,
+                cancellationToken);
             if (access.IsFailure)
                 return ResultT<ResponsePendingDiscardListJson>.Failure(access.Error);
 
@@ -51,7 +55,7 @@ public static class ListPendingDiscards
                     && value.Status == DiscardStatus.Pending)
                 .OrderBy(value => value.CreatedAt)
                 .ThenBy(value => value.Id)
-                .ToListAsync(ct);
+                .ToListAsync(cancellationToken);
 
             var items = discards.Select(discard => new ResponsePendingDiscardJson
             {

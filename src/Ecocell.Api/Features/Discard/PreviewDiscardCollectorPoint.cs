@@ -34,18 +34,24 @@ public static class PreviewDiscardCollectorPoint
         ICurrentUserService currentUserService)
         : IRequestHandler<Query, ResultT<ResponseDiscardPreviewJson>>
     {
-        public async ValueTask<ResultT<ResponseDiscardPreviewJson>> Handle(Query request, CancellationToken ct)
+        public async ValueTask<ResultT<ResponseDiscardPreviewJson>> Handle(
+            Query request,
+            CancellationToken cancellationToken)
         {
-            var validation = await validator.ValidateAsync(request, ct);
+            var validation = await validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid)
             {
                 return ResultT<ResponseDiscardPreviewJson>.Failure(
                     Error.ErrorOnValidation(validation.Errors.Select(value => value.ErrorMessage).ToList()));
             }
 
-            CollectorPointQrCode.TryParse(request.QrCode, out var collectorPointId);
+            if (!CollectorPointQrCode.TryParse(request.QrCode, out var collectorPointId))
+            {
+                return ResultT<ResponseDiscardPreviewJson>.Failure(
+                    Error.ErrorOnValidation(["O QR Code do Ponto de Coleta é inválido."]));
+            }
 
-            var currentUser = await currentUserService.GetCurrentUserAsync(ct);
+            var currentUser = await currentUserService.GetCurrentUserAsync(cancellationToken);
             if (currentUser is null
                 || currentUser.PersonType != PersonType.NaturalPerson
                 || currentUser.PersonStatus != PersonStatus.Active
@@ -60,7 +66,7 @@ public static class PreviewDiscardCollectorPoint
                 .Include(value => value.Address)
                 .FirstOrDefaultAsync(
                     value => value.Id == collectorPointId && value.Journey == Journey.CollectPoint,
-                    ct);
+                    cancellationToken);
 
             if (collectorPoint is null)
             {
@@ -83,7 +89,7 @@ public static class PreviewDiscardCollectorPoint
                 .Select(value => value.Material)
                 .Distinct()
                 .Order()
-                .ToListAsync(ct))
+                .ToListAsync(cancellationToken))
                 .Select(value => (Ecocell.Shared.Enums.ElectronicMaterial)(int)value)
                 .ToArray();
 

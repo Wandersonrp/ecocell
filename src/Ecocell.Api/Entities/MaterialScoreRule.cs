@@ -20,13 +20,13 @@ public sealed class MaterialScoreRule : BaseEntity
         if (legalPersonId == Guid.Empty)
             throw new ArgumentException("O identificador da pessoa jurídica é obrigatório.", nameof(legalPersonId));
 
-        if (!Enum.IsDefined(typeof(ElectronicMaterial), material))
+        if (!Enum.IsDefined(material))
             throw new ArgumentOutOfRangeException(nameof(material), "O material informado é inválido.");
 
         if (points <= 0)
             throw new ArgumentOutOfRangeException(nameof(points), "A pontuação deve ser maior que zero.");
 
-        if (!Enum.IsDefined(typeof(MaterialScoreUnit), unit))
+        if (!Enum.IsDefined(unit))
             throw new ArgumentOutOfRangeException(nameof(unit), "A unidade de pontuação informada é inválida.");
 
         EnsureUtc(validFrom, nameof(validFrom));
