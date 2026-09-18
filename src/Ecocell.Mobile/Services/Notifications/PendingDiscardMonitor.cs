@@ -14,10 +14,12 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
     private readonly IDiscardClient _discardClient;
     private readonly AuthStateService _authState;
     private readonly ActiveContextService _context;
+    private readonly SemaphoreSlim _sideEffectGate = new(1, 1);
     private CancellationTokenSource? _loopCts;
     private Task _loopTask = Task.CompletedTask;
     private int _refreshSequence;
     private int _generation;
+    private int _observedSessionGeneration;
     private Guid? _notificationTarget;
     private bool _isForeground;
     private bool _disposed;
@@ -30,9 +32,10 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
         _discardClient = discardClient;
         _authState = authState;
         _context = context;
+        _observedSessionGeneration = authState.SessionGeneration;
 
-        _authState.AuthStateChanged += Restart;
-        _context.ContextChanged += Restart;
+        _authState.AuthStateChanged += OnAuthStateChanged;
+        _context.ContextChanged += OnContextChanged;
         LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
 
         var launchDetails = LocalNotificationCenter.LaunchNotificationDetails;
@@ -70,6 +73,7 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
         var pointId = _context.Current.CollectPointId!.Value;
         var contextGeneration = _context.Generation;
         var monitorGeneration = Volatile.Read(ref _generation);
+        var sessionGeneration = _authState.SessionGeneration;
         var refreshSequence = Interlocked.Increment(ref _refreshSequence);
         IsLoading = true;
         Changed?.Invoke();
@@ -80,7 +84,7 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
             if (!response.IsSuccessStatusCode || response.Content is null)
                 return;
 
-            if (!IsCurrent(pointId, contextGeneration, monitorGeneration, ct))
+            if (!IsCurrent(pointId, contextGeneration, monitorGeneration, sessionGeneration, ct))
                 return;
 
             var currentIds = response.Content.Items.Select(value => value.Id).ToHashSet();
@@ -88,31 +92,39 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
             var knownIds = ReadKnownIds(pointId);
             var newCount = hasBaseline ? currentIds.Except(knownIds).Count() : 0;
 
-            if (newCount > 0)
+            await _sideEffectGate.WaitAsync(ct);
+            try
             {
-                if (!IsCurrent(pointId, contextGeneration, monitorGeneration, ct))
+                if (newCount > 0)
+                {
+                    if (!IsCurrent(pointId, contextGeneration, monitorGeneration, sessionGeneration, ct))
+                        return;
+
+                    var request = new NotificationRequest
+                    {
+                        NotificationId = BitConverter.ToInt32(pointId.ToByteArray(), 0) & int.MaxValue,
+                        Title = "Novos descartes pendentes",
+                        Description = newCount == 1
+                            ? "Há 1 novo descarte aguardando conferência."
+                            : $"Há {newCount} novos descartes aguardando conferência.",
+                        ReturningData = pointId.ToString("D"),
+                    };
+
+                    await LocalNotificationCenter.Current.Show(request);
+                }
+
+                if (!IsCurrent(pointId, contextGeneration, monitorGeneration, sessionGeneration, ct))
                     return;
 
-                var request = new NotificationRequest
-                {
-                    NotificationId = BitConverter.ToInt32(pointId.ToByteArray(), 0) & int.MaxValue,
-                    Title = "Novos descartes pendentes",
-                    Description = newCount == 1
-                        ? "Há 1 novo descarte aguardando conferência."
-                        : $"Há {newCount} novos descartes aguardando conferência.",
-                    ReturningData = pointId.ToString("D"),
-                };
-
-                await LocalNotificationCenter.Current.Show(request);
+                PendingCount = currentIds.Count;
+                WriteKnownIds(pointId, currentIds);
+                Preferences.Default.Set(BaselineKey(pointId), true);
+                Changed?.Invoke();
             }
-
-            if (!IsCurrent(pointId, contextGeneration, monitorGeneration, ct))
-                return;
-
-            PendingCount = currentIds.Count;
-            WriteKnownIds(pointId, currentIds);
-            Preferences.Default.Set(BaselineKey(pointId), true);
-            Changed?.Invoke();
+            finally
+            {
+                _sideEffectGate.Release();
+            }
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -159,8 +171,8 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
             return;
 
         _disposed = true;
-        _authState.AuthStateChanged -= Restart;
-        _context.ContextChanged -= Restart;
+        _authState.AuthStateChanged -= OnAuthStateChanged;
+        _context.ContextChanged -= OnContextChanged;
         LocalNotificationCenter.Current.NotificationActionTapped -= OnNotificationActionTapped;
         _loopCts?.Cancel();
         _loopCts?.Dispose();
@@ -172,28 +184,45 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
         catch (OperationCanceledException)
         {
         }
+
+        _sideEffectGate.Dispose();
     }
 
     private void Restart()
     {
+        _ = RestartAsync();
+    }
+
+    private async Task RestartAsync()
+    {
         if (_disposed)
             return;
 
-        Interlocked.Increment(ref _generation);
-        Interlocked.Increment(ref _refreshSequence);
-        _loopCts?.Cancel();
-        _loopCts?.Dispose();
-        _loopCts = null;
-        _notificationTarget = null;
-        PendingCount = 0;
-        IsLoading = false;
-        Changed?.Invoke();
+        await _sideEffectGate.WaitAsync();
+        try
+        {
+            if (_disposed)
+                return;
 
-        if (!IsEligible)
-            return;
+            Interlocked.Increment(ref _generation);
+            Interlocked.Increment(ref _refreshSequence);
+            _loopCts?.Cancel();
+            _loopCts?.Dispose();
+            _loopCts = null;
+            PendingCount = 0;
+            IsLoading = false;
+            Changed?.Invoke();
 
-        _loopCts = new CancellationTokenSource();
-        _loopTask = RunLoopAsync(_loopCts.Token);
+            if (!IsEligible)
+                return;
+
+            _loopCts = new CancellationTokenSource();
+            _loopTask = RunLoopAsync(_loopCts.Token);
+        }
+        finally
+        {
+            _sideEffectGate.Release();
+        }
     }
 
     private async Task RunLoopAsync(CancellationToken ct)
@@ -214,12 +243,37 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
         Guid pointId,
         int contextGeneration,
         int monitorGeneration,
+        int sessionGeneration,
         CancellationToken ct) =>
         !ct.IsCancellationRequested
         && IsEligible
         && Volatile.Read(ref _generation) == monitorGeneration
+        && _authState.SessionGeneration == sessionGeneration
         && _context.Generation == contextGeneration
         && _context.Current.CollectPointId == pointId;
+
+    private void OnAuthStateChanged()
+    {
+        if (_authState.SessionGeneration != _observedSessionGeneration)
+        {
+            _observedSessionGeneration = _authState.SessionGeneration;
+            _notificationTarget = null;
+        }
+
+        Restart();
+    }
+
+    private void OnContextChanged()
+    {
+        if (_notificationTarget is { } target
+            && _context.Current.CollectPointId is { } currentPointId
+            && currentPointId != target)
+        {
+            _notificationTarget = null;
+        }
+
+        Restart();
+    }
 
     private void OnNotificationActionTapped(NotificationActionEventArgs args)
     {
