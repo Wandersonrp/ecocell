@@ -12,9 +12,23 @@ public sealed class MauiQrScanner : IQrScanner
         if (!BarcodeScanning.IsSupported)
             return new(QrScanStatus.Unsupported);
 
-        var permission = await Permissions.RequestAsync<Permissions.Camera>();
+        PermissionStatus permission;
+        try
+        {
+            var permissionRequest = MainThread.InvokeOnMainThreadAsync(
+                () => Permissions.RequestAsync<Permissions.Camera>());
+            permission = await permissionRequest.WaitAsync(ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return new(QrScanStatus.Cancelled);
+        }
+
         if (permission != PermissionStatus.Granted)
             return new(QrScanStatus.PermissionDenied);
+
+        if (ct.IsCancellationRequested)
+            return new(QrScanStatus.Cancelled);
 
         var hostPage = await MainThread.InvokeOnMainThreadAsync(
             () => Application.Current?.Windows.FirstOrDefault()?.Page);
@@ -22,10 +36,21 @@ public sealed class MauiQrScanner : IQrScanner
             return new(QrScanStatus.Unsupported);
 
         var scannerPage = new QrScannerPage();
-        await MainThread.InvokeOnMainThreadAsync(
-            () => hostPage.Navigation.PushModalAsync(scannerPage));
+        using var cancellation = ct.Register(() =>
+            MainThread.BeginInvokeOnMainThread(() => _ = scannerPage.CancelAsync()));
 
-        using var cancellation = ct.Register(() => _ = scannerPage.CancelAsync());
+        var presented = await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            if (ct.IsCancellationRequested)
+                return false;
+
+            await hostPage.Navigation.PushModalAsync(scannerPage);
+            return true;
+        });
+
+        if (!presented)
+            return new(QrScanStatus.Cancelled);
+
         var result = await scannerPage.Result;
 
         return ct.IsCancellationRequested
