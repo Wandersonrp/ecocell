@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
+using Plugin.LocalNotification;
 using Refit;
+using ZXing.Net.Maui.Controls;
 using Ecocell.Mobile.Services.Api;
 using Ecocell.Mobile.Services.Auth;
 using Ecocell.Mobile.Services.Http;
@@ -16,6 +18,8 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseBarcodeReader()
+            .UseLocalNotification()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("Inter-VariableFont.ttf", "Inter");
@@ -56,6 +60,11 @@ public static class MauiProgram
             .AddHttpMessageHandler<AuthTokenHandler>();
 
         builder.Services.AddRefitClient<IAdminClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<TransientRetryHandler>()
+            .AddHttpMessageHandler<AuthTokenHandler>();
+
+        builder.Services.AddRefitClient<IDiscardClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
             .AddHttpMessageHandler<TransientRetryHandler>()
             .AddHttpMessageHandler<AuthTokenHandler>();
