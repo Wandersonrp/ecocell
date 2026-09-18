@@ -5,6 +5,7 @@
 @inject IJSRuntime Js
 @inject IConfiguration Configuration
 @inject NavigationManager Navigation
+@using Ecocell.Mobile.Services.Navigation
 @implements IAsyncDisposable
 
 <div class="eco-map-screen">
@@ -61,7 +62,7 @@
     <EcoMapBottomSheet Point="ViewModel.Selected" OnClose="() => ViewModel.Select(null)" OnRoute="OpenRouteAsync" />
 
     <div class="eco-map-navbar">
-        <EcoNavBar Items="_navItems" ActiveId="inicio" OnSelect="OnNavSelect" />
+        <EcoNavBar Items="DepositorNav.Items" ActiveId="inicio" OnSelect="OnNavSelect" />
     </div>
 </div>
 
@@ -73,14 +74,6 @@
     private string _city = string.Empty;
     private bool _showCitySearch;
     private bool _disposed;
-
-    private static readonly IReadOnlyList<EcoNavItem> _navItems =
-    [
-        new("inicio", "Início", Icons.Material.Filled.Home),
-        new("descartar", "Descartar", Icons.Material.Filled.Recycling, "/descartar"),
-        new("ranking", "Ranking", Icons.Material.Filled.EmojiEvents),
-        new("perfil", "Perfil", Icons.Material.Filled.Person, "/perfil"),
-    ];
 
     /// <remarks>
     /// Todo o boot do mapa acontece aqui, em sequência, porque o GPS resolve DEPOIS do
@@ -189,7 +182,7 @@
 
     private void OnNavSelect(string id)
     {
-        var item = _navItems.FirstOrDefault(n => n.Id == id);
+        var item = DepositorNav.Items.FirstOrDefault(n => n.Id == id);
         if (item?.Href is not null) Navigation.NavigateTo(item.Href);
     }
 

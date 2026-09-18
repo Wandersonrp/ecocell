@@ -74,6 +74,7 @@ public static class MauiProgram
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.LegalPersonViewModel>();
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.ManagedCollectorPointsViewModel>();
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.MyQrCodeViewModel>();
+        builder.Services.AddTransient<Ecocell.Mobile.ViewModels.ScanViewModel>();
 
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<AuthStateService>();

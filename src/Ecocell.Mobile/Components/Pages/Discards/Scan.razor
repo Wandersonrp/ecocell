@@ -1,0 +1,217 @@
+@page "/descartes/escanear"
+@layout MainLayout
+@using Ecocell.Mobile.Components.Shared.Navigation
+@using Ecocell.Mobile.Models.Discards
+@using Ecocell.Mobile.Services.Navigation
+@using Ecocell.Mobile.Services.Scanner
+@using Ecocell.Mobile.ViewModels
+@using Ecocell.Shared.Enums
+@using MudBlazor
+@inject ScanViewModel ViewModel
+@inject IQrScanner QrScanner
+@inject NavigationManager Navigation
+
+<div class="eco-scan">
+    <EcoTopBar />
+
+    <main class="eco-scan__body">
+        @if (ViewModel.State == ScanState.Success)
+        {
+            <section class="eco-scan__center" aria-labelledby="eco-scan-success-title">
+                <EcoEmptyState Title="Descarte registrado"
+                               Description="Seu descarte foi enviado ao ponto de coleta para conferência.">
+                    <Action>
+                        <EcoPrimaryButton Label="Concluir" OnClick="Complete" />
+                    </Action>
+                </EcoEmptyState>
+            </section>
+        }
+        else
+        {
+            <section class="eco-scan__intro" aria-labelledby="eco-scan-title">
+                <h1 id="eco-scan-title" class="eco-scan__title">Descartar eletrônicos</h1>
+                <p class="eco-scan__subtitle">Escaneie o QR Code do ponto de coleta ou informe o código manualmente.</p>
+
+                @if (_scannerMessage is not null)
+                {
+                    <EcoErrorBanner Message="@_scannerMessage" />
+                }
+                else if (ViewModel.ErrorMessage is not null)
+                {
+                    <EcoErrorBanner Message="@ViewModel.ErrorMessage" />
+                }
+
+                <div class="eco-scan__actions">
+                    <EcoPrimaryButton Label="Escanear QR Code" OnClick="ScanAsync" Disabled="@IsBusy" />
+                    <EcoTextField @key="_manualInputKey"
+                                  id="eco-scan-manual-input"
+                                  Placeholder="Cole ou digite o código do ponto"
+                                  Value="@_manualQrCode"
+                                  ValueChanged="OnManualQrChanged"
+                                  HasError="@(ViewModel.State == ScanState.Error && ViewModel.Preview is null)"
+                                  ErrorText="@(ViewModel.State == ScanState.Error && ViewModel.Preview is null ? ViewModel.ErrorMessage : null)"
+                                  autocomplete="off"
+                                  autofocus="@_focusManualInput" />
+                    <EcoGhostButton Label="Continuar com código" OnClick="LoadManualPreviewAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(_manualQrCode))" />
+                </div>
+            </section>
+
+            @if (ViewModel.State == ScanState.LoadingPreview)
+            {
+                <div class="eco-scan__center">
+                    <EcoSpinner Label="Consultando ponto de coleta..." />
+                </div>
+            }
+            else if (ViewModel.State == ScanState.NoMaterials && ViewModel.Preview is not null)
+            {
+                <section class="eco-scan__preview">
+                    <EcoCard>
+                        <h2 class="eco-scan__point-name">@ViewModel.Preview.TradeName</h2>
+                        <p class="eco-scan__address">@ViewModel.Preview.FormattedAddress</p>
+                    </EcoCard>
+                    <EcoEmptyState Title="Nenhum material disponível"
+                                   Description="Este ponto não aceita materiais no momento. Tente outro ponto de coleta." />
+                </section>
+            }
+            else if (ViewModel.Preview is not null)
+            {
+                <section class="eco-scan__preview" aria-labelledby="eco-scan-point-title">
+                    <EcoCard>
+                        <h2 id="eco-scan-point-title" class="eco-scan__point-name">@ViewModel.Preview.TradeName</h2>
+                        <p class="eco-scan__address">@ViewModel.Preview.FormattedAddress</p>
+                    </EcoCard>
+
+                    <div class="eco-scan__items">
+                        @foreach (var item in ViewModel.Items)
+                        {
+                            <EcoCard CssClass="eco-scan__item">
+                                <div class="eco-scan__item-header">
+                                    <h3 class="eco-scan__item-title">Material</h3>
+                                    <EcoIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                   AriaLabel="Remover material"
+                                                   Destructive="true"
+                                                   Disabled="@(IsBusy || ViewModel.Items.Count == 1)"
+                                                   OnClick="() => RemoveItem(item)" />
+                                </div>
+                                <EcoSelectField Placeholder="Selecione o material"
+                                                Options="@MaterialOptions(item)"
+                                                Value="@MaterialValue(item)"
+                                                ValueChanged="value => SetMaterial(item, value)"
+                                                HasError="@(item.MaterialError is not null)" />
+                                @if (item.MaterialError is not null)
+                                {
+                                    <span class="eco-scan__field-error" role="alert">@item.MaterialError</span>
+                                }
+                                <EcoTextField Placeholder="Quantidade"
+                                              Type="number"
+                                              Value="@item.QuantityText"
+                                              ValueChanged="value => item.QuantityText = value"
+                                              HasError="@(item.QuantityError is not null)"
+                                              ErrorText="@item.QuantityError"
+                                              inputmode="numeric" />
+                                <EcoTextField Placeholder="Peso aproximado em kg"
+                                              Type="text"
+                                              Value="@item.WeightText"
+                                              ValueChanged="value => item.WeightText = value"
+                                              HasError="@(item.WeightError is not null)"
+                                              ErrorText="@item.WeightError"
+                                              inputmode="decimal" />
+                            </EcoCard>
+                        }
+                    </div>
+
+                    <div class="eco-scan__actions">
+                        <EcoGhostButton Label="Adicionar material" OnClick="AddItem" Disabled="@(IsBusy || !CanAddItem)" />
+                        <EcoPrimaryButton Label="Registrar descarte" OnClick="SubmitAsync" Disabled="@(IsBusy || ViewModel.Items.Count == 0)" IsLoading="@(ViewModel.State == ScanState.Submitting)" />
+                    </div>
+                </section>
+            }
+        }
+    </main>
+
+    <div class="eco-scan__navbar">
+        <EcoNavBar Items="DepositorNav.Items" ActiveId="descartar" OnSelect="OnNavSelect" />
+    </div>
+</div>
+
+@code {
+    private string _manualQrCode = string.Empty;
+    private int _manualInputKey;
+    private bool _focusManualInput;
+
+    private bool IsBusy => ViewModel.State is ScanState.LoadingPreview or ScanState.Submitting;
+
+    private bool CanAddItem => ViewModel.Preview is not null
+        && ViewModel.Preview.AcceptedMaterials.Any(material => ViewModel.Items.All(item => item.Material != material));
+
+    private async Task ScanAsync()
+    {
+        var result = await QrScanner.ScanAsync();
+        switch (result.Status)
+        {
+            case QrScanStatus.Detected when !string.IsNullOrWhiteSpace(result.Value):
+                _manualQrCode = result.Value;
+                _focusManualInput = false;
+                await ViewModel.LoadPreviewAsync(result.Value);
+                break;
+            case QrScanStatus.Unsupported:
+            case QrScanStatus.PermissionDenied:
+                _focusManualInput = true;
+                _manualInputKey++;
+                ViewModel.Reset();
+                _scannerMessage = result.Status == QrScanStatus.Unsupported
+                    ? "A câmera não está disponível neste dispositivo. Informe o código manualmente."
+                    : "A permissão da câmera foi negada. Informe o código manualmente.";
+                break;
+        }
+    }
+
+    private string? _scannerMessage;
+
+    private void OnManualQrChanged(string value)
+    {
+        _manualQrCode = value;
+        _focusManualInput = false;
+        _scannerMessage = null;
+    }
+
+    private async Task LoadManualPreviewAsync()
+    {
+        _scannerMessage = null;
+        await ViewModel.LoadPreviewAsync(_manualQrCode);
+    }
+
+    private void AddItem() => ViewModel.AddItem();
+
+    private void RemoveItem(DiscardItemDraft item) => ViewModel.RemoveItem(item);
+
+    private async Task SubmitAsync() => await ViewModel.SubmitAsync();
+
+    private void Complete()
+    {
+        ViewModel.Reset();
+        _manualQrCode = string.Empty;
+    }
+
+    private IEnumerable<string> MaterialOptions(DiscardItemDraft item) => ViewModel.Preview!.AcceptedMaterials
+        .Where(material => item.Material == material || ViewModel.Items.All(draft => draft == item || draft.Material != material))
+        .Select(ElectronicMaterialDisplay.Label);
+
+    private static string MaterialValue(DiscardItemDraft item) => item.Material is null
+        ? string.Empty
+        : ElectronicMaterialDisplay.Label(item.Material.Value);
+
+    private void SetMaterial(DiscardItemDraft item, string value)
+    {
+        item.Material = ViewModel.Preview!.AcceptedMaterials
+            .Cast<ElectronicMaterial?>()
+            .FirstOrDefault(material => material is not null && ElectronicMaterialDisplay.Label(material.Value) == value);
+    }
+
+    private void OnNavSelect(string id)
+    {
+        var item = DepositorNav.Items.FirstOrDefault(value => value.Id == id);
+        if (item?.Href is not null)
+            Navigation.NavigateTo(item.Href);
+    }
+}
