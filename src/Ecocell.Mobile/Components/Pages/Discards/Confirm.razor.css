@@ -61,11 +61,27 @@
 }
 
 .eco-confirm__card {
+    padding: var(--eco-space-md);
+}
+
+.eco-confirm__card-action {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    width: 100%;
     gap: var(--eco-space-xs);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
     text-align: left;
+    cursor: pointer;
+}
+
+.eco-confirm__card-action:focus-visible {
+    outline: 2px solid var(--eco-color-primary);
+    outline-offset: var(--eco-space-xs);
 }
 
 .eco-confirm__card-title,

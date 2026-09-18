@@ -19,14 +19,24 @@ public enum ConfirmState
     Error,
 }
 
-public sealed class ConfirmDiscardViewModel(
-    IDiscardClient client,
-    ActiveContextService context,
-    PendingDiscardMonitor monitor)
+public sealed class ConfirmDiscardViewModel : IDisposable
 {
-    private readonly IDiscardClient _client = client;
-    private readonly ActiveContextService _context = context;
-    private readonly PendingDiscardMonitor _monitor = monitor;
+    private readonly IDiscardClient _client;
+    private readonly ActiveContextService _context;
+    private readonly PendingDiscardMonitor _monitor;
+    private CancellationTokenSource _contextCts = new();
+    private bool _disposed;
+
+    public ConfirmDiscardViewModel(
+        IDiscardClient client,
+        ActiveContextService context,
+        PendingDiscardMonitor monitor)
+    {
+        _client = client;
+        _context = context;
+        _monitor = monitor;
+        _context.ContextChanged += OnContextChanged;
+    }
 
     public ConfirmState State { get; private set; } = ConfirmState.Loading;
     public IList<ResponsePendingDiscardJson> Items { get; } = [];
@@ -34,6 +44,7 @@ public sealed class ConfirmDiscardViewModel(
     public IList<DiscardItemDraft> DraftItems { get; } = [];
     public string? ErrorMessage { get; private set; }
     public string? FeedbackMessage { get; private set; }
+    public event Action? Changed;
 
     public async Task LoadAsync(CancellationToken ct = default)
     {
@@ -42,20 +53,24 @@ public sealed class ConfirmDiscardViewModel(
         {
             State = ConfirmState.Error;
             ErrorMessage = "Selecione um ponto de coleta para consultar os descartes.";
+            Changed?.Invoke();
             return;
         }
 
         var collectorPointId = current.CollectPointId.Value;
         var generation = _context.Generation;
+        using var operationCts = CancellationTokenSource.CreateLinkedTokenSource(ct, _contextCts.Token);
+        var operationToken = operationCts.Token;
         State = ConfirmState.Loading;
         Selected = null;
         DraftItems.Clear();
         ErrorMessage = null;
+        Changed?.Invoke();
 
         try
         {
-            var response = await _client.ListPendingAsync(collectorPointId, ct);
-            if (!IsCurrent(collectorPointId, generation))
+            var response = await _client.ListPendingAsync(collectorPointId, operationToken);
+            if (!IsCurrent(collectorPointId, generation) || operationToken.IsCancellationRequested)
                 return;
 
             Items.Clear();
@@ -65,17 +80,20 @@ public sealed class ConfirmDiscardViewModel(
                     Items.Add(item);
 
                 State = Items.Count == 0 ? ConfirmState.Empty : ConfirmState.List;
+                Changed?.Invoke();
                 return;
             }
 
             State = ConfirmState.Error;
             ErrorMessage = "Não foi possível carregar os descartes pendentes. Tente novamente.";
+            Changed?.Invoke();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (operationToken.IsCancellationRequested)
         {
-            if (IsCurrent(collectorPointId, generation))
+            if (IsCurrent(collectorPointId, generation) && !ct.IsCancellationRequested)
             {
                 State = Items.Count == 0 ? ConfirmState.Empty : ConfirmState.List;
+                Changed?.Invoke();
             }
         }
         catch
@@ -85,11 +103,15 @@ public sealed class ConfirmDiscardViewModel(
 
             State = ConfirmState.Error;
             ErrorMessage = "Falha de conexão. Verifique sua internet e tente novamente.";
+            Changed?.Invoke();
         }
     }
 
     public void Open(ResponsePendingDiscardJson discard)
     {
+        if (!_context.Current.IsCollectPoint || !Items.Contains(discard))
+            return;
+
         Selected = discard;
         DraftItems.Clear();
         foreach (var item in discard.Items)
@@ -176,18 +198,27 @@ public sealed class ConfirmDiscardViewModel(
     {
         var selected = Selected;
         var current = _context.Current;
-        if (selected is null || !current.IsCollectPoint || current.CollectPointId is null)
+        if (selected is null
+            || !Items.Contains(selected)
+            || !current.IsCollectPoint
+            || current.CollectPointId is null)
             return;
 
         var collectorPointId = current.CollectPointId.Value;
         var generation = _context.Generation;
+        using var operationCts = CancellationTokenSource.CreateLinkedTokenSource(ct, _contextCts.Token);
+        var operationToken = operationCts.Token;
+        if (!IsCurrent(collectorPointId, generation) || operationToken.IsCancellationRequested)
+            return;
+
         State = ConfirmState.Submitting;
         ErrorMessage = null;
+        Changed?.Invoke();
 
         try
         {
-            var response = await request(ct);
-            if (!IsCurrent(collectorPointId, generation))
+            var response = await request(operationToken);
+            if (!IsCurrent(collectorPointId, generation) || operationToken.IsCancellationRequested)
                 return;
 
             if (response.StatusCode == HttpStatusCode.NoContent)
@@ -196,24 +227,29 @@ public sealed class ConfirmDiscardViewModel(
                 Selected = null;
                 DraftItems.Clear();
                 State = Items.Count == 0 ? ConfirmState.Empty : ConfirmState.List;
-                await _monitor.RefreshAsync(ct);
+                Changed?.Invoke();
+                await _monitor.RefreshAsync(operationToken);
                 return;
             }
 
             if (response.StatusCode == HttpStatusCode.Conflict)
             {
                 FeedbackMessage = "Este descarte já foi processado.";
-                await LoadAsync(ct);
+                await LoadAsync(operationToken);
                 return;
             }
 
             State = ConfirmState.Detail;
             ErrorMessage = "Não foi possível processar o descarte. Tente novamente.";
+            Changed?.Invoke();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (operationToken.IsCancellationRequested)
         {
-            if (IsCurrent(collectorPointId, generation))
+            if (IsCurrent(collectorPointId, generation) && !ct.IsCancellationRequested)
+            {
                 State = ConfirmState.Detail;
+                Changed?.Invoke();
+            }
         }
         catch
         {
@@ -222,11 +258,45 @@ public sealed class ConfirmDiscardViewModel(
 
             State = ConfirmState.Detail;
             ErrorMessage = "Falha de conexão. Verifique sua internet e tente novamente.";
+            Changed?.Invoke();
         }
     }
 
+    private void OnContextChanged()
+    {
+        var previousCts = Interlocked.Exchange(ref _contextCts, new CancellationTokenSource());
+        previousCts.Cancel();
+        previousCts.Dispose();
+
+        Selected = null;
+        Items.Clear();
+        DraftItems.Clear();
+        ErrorMessage = null;
+        FeedbackMessage = null;
+        State = _context.Current.IsCollectPoint
+            ? ConfirmState.Loading
+            : ConfirmState.Error;
+        Changed?.Invoke();
+
+        if (!_disposed && _context.Current.IsCollectPoint)
+            _ = LoadAsync(_contextCts.Token);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _context.ContextChanged -= OnContextChanged;
+        var cts = _contextCts;
+        cts.Cancel();
+        cts.Dispose();
+    }
+
     private bool IsCurrent(Guid collectorPointId, int generation) =>
-        _context.Generation == generation
+        !_disposed
+        && _context.Generation == generation
         && _context.Current.IsCollectPoint
         && _context.Current.CollectPointId == collectorPointId;
 }

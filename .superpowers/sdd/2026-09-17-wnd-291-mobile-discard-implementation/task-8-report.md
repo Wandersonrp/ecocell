@@ -2,14 +2,13 @@
 
 ## Status
 
-Implementação concluída com `ConfirmDiscardViewModel`, rota de pendências, CSS scoped e registro transitório na DI. A lista é ordenada pelo descarte mais antigo, e operações de confirmação/rejeição preservam o contexto de geração e os drafts em falhas recuperáveis.
+Implementação concluída com `ConfirmDiscardViewModel`, rota de pendências, CSS scoped e registro transitório na DI. A revisão foi incorporada: `ContextChanged` cancela operações do ponto anterior, invalida lista/detalhe/drafts, recarrega o novo ponto válido e a página redireciona com segurança quando não há contexto PC. O card usa uma superfície `EcoCard` com botão interno semântico.
 
 ## Verificações
 
-- `rtk dotnet build src/Ecocell.Mobile/Ecocell.Mobile.csproj -f net10.0-windows10.0.19041.0` executado com `TEMP`/`TMP` isolados em `.temp-test`, após o diretório temporário global bloquear o MSBuild.
-- `dotnet build src/Ecocell.Mobile/Ecocell.Mobile.csproj -f net10.0-windows10.0.19041.0 --no-restore -p:UseSharedCompilation=false -v minimal` executado antes e depois do commit com o mesmo isolamento; o runner exibiu a compilação de `Ecocell.Shared` e a geração XAML, sem erros, mas não devolveu o resumo final/exit code do MAUI.
-- `git diff --check` nos caminhos da Task 8 passou.
-- Busca de hex, estilo inline e componentes Mud crus nas telas novas não retornou ocorrências.
+- `dotnet build src/Ecocell.Mobile/Ecocell.Mobile.csproj -f net10.0-windows10.0.19041.0 --no-restore -p:UseSharedCompilation=false -v minimal` executado após a correção com `TEMP`/`TMP` isolados em `.temp-test`; o runner exibiu `Ecocell.Shared -> ...Ecocell.Shared.dll` e a geração XAML, sem erros de compilação exibidos.
+- `git diff --check` dos caminhos alterados da Task 8 passou.
+- Busca de hex, estilo inline e componentes Mud crus na tela nova não retornou ocorrências.
 
 ## Commit
 
@@ -18,3 +17,4 @@ Implementação concluída com `ConfirmDiscardViewModel`, rota de pendências, C
 ## Limitações
 
 - A história não possui infraestrutura de testes automatizados Mobile; o smoke visual/interativo requer um host Windows com API acessível.
+- O runner desta sessão não devolve o resumo/exit code final do projeto MAUI, portanto a evidência de build é a saída de compilação emitida, não uma contagem final de erros/avisos.
