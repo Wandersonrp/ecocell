@@ -9,6 +9,7 @@ using Ecocell.Mobile.Services.Api;
 using Ecocell.Mobile.Services.Auth;
 using Ecocell.Mobile.Services.Http;
 using Ecocell.Mobile.Services.Scanner;
+using Ecocell.Mobile.Services.Notifications;
 
 namespace Ecocell.Mobile;
 
@@ -77,6 +78,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<AuthStateService>();
         builder.Services.AddSingleton<Ecocell.Mobile.Services.Context.ActiveContextService>();
+        builder.Services.AddSingleton<PendingDiscardMonitor>();
         builder.Services.AddTransient<AuthTokenHandler>();
         builder.Services.AddTransient<TransientRetryHandler>();
         builder.Services.AddSingleton<Ecocell.Mobile.Services.Location.ILocationService,

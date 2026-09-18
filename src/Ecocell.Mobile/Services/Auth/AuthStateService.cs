@@ -33,7 +33,11 @@ public sealed class AuthStateService
 
     public string? CurrentRefreshToken => _tokens?.RefreshToken;
 
-    public async Task InitializeAsync() => _tokens = await _store.GetAsync();
+    public async Task InitializeAsync()
+    {
+        _tokens = await _store.GetAsync();
+        AuthStateChanged?.Invoke();
+    }
 
     public async Task SignInAsync(ResponseLogin tokens)
     {
