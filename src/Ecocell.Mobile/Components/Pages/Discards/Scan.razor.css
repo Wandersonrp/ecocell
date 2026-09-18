@@ -63,6 +63,13 @@
     line-height: var(--eco-font-body-md-lh);
 }
 
+.eco-scan__field-label {
+    color: var(--eco-color-text-secondary);
+    font-size: var(--eco-font-label-size);
+    font-weight: var(--eco-font-label-weight);
+    line-height: var(--eco-font-label-lh);
+}
+
 .eco-scan__point-name,
 .eco-scan__item-title {
     margin: 0;

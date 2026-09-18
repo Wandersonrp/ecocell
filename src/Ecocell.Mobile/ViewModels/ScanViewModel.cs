@@ -82,6 +82,19 @@ public sealed class ScanViewModel(IDiscardClient client)
 
     public void RemoveItem(DiscardItemDraft item) => Items.Remove(item);
 
+    public void RevalidateDraft(DiscardItemDraft item)
+    {
+        var isDuplicated = item.Material is not null
+            && Items.Count(draft => draft.Material == item.Material) > 1;
+        item.TryGetValues(isDuplicated, out _, out _, out _);
+    }
+
+    public void RevalidateDrafts()
+    {
+        foreach (var item in Items)
+            RevalidateDraft(item);
+    }
+
     public async Task<bool> SubmitAsync(CancellationToken ct = default)
     {
         var values = new List<(ElectronicMaterial Material, int Quantity, decimal ApproximateWeightKg)>();
