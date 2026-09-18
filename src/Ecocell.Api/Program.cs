@@ -87,4 +87,4 @@ app.UseAuthorization();
 
 app.MapCarter();
 
-app.Run();
+await app.RunAsync();

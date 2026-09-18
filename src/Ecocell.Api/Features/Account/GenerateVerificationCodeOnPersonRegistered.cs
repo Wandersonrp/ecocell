@@ -52,7 +52,8 @@ public static class GenerateVerificationCodeOnPersonRegistered
                     new Dictionary<string, string> { ["code"] = code },
                     cancellationToken);
 
-                _logger.LogInformation("Código OTP gerado e enviado para {Email}", notification.Email);
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation("Código OTP gerado e enviado para {Email}", notification.Email);
             }
             catch (Exception ex)
             {

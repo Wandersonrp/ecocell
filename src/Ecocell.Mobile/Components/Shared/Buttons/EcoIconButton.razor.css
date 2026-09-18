@@ -1,0 +1,29 @@
+.eco-icon-btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--eco-radius-full);
+    background: transparent;
+    color: var(--eco-color-primary-light);
+    cursor: pointer;
+}
+
+.eco-icon-btn:hover:not(:disabled) {
+    background: var(--eco-color-primary-tint);
+}
+
+.eco-icon-btn:disabled {
+    color: var(--eco-color-primary-muted);
+    cursor: not-allowed;
+}
+
+.eco-icon-btn--destructive {
+    color: var(--eco-color-error);
+}
+
+.eco-icon-btn--destructive:hover:not(:disabled) {
+    background: var(--eco-color-error-light);
+}

@@ -24,7 +24,7 @@ public abstract class TestBase : IDisposable
         DbContext.Database.EnsureCreated();
     }
 
-    protected Mock<ILogger<T>> CreateLoggerMock<T>() => new Mock<ILogger<T>>();
+    protected static Mock<ILogger<T>> CreateLoggerMock<T>() => new Mock<ILogger<T>>();
 
     public void Dispose()
     {

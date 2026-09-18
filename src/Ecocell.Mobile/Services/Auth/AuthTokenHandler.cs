@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using Ecocell.Mobile.Services.Api;
+using Ecocell.Mobile.Services.Http;
 using Ecocell.Shared.Requests;
 
 namespace Ecocell.Mobile.Services.Auth;
@@ -42,7 +43,7 @@ public sealed class AuthTokenHandler : DelegatingHandler
         }
 
         response.Dispose();
-        var retry = await CloneAsync(request);
+        var retry = await HttpRequestCloner.CloneAsync(request);
         ApplyBearer(retry);
         return await base.SendAsync(retry, cancellationToken);
     }
@@ -93,26 +94,4 @@ public sealed class AuthTokenHandler : DelegatingHandler
         }
     }
 
-    private static async Task<HttpRequestMessage> CloneAsync(HttpRequestMessage request)
-    {
-        var clone = new HttpRequestMessage(request.Method, request.RequestUri);
-
-        if (request.Content is not null)
-        {
-            var bytes = await request.Content.ReadAsByteArrayAsync();
-            clone.Content = new ByteArrayContent(bytes);
-            foreach (var header in request.Content.Headers)
-            {
-                clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
-            }
-        }
-
-        foreach (var header in request.Headers)
-        {
-            clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        }
-
-        clone.Version = request.Version;
-        return clone;
-    }
 }

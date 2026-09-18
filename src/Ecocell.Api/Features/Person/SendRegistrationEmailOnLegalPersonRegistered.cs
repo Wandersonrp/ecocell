@@ -38,10 +38,11 @@ public static class SendRegistrationEmailOnLegalPersonRegistered
                 await _emailSender.SendAsync(notification.LegalPersonEmail, EmailType.LegalPersonRegistration, ct: cancellationToken);
                 await _emailSender.SendAsync(notification.ResponsiblePersonEmail, EmailType.LegalPersonRegistration, ct: cancellationToken);
 
-                _logger.LogInformation(
-                    "Notificação de cadastro de PJ enviada para {LegalPersonEmail} e {ResponsiblePersonEmail}",
-                    notification.LegalPersonEmail,
-                    notification.ResponsiblePersonEmail);
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Notificação de cadastro de PJ enviada para {LegalPersonEmail} e {ResponsiblePersonEmail}",
+                        notification.LegalPersonEmail,
+                        notification.ResponsiblePersonEmail);
             }
             catch (Exception ex)
             {

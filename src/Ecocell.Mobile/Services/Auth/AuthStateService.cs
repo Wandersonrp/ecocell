@@ -18,6 +18,8 @@ public sealed class AuthStateService
 
     public event Action? AuthStateChanged;
 
+    public int SessionGeneration { get; private set; }
+
     public bool IsAuthenticated =>
         _tokens is not null
         && (_tokens.AccessTokenExpiresAtUtc > DateTimeOffset.UtcNow
@@ -33,19 +35,29 @@ public sealed class AuthStateService
 
     public string? CurrentRefreshToken => _tokens?.RefreshToken;
 
-    public async Task InitializeAsync() => _tokens = await _store.GetAsync();
+    public async Task InitializeAsync()
+    {
+        _tokens = await _store.GetAsync();
+        AuthStateChanged?.Invoke();
+    }
 
     public async Task SignInAsync(ResponseLogin tokens)
     {
+        var wasAuthenticated = IsAuthenticated;
         await _store.SaveAsync(tokens);
         _tokens = await _store.GetAsync();
+        if (!wasAuthenticated && IsAuthenticated)
+            SessionGeneration++;
         AuthStateChanged?.Invoke();
     }
 
     public async Task SignOutAsync()
     {
+        var hadSession = _tokens is not null;
         await _store.ClearAsync();
         _tokens = null;
+        if (hadSession)
+            SessionGeneration++;
         AuthStateChanged?.Invoke();
     }
 }

@@ -1,0 +1,319 @@
+using System.Text.Json;
+using Ecocell.Mobile.Services.Api;
+using Ecocell.Mobile.Services.Auth;
+using Ecocell.Mobile.Services.Context;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.Core.Models;
+using Plugin.LocalNotification.EventArgs;
+
+namespace Ecocell.Mobile.Services.Notifications;
+
+public sealed class PendingDiscardMonitor : IAsyncDisposable
+{
+    private const string ExplainedKey = "ecocell.notifications.explained";
+    private readonly IDiscardClient _discardClient;
+    private readonly AuthStateService _authState;
+    private readonly ActiveContextService _context;
+    private readonly SemaphoreSlim _sideEffectGate = new(1, 1);
+    private CancellationTokenSource? _loopCts;
+    private Task _loopTask = Task.CompletedTask;
+    private int _refreshSequence;
+    private int _generation;
+    private int _observedSessionGeneration;
+    private Guid? _notificationTarget;
+    private bool _isForeground;
+    private bool _disposed;
+
+    public PendingDiscardMonitor(
+        IDiscardClient discardClient,
+        AuthStateService authState,
+        ActiveContextService context)
+    {
+        _discardClient = discardClient;
+        _authState = authState;
+        _context = context;
+        _observedSessionGeneration = authState.SessionGeneration;
+
+        _authState.AuthStateChanged += OnAuthStateChanged;
+        _context.ContextChanged += OnContextChanged;
+        LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
+
+        var launchDetails = LocalNotificationCenter.LaunchNotificationDetails;
+        if (launchDetails?.DidNotificationLaunchApp == true)
+            CaptureNotificationTarget(launchDetails.Request?.ReturningData);
+    }
+
+    public event Action? Changed;
+    public event Action? NotificationTargetAvailable;
+
+    public int PendingCount { get; private set; }
+    public bool IsLoading { get; private set; }
+    public bool ShouldExplainNotifications =>
+        !Preferences.Default.Get(ExplainedKey, false);
+
+    private bool IsEligible =>
+        _isForeground
+        && _authState.IsAuthenticated
+        && _context.Current is { IsCollectPoint: true, CollectPointId: not null };
+
+    public void SetForeground(bool isForeground)
+    {
+        if (_isForeground == isForeground)
+            return;
+
+        _isForeground = isForeground;
+        Restart();
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        if (!IsEligible)
+            return;
+
+        var pointId = _context.Current.CollectPointId!.Value;
+        var contextGeneration = _context.Generation;
+        var monitorGeneration = Volatile.Read(ref _generation);
+        var sessionGeneration = _authState.SessionGeneration;
+        var refreshSequence = Interlocked.Increment(ref _refreshSequence);
+        IsLoading = true;
+        Changed?.Invoke();
+
+        try
+        {
+            var response = await _discardClient.ListPendingAsync(pointId, ct);
+            if (!response.IsSuccessStatusCode || response.Content is null)
+                return;
+
+            if (!IsCurrent(pointId, contextGeneration, monitorGeneration, sessionGeneration, ct))
+                return;
+
+            var currentIds = response.Content.Items.Select(value => value.Id).ToHashSet();
+            var hasBaseline = Preferences.Default.Get(BaselineKey(pointId), false);
+            var knownIds = ReadKnownIds(pointId);
+            var newCount = hasBaseline ? currentIds.Except(knownIds).Count() : 0;
+
+            await _sideEffectGate.WaitAsync(ct);
+            try
+            {
+                if (newCount > 0)
+                {
+                    if (!IsCurrent(pointId, contextGeneration, monitorGeneration, sessionGeneration, ct))
+                        return;
+
+                    var request = new NotificationRequest
+                    {
+                        NotificationId = BitConverter.ToInt32(pointId.ToByteArray(), 0) & int.MaxValue,
+                        Title = "Novos descartes pendentes",
+                        Description = newCount == 1
+                            ? "Há 1 novo descarte aguardando conferência."
+                            : $"Há {newCount} novos descartes aguardando conferência.",
+                        ReturningData = pointId.ToString("D"),
+                    };
+
+                    await LocalNotificationCenter.Current.Show(request);
+                }
+
+                if (!IsCurrent(pointId, contextGeneration, monitorGeneration, sessionGeneration, ct))
+                    return;
+
+                PendingCount = currentIds.Count;
+                WriteKnownIds(pointId, currentIds);
+                Preferences.Default.Set(BaselineKey(pointId), true);
+                Changed?.Invoke();
+            }
+            finally
+            {
+                _sideEffectGate.Release();
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            // A failed request must not change the current count or persisted baseline.
+        }
+        finally
+        {
+            if (refreshSequence == Volatile.Read(ref _refreshSequence))
+            {
+                IsLoading = false;
+                Changed?.Invoke();
+            }
+        }
+    }
+
+    public async Task<bool> EnableNotificationsAsync()
+    {
+        Preferences.Default.Set(ExplainedKey, true);
+        return await LocalNotificationCenter.Current.RequestNotificationPermission(
+            new NotificationPermission());
+    }
+
+    public void DismissNotificationPrompt() => Preferences.Default.Set(ExplainedKey, true);
+
+    public bool TryGetNotificationTarget(out Guid collectorPointId)
+    {
+        if (_notificationTarget is not { } target)
+        {
+            collectorPointId = default;
+            return false;
+        }
+
+        collectorPointId = target;
+        return true;
+    }
+
+    public void ClearNotificationTarget(Guid collectorPointId)
+    {
+        if (_notificationTarget == collectorPointId)
+            _notificationTarget = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _authState.AuthStateChanged -= OnAuthStateChanged;
+        _context.ContextChanged -= OnContextChanged;
+        LocalNotificationCenter.Current.NotificationActionTapped -= OnNotificationActionTapped;
+        _loopCts?.Cancel();
+        _loopCts?.Dispose();
+
+        try
+        {
+            await _loopTask;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+
+        _sideEffectGate.Dispose();
+    }
+
+    private void Restart()
+    {
+        _ = RestartAsync();
+    }
+
+    private async Task RestartAsync()
+    {
+        if (_disposed)
+            return;
+
+        await _sideEffectGate.WaitAsync();
+        try
+        {
+            if (_disposed)
+                return;
+
+            Interlocked.Increment(ref _generation);
+            Interlocked.Increment(ref _refreshSequence);
+            _loopCts?.Cancel();
+            _loopCts?.Dispose();
+            _loopCts = null;
+            PendingCount = 0;
+            IsLoading = false;
+            Changed?.Invoke();
+
+            if (!IsEligible)
+                return;
+
+            _loopCts = new CancellationTokenSource();
+            _loopTask = RunLoopAsync(_loopCts.Token);
+        }
+        finally
+        {
+            _sideEffectGate.Release();
+        }
+    }
+
+    private async Task RunLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            await RefreshAsync(ct);
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+            while (await timer.WaitForNextTickAsync(ct))
+                await RefreshAsync(ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+        }
+    }
+
+    private bool IsCurrent(
+        Guid pointId,
+        int contextGeneration,
+        int monitorGeneration,
+        int sessionGeneration,
+        CancellationToken ct) =>
+        !ct.IsCancellationRequested
+        && IsEligible
+        && Volatile.Read(ref _generation) == monitorGeneration
+        && _authState.SessionGeneration == sessionGeneration
+        && _context.Generation == contextGeneration
+        && _context.Current.CollectPointId == pointId;
+
+    private void OnAuthStateChanged()
+    {
+        if (_authState.SessionGeneration != _observedSessionGeneration)
+        {
+            _observedSessionGeneration = _authState.SessionGeneration;
+            _notificationTarget = null;
+        }
+
+        Restart();
+    }
+
+    private void OnContextChanged()
+    {
+        if (_notificationTarget is { } target
+            && _context.Current.CollectPointId is { } currentPointId
+            && currentPointId != target)
+        {
+            _notificationTarget = null;
+        }
+
+        Restart();
+    }
+
+    private void OnNotificationActionTapped(NotificationActionEventArgs args)
+    {
+        if (_authState.IsAuthenticated)
+            CaptureNotificationTarget(args.Request?.ReturningData);
+    }
+
+    private void CaptureNotificationTarget(string? returningData)
+    {
+        if (!Guid.TryParseExact(returningData, "D", out var id))
+            return;
+
+        _notificationTarget = id;
+        NotificationTargetAvailable?.Invoke();
+    }
+
+    private static string BaselineKey(Guid id) => $"ecocell.pending.{id:D}.baseline";
+    private static string KnownIdsKey(Guid id) => $"ecocell.pending.{id:D}.ids";
+
+    private static HashSet<Guid> ReadKnownIds(Guid id)
+    {
+        var json = Preferences.Default.Get(KnownIdsKey(id), string.Empty);
+        if (string.IsNullOrWhiteSpace(json))
+            return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize<HashSet<Guid>>(json) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static void WriteKnownIds(Guid id, IEnumerable<Guid> ids) =>
+        Preferences.Default.Set(KnownIdsKey(id), JsonSerializer.Serialize(ids));
+}

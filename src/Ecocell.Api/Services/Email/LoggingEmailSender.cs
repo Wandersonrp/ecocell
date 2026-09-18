@@ -21,7 +21,8 @@ public sealed class LoggingEmailSender : IEmailSender
         IReadOnlyDictionary<string, string>? variables = null,
         CancellationToken ct = default)
     {
-        _logger.LogInformation("[EMAIL] Tipo={Type} → {Email} | Variáveis={@Variables}", type, email, variables);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("[EMAIL] Tipo={Type} → {Email} | Variáveis={@Variables}", type, email, variables);
         return Task.CompletedTask;
     }
 }

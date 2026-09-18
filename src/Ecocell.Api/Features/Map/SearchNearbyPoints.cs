@@ -56,13 +56,11 @@ public static class SearchNearbyPoints
     public sealed class Handler : IRequestHandler<Command, ResultT<IReadOnlyList<ResponseNearbyPoint>>>
     {
         private readonly AppDbContext _dbContext;
-        private readonly ILogger<Handler> _logger;
         private readonly IValidator<Command> _validator;
 
-        public Handler(AppDbContext dbContext, ILogger<Handler> logger, IValidator<Command> validator)
+        public Handler(AppDbContext dbContext, IValidator<Command> validator)
         {
             _dbContext = dbContext;
-            _logger = logger;
             _validator = validator;
         }
 
@@ -85,7 +83,7 @@ public static class SearchNearbyPoints
                         && lp.Address != null
                         && lp.Address.Latitude != null
                         && lp.Address.Longitude != null
-                        && lp.Address.City.ToLower() == city)
+                        && EF.Functions.Like(lp.Address.City.ToLower(), city))
                     .Select(lp => new ResponseNearbyPoint
                     {
                         Id = lp.Id,

@@ -60,7 +60,8 @@ public static class RegisterNaturalPerson
 
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {            
-            _logger.LogInformation("Processando o cadastro da pessoa física {@NaturalPerson}", request);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Processando o cadastro da pessoa física {@NaturalPerson}", request);
 
             var validationResult = _validator.Validate(request);
 
@@ -104,7 +105,8 @@ public static class RegisterNaturalPerson
 
             await _publisher.Publish(new PersonRegistered(person.Id, person.Email), cancellationToken);
 
-            _logger.LogInformation("Pessoa física cadastrada com sucesso {@NaturalPerson}", person);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Pessoa física cadastrada com sucesso {@NaturalPerson}", person);
             return Result.Success();
         }
     }

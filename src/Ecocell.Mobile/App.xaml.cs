@@ -1,4 +1,5 @@
 using Ecocell.Mobile.Services.Auth;
+using Ecocell.Mobile.Services.Notifications;
 #if ANDROID
 using Microsoft.Maui.Controls.PlatformConfiguration;
 using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
@@ -8,8 +9,11 @@ namespace Ecocell.Mobile;
 
 public partial class App : Microsoft.Maui.Controls.Application
 {
-    public App(AuthStateService authState)
+    private readonly PendingDiscardMonitor _pendingMonitor;
+
+    public App(AuthStateService authState, PendingDiscardMonitor pendingMonitor)
     {
+        _pendingMonitor = pendingMonitor;
         InitializeComponent();
 
 #if ANDROID
@@ -27,6 +31,11 @@ public partial class App : Microsoft.Maui.Controls.Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new MainPage()) { Title = "Ecocell.Mobile" };
+        var window = new Window(new MainPage()) { Title = "Ecocell.Mobile" };
+        window.Activated += (_, _) => _pendingMonitor.SetForeground(true);
+        window.Resumed += (_, _) => _pendingMonitor.SetForeground(true);
+        window.Deactivated += (_, _) => _pendingMonitor.SetForeground(false);
+        window.Stopped += (_, _) => _pendingMonitor.SetForeground(false);
+        return window;
     }
 }

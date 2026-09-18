@@ -143,7 +143,8 @@ public static class RegisterLegalPerson
         /// <returns><see cref="Result"/> indicando sucesso ou o erro encontrado.</returns>
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processando cadastro da pessoa jurídica {@LegalPerson}", request);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Processando cadastro da pessoa jurídica {@LegalPerson}", request);
 
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -230,7 +231,8 @@ public static class RegisterLegalPerson
                 new LegalPersonRegistered(legalPerson.Id, legalPerson.Email, responsiblePerson.Email),
                 cancellationToken);
 
-            _logger.LogInformation("Pessoa jurídica cadastrada com sucesso {@LegalPerson}", legalPerson);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Pessoa jurídica cadastrada com sucesso {@LegalPerson}", legalPerson);
             return Result.Success();
         }
     }

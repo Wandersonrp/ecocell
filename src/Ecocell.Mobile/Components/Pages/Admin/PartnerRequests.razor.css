@@ -180,7 +180,7 @@
     font-weight: 500;
     color: var(--eco-color-text-primary);
     line-height: 1.4;
-    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .eco-sheet-detail__actions {

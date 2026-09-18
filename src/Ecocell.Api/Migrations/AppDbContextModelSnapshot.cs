@@ -81,6 +81,216 @@ namespace Ecocell.Api.Migrations
                     b.ToTable("Addresses", (string)null);
                 });
 
+            modelBuilder.Entity("Ecocell.Api.Entities.CreditScoreRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DiscardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DispatchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiscardId")
+                        .IsUnique();
+
+                    b.HasIndex("DispatchedAt");
+
+                    b.ToTable("CreditScoreRequests", (string)null);
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.DepositorScoreTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DepositorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DiscardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Points")
+                        .HasPrecision(28, 5)
+                        .HasColumnType("numeric(28,5)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepositorId");
+
+                    b.HasIndex("DiscardId")
+                        .IsUnique();
+
+                    b.ToTable("DepositorScoreTransactions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DepositorScoreTransactions_Points_Positive", "CAST(\"Points\" AS REAL) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.DepositorTotalScore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DepositorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalPoints")
+                        .IsConcurrencyToken()
+                        .HasPrecision(28, 5)
+                        .HasColumnType("numeric(28,5)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepositorId")
+                        .IsUnique();
+
+                    b.ToTable("DepositorTotalScores", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DepositorTotalScores_TotalPoints_NonNegative", "CAST(\"TotalPoints\" AS REAL) >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.Discard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CollectorPointId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DepositorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CollectorPointId");
+
+                    b.HasIndex("DepositorId");
+
+                    b.ToTable("Discards", (string)null);
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.DiscardItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("ApproximateWeightKg")
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DiscardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Material")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("MaterialScoreRuleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialScoreRuleId");
+
+                    b.HasIndex("DiscardId", "Material")
+                        .IsUnique();
+
+                    b.ToTable("DiscardItems", (string)null);
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.MaterialScoreRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("LegalPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Material")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("Points")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LegalPersonId", "Material")
+                        .IsUnique()
+                        .HasFilter("\"ValidTo\" IS NULL");
+
+                    b.ToTable("MaterialScoreRules", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MaterialScoreRules_Points_Positive", "CAST(\"Points\" AS REAL) > 0");
+
+                            t.HasCheckConstraint("CK_MaterialScoreRules_Validity", "\"ValidTo\" IS NULL OR \"ValidTo\" > \"ValidFrom\"");
+                        });
+                });
+
             modelBuilder.Entity("Ecocell.Api.Entities.Person", b =>
                 {
                     b.Property<Guid>("Id")
@@ -117,6 +327,49 @@ namespace Ecocell.Api.Migrations
                     b.ToTable("People", (string)null);
 
                     b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Features.Map.NearbyPointRow", b =>
+                {
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("DistanceKm")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Neighborhood")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TradeName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("Ecocell.Api.Entities.LegalPerson", b =>
@@ -179,6 +432,96 @@ namespace Ecocell.Api.Migrations
                     b.ToTable("NaturalPeople", (string)null);
                 });
 
+            modelBuilder.Entity("Ecocell.Api.Entities.CreditScoreRequest", b =>
+                {
+                    b.HasOne("Ecocell.Api.Entities.Discard", "Discard")
+                        .WithMany()
+                        .HasForeignKey("DiscardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Discard");
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.DepositorScoreTransaction", b =>
+                {
+                    b.HasOne("Ecocell.Api.Entities.NaturalPerson", "Depositor")
+                        .WithMany()
+                        .HasForeignKey("DepositorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Ecocell.Api.Entities.Discard", "Discard")
+                        .WithMany()
+                        .HasForeignKey("DiscardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Depositor");
+
+                    b.Navigation("Discard");
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.DepositorTotalScore", b =>
+                {
+                    b.HasOne("Ecocell.Api.Entities.NaturalPerson", "Depositor")
+                        .WithMany()
+                        .HasForeignKey("DepositorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Depositor");
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.Discard", b =>
+                {
+                    b.HasOne("Ecocell.Api.Entities.LegalPerson", "CollectorPoint")
+                        .WithMany()
+                        .HasForeignKey("CollectorPointId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Ecocell.Api.Entities.NaturalPerson", "Depositor")
+                        .WithMany()
+                        .HasForeignKey("DepositorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CollectorPoint");
+
+                    b.Navigation("Depositor");
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.DiscardItem", b =>
+                {
+                    b.HasOne("Ecocell.Api.Entities.Discard", "Discard")
+                        .WithMany("Items")
+                        .HasForeignKey("DiscardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Ecocell.Api.Entities.MaterialScoreRule", "MaterialScoreRule")
+                        .WithMany()
+                        .HasForeignKey("MaterialScoreRuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Discard");
+
+                    b.Navigation("MaterialScoreRule");
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.MaterialScoreRule", b =>
+                {
+                    b.HasOne("Ecocell.Api.Entities.LegalPerson", "LegalPerson")
+                        .WithMany()
+                        .HasForeignKey("LegalPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("LegalPerson");
+                });
+
             modelBuilder.Entity("Ecocell.Api.Entities.LegalPerson", b =>
                 {
                     b.HasOne("Ecocell.Api.Entities.Address", "Address")
@@ -209,6 +552,11 @@ namespace Ecocell.Api.Migrations
                         .HasForeignKey("Ecocell.Api.Entities.NaturalPerson", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Ecocell.Api.Entities.Discard", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Ecocell.Api.Entities.NaturalPerson", b =>

@@ -74,9 +74,17 @@
                 _loading = false;
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (_cts.IsCancellationRequested)
         {
             // Página abandonada durante a requisição — descarta sem atualizar estado.
+        }
+        catch (Exception)
+        {
+            // Falha de rede (HttpRequestException, timeout) não pode derrubar o circuito
+            // Blazor — vira erro inline com retry manual. O retry automático de falha
+            // transitória (warm-up do GMS na 1ª conexão) vive no TransientRetryHandler.
+            _errorMessage = "Falha de conexão. Verifique sua internet e tente novamente.";
+            _loading = false;
         }
     }
 

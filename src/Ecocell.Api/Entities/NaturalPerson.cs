@@ -7,8 +7,8 @@ namespace Ecocell.Api.Entities;
 /// </summary>
 public class NaturalPerson : Person
 {
-    public string FullName { get; private set; } = string.Empty;
-    public string Cpf { get; private set; } = string.Empty;
+    public string FullName { get; private set; }
+    public string Cpf { get; private set; }
     public DateOnly BirthDate { get; private set; }
     public virtual ICollection<LegalPerson> ManagedCompanies { get; private set; } = new List<LegalPerson>();
 

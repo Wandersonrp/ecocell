@@ -3,10 +3,12 @@ using System.Text.Json;
 using System.Threading.RateLimiting;
 using Carter;
 using Ecocell.Api.Configurations;
+using Ecocell.Api.Jobs;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Shared;
 using Ecocell.Api.Database;
 using Ecocell.Api.Services.Authentication;
+using Ecocell.Api.Services.CollectorPoints;
 using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Services.Email;
 using Ecocell.Api.Services.External;
@@ -28,6 +30,11 @@ namespace Ecocell.Api.Extensions;
 /// </summary>
 public static class DependencyInjectionExtensions
 {
+    private static readonly JsonSerializerOptions CamelCaseJsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     /// <summary>
     /// Registra todos os serviços necessários para a execução da API.
     /// </summary>
@@ -42,12 +49,15 @@ public static class DependencyInjectionExtensions
         AddSettings(services, configuration);
         AddRedis(services, configuration);
         AddServices(services, environment);
+        AddScoreProcessing(services, environment);
         AddGeocoding(services, configuration);
         AddJwtAuthentication(services, configuration);
         AddRateLimiting(services, configuration);
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICollectorPointAccessGuard, CollectorPointAccessGuard>();
+        services.AddSingleton(TimeProvider.System);
 
         var assembly = typeof(Program).Assembly;
         services.AddValidatorsFromAssembly(assembly);
@@ -131,12 +141,26 @@ public static class DependencyInjectionExtensions
     /// </summary>
     private static void AddServices(IServiceCollection services, IHostEnvironment environment)
     {
-        if (environment.IsProduction() || environment.IsStaging() || environment.IsDevelopment())
+        if (environment.IsProduction() || environment.IsStaging())
             services.AddScoped<IEmailSender, MailKitEmailSender>();
         else
             services.AddSingleton<IEmailSender, LoggingEmailSender>();
 
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+    }
+
+    private static void AddScoreProcessing(
+        IServiceCollection services,
+        IHostEnvironment environment)
+    {
+        services.AddScoped<CreditScoreJob>();
+        services.AddSingleton<CreditScoreDispatcher>();
+
+        if (!environment.IsEnvironment("Testing"))
+        {
+            services.AddHostedService(provider =>
+                provider.GetRequiredService<CreditScoreDispatcher>());
+        }
     }
 
     /// <summary>
@@ -176,7 +200,7 @@ public static class DependencyInjectionExtensions
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = jwtSettings!.Issuer,
+                    ValidIssuer = jwtSettings.Issuer,
                     ValidateAudience = true,
                     ValidAudience = jwtSettings.Audience,
                     ValidateLifetime = true,
@@ -187,15 +211,12 @@ public static class DependencyInjectionExtensions
                 };
             });
 
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy(AuthorizationPolicies.Authenticated, policy =>
-                policy.RequireAuthenticatedUser());
-
-            options.AddPolicy(AuthorizationPolicies.Admin, policy =>
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthorizationPolicies.Authenticated, policy =>
+                policy.RequireAuthenticatedUser())
+            .AddPolicy(AuthorizationPolicies.Admin, policy =>
                 policy.RequireAuthenticatedUser()
-                      .RequireClaim("role", Ecocell.Api.Enums.Role.Admin.ToString()));
-        });
+                    .RequireClaim("role", Ecocell.Api.Enums.Role.Admin.ToString()));
     }
 
     /// <summary>
@@ -236,7 +257,7 @@ public static class DependencyInjectionExtensions
                 ctx.HttpContext.Response.ContentType = "application/json";
                 var body = JsonSerializer.Serialize(
                     new ResponseError("Limite de requisições excedido. Tente novamente em instantes."),
-                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                    CamelCaseJsonSerializerOptions);
                 await ctx.HttpContext.Response.WriteAsync(body, ct);
             };
         });

@@ -83,7 +83,8 @@ public static class RequestLoginCode
         /// <returns><see cref="Result"/> indicando sucesso ou erro de validação.</returns>
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processando solicitação de código OTP de login para {Email}", request.Email);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Processando solicitação de código OTP de login para {Email}", request.Email);
 
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
@@ -99,9 +100,10 @@ public static class RequestLoginCode
 
             if (person is null || person.PersonStatus != PersonStatus.Active)
             {
-                _logger.LogInformation(
-                    "Solicitação de OTP de login ignorada para {Email}: conta inexistente ou não ativa (anti-enumeração)",
-                    request.Email);
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Solicitação de OTP de login ignorada para {Email}: conta inexistente ou não ativa (anti-enumeração)",
+                        request.Email);
                 return Result.Success();
             }
 
@@ -117,7 +119,8 @@ public static class RequestLoginCode
                     EmailType.VerificationCode,
                     new Dictionary<string, string> { ["code"] = code },
                     cancellationToken);
-                _logger.LogInformation("Código OTP de login enviado para {Email}", request.Email);
+                if (_logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation("Código OTP de login enviado para {Email}", request.Email);
             }
             catch (Exception ex)
             {

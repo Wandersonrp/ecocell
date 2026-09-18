@@ -193,4 +193,110 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
         return legalPerson;
     }
+
+    /// <summary>
+    /// Semeia uma pessoa jurídica CollectPoint já <c>Active</c> (aprovada), vinculada ao responsável.
+    /// </summary>
+    protected async Task<LegalPerson> CreateActiveCollectorPointAsync(Guid responsiblePersonId)
+    {
+        var faker = new Faker("pt_BR");
+
+        var address = new Address(
+            faker.Address.StreetName(),
+            faker.Address.BuildingNumber(),
+            faker.Address.SecondaryAddress(),
+            faker.Address.City(),
+            faker.Address.StateAbbr(),
+            faker.Address.ZipCode("########"));
+
+        var legalPerson = new LegalPerson(
+            legalName: faker.Company.CompanyName(),
+            tradeName: faker.Company.CompanyName(),
+            cnpj: faker.Company.Cnpj(includeFormatSymbols: false),
+            email: faker.Internet.Email(),
+            journey: ApiEnums.Journey.CollectPoint,
+            addressId: address.Id,
+            responsiblePersonId: responsiblePersonId);
+
+        legalPerson.Approve(ApiEnums.Role.Admin); // PendingApproval -> Active
+
+        await using var scope = Fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Addresses.Add(address);
+        db.People.Add(legalPerson);
+        await db.SaveChangesAsync();
+
+        return legalPerson;
+    }
+
+    /// <summary>
+    /// Semeia um descarte pendente com regras vigentes para os materiais informados.
+    /// </summary>
+    protected async Task<Discard> CreatePendingDiscardAsync(
+        Guid depositorId,
+        Guid collectorPointId,
+        params ApiEnums.ElectronicMaterial[] materials)
+    {
+        if (materials.Length == 0)
+            throw new ArgumentException("Informe ao menos um material.", nameof(materials));
+
+        var validFrom = DateTime.UtcNow.AddDays(-1);
+        var rules = materials
+            .Distinct()
+            .Select(material => new MaterialScoreRule(
+                collectorPointId,
+                material,
+                10m,
+                ApiEnums.MaterialScoreUnit.PerUnit,
+                validFrom))
+            .ToArray();
+        var items = rules
+            .Select(rule => new DiscardItem(rule.Material, 1, 0.250m, rule.Id))
+            .ToArray();
+        var discard = new Discard(depositorId, collectorPointId, items);
+
+        await using var scope = Fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.MaterialScoreRules.AddRange(rules);
+        db.Discards.Add(discard);
+        await db.SaveChangesAsync();
+        return discard;
+    }
+
+    /// <summary>Resolve o Id da pessoa pelo e-mail (para vincular pontos ao responsável logado).</summary>
+    protected async Task<Guid> GetPersonIdByEmailAsync(string email)
+    {
+        await using var scope = Fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var person = await db.People.FirstAsync(p => p.Email == email);
+        return person.Id;
+    }
+
+    /// <summary>
+    /// Semeia uma pessoa física com a role informada (Admin/Support), confirma e faz login.
+    /// Espelha <c>CreateAdminAndLoginAsync</c> para permitir testar 403 por role insuficiente.
+    /// </summary>
+    protected async Task<(string email, string jwt)> CreatePrivilegedUserAndLoginAsync(ApiEnums.Role role)
+    {
+        var faker = new Faker("pt_BR");
+        var email = faker.Internet.Email();
+
+        await using (var scope = Fixture.Factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var user = new NaturalPerson(
+                fullName: faker.Name.FullName(),
+                cpf: faker.Person.Cpf(includeFormatSymbols: false),
+                birthDate: DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)),
+                role: role,
+                email: email,
+                journey: ApiEnums.Journey.None);
+            user.Confirm();
+            db.People.Add(user);
+            await db.SaveChangesAsync();
+        }
+
+        var jwt = await LoginAsync(email);
+        return (email, jwt);
+    }
 }

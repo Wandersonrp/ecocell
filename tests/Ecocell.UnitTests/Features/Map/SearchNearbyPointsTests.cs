@@ -2,7 +2,6 @@ using Ecocell.Api.Entities;
 using Ecocell.Api.Enums;
 using Ecocell.Api.Features.Map;
 using Ecocell.Api.Shared;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 
 namespace Ecocell.UnitTests.Features.Map;
@@ -12,7 +11,7 @@ public class SearchNearbyPointsTests : TestBase
     private readonly SearchNearbyPoints.Validator _validator = new();
 
     private SearchNearbyPoints.Handler CreateHandler() =>
-        new(DbContext, CreateLoggerMock<SearchNearbyPoints.Handler>().Object, _validator);
+        new(DbContext, _validator);
 
     private async Task SeedCollectPointAsync(string city, decimal lat, decimal lng, PersonStatus status = PersonStatus.Active)
     {

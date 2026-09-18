@@ -8,13 +8,13 @@ namespace Ecocell.Api.Entities;
 /// </summary>
 public class Address : BaseEntity
 {
-    public string Street { get; private set; } = string.Empty;
-    public string Number { get; private set; } = string.Empty;
+    public string Street { get; private set; }
+    public string Number { get; private set; }
     public string? Complement { get; private set; }
-    public string Neighborhood { get; private set; } = string.Empty;
-    public string City { get; private set; } = string.Empty;
-    public string State { get; private set; } = string.Empty;
-    public string ZipCode { get; private set; } = string.Empty;
+    public string Neighborhood { get; private set; }
+    public string City { get; private set; }
+    public string State { get; private set; }
+    public string ZipCode { get; private set; }
     public decimal? Latitude { get; private set; }
     public decimal? Longitude { get; private set; }
 

@@ -90,7 +90,8 @@ public static class RefreshAccessToken
 
             var jwtToken = jwtTokenService.Generate(person);
 
-            logger.LogInformation("Tokens renovados com sucesso. PersonId: {PersonId}", personId);
+            if (logger.IsEnabled(LogLevel.Information))
+                logger.LogInformation("Tokens renovados com sucesso. PersonId: {PersonId}", personId);
             return ResultT<ResponseLogin>.Success(new ResponseLogin
             {
                 AccessToken = jwtToken.AccessToken,

@@ -10,6 +10,9 @@ namespace Ecocell.Mobile;
 // por gestos), o Android não redimensiona a janela — entrega a altura do teclado via
 // WindowInsets. O listener abaixo aplica esse inset como padding no content view,
 // encolhendo o BlazorWebView para o campo focado subir acima do teclado (WND-272).
+// Pelo mesmo motivo (janela fullscreen), o conteúdo é desenhado por baixo da status
+// bar; o inset superior de system bars é aplicado como padding-top para o topo das
+// telas não ficar encoberto. Em janelas não-fullscreen o inset chega como 0.
 [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, WindowSoftInputMode = SoftInput.AdjustResize, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 public class MainActivity : MauiAppCompatActivity
 {
@@ -33,7 +36,8 @@ public class MainActivity : MauiAppCompatActivity
                 return insets!;
 
             var imeBottom = insets.GetInsets(WindowInsetsCompat.Type.Ime())?.Bottom ?? 0;
-            view.SetPadding(view.PaddingLeft, view.PaddingTop, view.PaddingRight, imeBottom);
+            var statusBarTop = insets.GetInsets(WindowInsetsCompat.Type.StatusBars())?.Top ?? 0;
+            view.SetPadding(view.PaddingLeft, statusBarTop, view.PaddingRight, imeBottom);
             return insets;
         }
     }

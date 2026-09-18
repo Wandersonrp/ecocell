@@ -13,6 +13,12 @@ public class AppDbContext : DbContext
     public DbSet<NaturalPerson> NaturalPeople { get; set; }
     public DbSet<LegalPerson> LegalPeople { get; set; }
     public DbSet<Address> Addresses { get; set; }
+    public DbSet<MaterialScoreRule> MaterialScoreRules { get; set; }
+    public DbSet<Discard> Discards { get; set; }
+    public DbSet<DiscardItem> DiscardItems { get; set; }
+    public DbSet<CreditScoreRequest> CreditScoreRequests { get; set; }
+    public DbSet<DepositorScoreTransaction> DepositorScoreTransactions { get; set; }
+    public DbSet<DepositorTotalScore> DepositorTotalScores { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
