@@ -17,6 +17,7 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
     private CancellationTokenSource? _loopCts;
     private Task _loopTask = Task.CompletedTask;
     private int _refreshSequence;
+    private int _generation;
     private Guid? _notificationTarget;
     private bool _isForeground;
     private bool _disposed;
@@ -67,7 +68,8 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
             return;
 
         var pointId = _context.Current.CollectPointId!.Value;
-        var generation = _context.Generation;
+        var contextGeneration = _context.Generation;
+        var monitorGeneration = Volatile.Read(ref _generation);
         var refreshSequence = Interlocked.Increment(ref _refreshSequence);
         IsLoading = true;
         Changed?.Invoke();
@@ -78,7 +80,7 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
             if (!response.IsSuccessStatusCode || response.Content is null)
                 return;
 
-            if (!IsCurrent(pointId, generation, ct))
+            if (!IsCurrent(pointId, contextGeneration, monitorGeneration, ct))
                 return;
 
             var currentIds = response.Content.Items.Select(value => value.Id).ToHashSet();
@@ -88,6 +90,9 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
 
             if (newCount > 0)
             {
+                if (!IsCurrent(pointId, contextGeneration, monitorGeneration, ct))
+                    return;
+
                 var request = new NotificationRequest
                 {
                     NotificationId = BitConverter.ToInt32(pointId.ToByteArray(), 0) & int.MaxValue,
@@ -99,9 +104,10 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
                 };
 
                 await LocalNotificationCenter.Current.Show(request);
-                if (!IsCurrent(pointId, generation, ct))
-                    return;
             }
+
+            if (!IsCurrent(pointId, contextGeneration, monitorGeneration, ct))
+                return;
 
             PendingCount = currentIds.Count;
             WriteKnownIds(pointId, currentIds);
@@ -173,15 +179,18 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
         if (_disposed)
             return;
 
+        Interlocked.Increment(ref _generation);
+        Interlocked.Increment(ref _refreshSequence);
         _loopCts?.Cancel();
         _loopCts?.Dispose();
         _loopCts = null;
+        _notificationTarget = null;
+        PendingCount = 0;
+        IsLoading = false;
+        Changed?.Invoke();
 
         if (!IsEligible)
-        {
-            IsLoading = false;
             return;
-        }
 
         _loopCts = new CancellationTokenSource();
         _loopTask = RunLoopAsync(_loopCts.Token);
@@ -201,14 +210,22 @@ public sealed class PendingDiscardMonitor : IAsyncDisposable
         }
     }
 
-    private bool IsCurrent(Guid pointId, int generation, CancellationToken ct) =>
+    private bool IsCurrent(
+        Guid pointId,
+        int contextGeneration,
+        int monitorGeneration,
+        CancellationToken ct) =>
         !ct.IsCancellationRequested
         && IsEligible
-        && _context.Generation == generation
+        && Volatile.Read(ref _generation) == monitorGeneration
+        && _context.Generation == contextGeneration
         && _context.Current.CollectPointId == pointId;
 
-    private void OnNotificationActionTapped(NotificationActionEventArgs args) =>
-        CaptureNotificationTarget(args.Request?.ReturningData);
+    private void OnNotificationActionTapped(NotificationActionEventArgs args)
+    {
+        if (_authState.IsAuthenticated)
+            CaptureNotificationTarget(args.Request?.ReturningData);
+    }
 
     private void CaptureNotificationTarget(string? returningData)
     {
