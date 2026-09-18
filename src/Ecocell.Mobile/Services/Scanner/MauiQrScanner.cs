@@ -36,15 +36,42 @@ public sealed class MauiQrScanner : IQrScanner
             return new(QrScanStatus.Unsupported);
 
         var scannerPage = new QrScannerPage();
+        var presentationGate = new object();
+        var presentationCompleted = false;
         using var cancellation = ct.Register(() =>
-            MainThread.BeginInvokeOnMainThread(() => _ = scannerPage.CancelAsync()));
+        {
+            var shouldCancelPresentedPage = false;
+            lock (presentationGate)
+            {
+                shouldCancelPresentedPage = presentationCompleted;
+            }
+
+            if (shouldCancelPresentedPage)
+            {
+                MainThread.BeginInvokeOnMainThread(() => _ = scannerPage.CancelAsync());
+            }
+        });
 
         var presented = await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            if (ct.IsCancellationRequested)
-                return false;
+            lock (presentationGate)
+            {
+                if (ct.IsCancellationRequested)
+                    return false;
+            }
 
             await hostPage.Navigation.PushModalAsync(scannerPage);
+
+            var cancelAfterPresentation = false;
+            lock (presentationGate)
+            {
+                presentationCompleted = true;
+                cancelAfterPresentation = ct.IsCancellationRequested;
+            }
+
+            if (cancelAfterPresentation)
+                await scannerPage.CancelAsync();
+
             return true;
         });
 
