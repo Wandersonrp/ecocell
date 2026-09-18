@@ -8,6 +8,7 @@ using ZXing.Net.Maui.Controls;
 using Ecocell.Mobile.Services.Api;
 using Ecocell.Mobile.Services.Auth;
 using Ecocell.Mobile.Services.Http;
+using Ecocell.Mobile.Services.Scanner;
 
 namespace Ecocell.Mobile;
 
@@ -80,6 +81,7 @@ public static class MauiProgram
         builder.Services.AddTransient<TransientRetryHandler>();
         builder.Services.AddSingleton<Ecocell.Mobile.Services.Location.ILocationService,
                                       Ecocell.Mobile.Services.Location.LocationService>();
+        builder.Services.AddSingleton<IQrScanner, MauiQrScanner>();
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.MapViewModel>();
 
         // Client dedicado ao refresh — registrado SEM AuthTokenHandler (evita ciclo/recursão).

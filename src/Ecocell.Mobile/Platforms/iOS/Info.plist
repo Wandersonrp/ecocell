@@ -30,5 +30,7 @@
     <string>Assets.xcassets/appicon.appiconset</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>O EcoCell usa sua localização para mostrar os pontos de coleta próximos.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>A EcoCell usa a câmera para ler o QR Code do Ponto de Coleta.</string>
 </dict>
 </plist>
