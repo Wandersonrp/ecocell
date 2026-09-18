@@ -2,7 +2,9 @@
 @layout MainLayout
 @using Ecocell.Mobile.Services.Context
 @using Ecocell.Mobile.Services.Navigation
+@using Ecocell.Mobile.Services.Notifications
 @inject ActiveContextService Context
+@inject PendingDiscardMonitor Monitor
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -20,8 +22,20 @@
         <h1 class="eco-pc-home__title">Modo Ponto de Coleta</h1>
         <p class="eco-pc-home__hint">
             Você está atuando como <strong>@Context.Current.DisplayName</strong>.
-            As telas de materiais, cupons e selos aparecerão aqui.
+            Acompanhe os descartes recebidos e confira os materiais antes de confirmar.
         </p>
+
+        <EcoCard CssClass="eco-pc-home__pending" OnClick="OpenPending">
+            <div>
+                <h2 class="eco-pc-home__pending-title">Descartes pendentes</h2>
+                <p class="eco-pc-home__pending-description">
+                    Confira os materiais recebidos antes de confirmar.
+                </p>
+            </div>
+            <span class="eco-pc-home__pending-count" aria-label="@PendingCountLabel">
+                @(Monitor.IsLoading ? "—" : Monitor.PendingCount)
+            </span>
+        </EcoCard>
     </main>
 
     <div class="eco-pc-home__fab">
@@ -47,11 +61,31 @@
             </button>
         </div>
     </EcoBottomSheet>
+
+    <EcoBottomSheet Open="_notificationRationaleOpen" OnClose="DismissNotificationRationale">
+        <div class="eco-pc-home__notification-sheet">
+            <h2 class="eco-pc-home__notification-title">Acompanhe novos descartes</h2>
+            <p class="eco-pc-home__notification-description">
+                Ative as notificações para saber quando um descarte chegar ao seu ponto de coleta.
+            </p>
+            <div class="eco-pc-home__notification-actions">
+                <EcoPrimaryButton Label="Ativar notificações" OnClick="EnableNotificationsAsync" />
+                <EcoGhostButton Label="Agora não" OnClick="DismissNotificationRationale" />
+            </div>
+        </div>
+    </EcoBottomSheet>
 </div>
 
 @code {
     private bool _switcherOpen;
+    private bool _notificationRationaleOpen;
     private IReadOnlyList<Ecocell.Mobile.Components.Shared.Navigation.EcoNavItem> _navItems = [];
+
+    private string PendingCountLabel => Monitor.IsLoading
+        ? "Carregando quantidade de descartes pendentes"
+        : Monitor.PendingCount == 1
+            ? "1 descarte pendente"
+            : $"{Monitor.PendingCount} descartes pendentes";
 
     protected override void OnInitialized()
     {
@@ -64,6 +98,8 @@
 
         _navItems = NavItemsResolver.Resolve(Context.Current);
         Context.ContextChanged += OnContextChanged;
+        Monitor.Changed += OnMonitorChanged;
+        _notificationRationaleOpen = Monitor.ShouldExplainNotifications;
     }
 
     private void OnContextChanged()
@@ -71,6 +107,8 @@
         _navItems = NavItemsResolver.Resolve(Context.Current);
         InvokeAsync(StateHasChanged);
     }
+
+    private void OnMonitorChanged() => InvokeAsync(StateHasChanged);
 
     private void OpenSwitcher() => _switcherOpen = true;
 
@@ -91,7 +129,25 @@
 
     private void GoToQr() => Navigation.NavigateTo("/ponto-de-coleta/qr");
 
+    private void OpenPending() => Navigation.NavigateTo("/ponto-de-coleta/descartes-pendentes");
+
+    private async Task EnableNotificationsAsync()
+    {
+        _notificationRationaleOpen = false;
+        await Monitor.EnableNotificationsAsync();
+    }
+
+    private void DismissNotificationRationale()
+    {
+        _notificationRationaleOpen = false;
+        Monitor.DismissNotificationPrompt();
+    }
+
     private void OnNavSelect(string id) { }
 
-    public void Dispose() => Context.ContextChanged -= OnContextChanged;
+    public void Dispose()
+    {
+        Context.ContextChanged -= OnContextChanged;
+        Monitor.Changed -= OnMonitorChanged;
+    }
 }

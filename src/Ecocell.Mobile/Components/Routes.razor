@@ -1,5 +1,12 @@
 @using Ecocell.Mobile.Services.Auth
+@using Ecocell.Mobile.Services.Api
+@using Ecocell.Mobile.Services.Context
+@using Ecocell.Mobile.Services.Notifications
+@using Ecocell.Shared.Enums
 @inject AuthStateService AuthState
+@inject ICollectorPointClient CollectorPointClient
+@inject ActiveContextService Context
+@inject PendingDiscardMonitor Monitor
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -11,7 +18,17 @@
 </Router>
 
 @code {
-    protected override void OnInitialized() => AuthState.AuthStateChanged += OnAuthStateChanged;
+    protected override void OnInitialized()
+    {
+        AuthState.AuthStateChanged += OnAuthStateChanged;
+        Monitor.NotificationTargetAvailable += OnNotificationTargetAvailable;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await OpenNotificationTargetAsync();
+    }
 
     /// <summary>
     /// Única navegação pós-logout do app: reage a sign-out forçado (refresh token
@@ -26,8 +43,38 @@
         if (!AuthState.IsAuthenticated)
         {
             InvokeAsync(() => Navigation.NavigateTo("/", replace: true));
+            return;
         }
+
+        _ = InvokeAsync(OpenNotificationTargetAsync);
     }
 
-    public void Dispose() => AuthState.AuthStateChanged -= OnAuthStateChanged;
+    private void OnNotificationTargetAvailable() => _ = InvokeAsync(OpenNotificationTargetAsync);
+
+    private async Task OpenNotificationTargetAsync()
+    {
+        if (!AuthState.IsAuthenticated
+            || !Monitor.TryTakeNotificationTarget(out var collectorPointId))
+        {
+            return;
+        }
+
+        var response = await CollectorPointClient.ListMineAsync();
+        var point = response.IsSuccessStatusCode
+            ? response.Content?.Items.FirstOrDefault(value =>
+                value.Id == collectorPointId && value.Status == PersonStatus.Active)
+            : null;
+
+        if (point is null)
+            return;
+
+        Context.EnterCollectPoint(point.Id, point.TradeName);
+        Navigation.NavigateTo("/ponto-de-coleta/descartes-pendentes");
+    }
+
+    public void Dispose()
+    {
+        AuthState.AuthStateChanged -= OnAuthStateChanged;
+        Monitor.NotificationTargetAvailable -= OnNotificationTargetAvailable;
+    }
 }
