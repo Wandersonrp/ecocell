@@ -5,43 +5,6 @@
     background: var(--eco-color-surface-alt);
 }
 
-.eco-qr__topbar {
-    display: flex;
-    align-items: center;
-    gap: var(--eco-space-sm);
-    padding: var(--eco-space-sm) var(--eco-space-md);
-    background: var(--eco-color-surface);
-    box-shadow: var(--eco-shadow-top-bar);
-}
-
-.eco-qr__back {
-    width: 2.5rem;
-    height: 2.5rem;
-    border: none;
-    border-radius: var(--eco-radius-full);
-    background: transparent;
-    color: var(--eco-color-text-secondary);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.eco-qr__pcname {
-    flex: 1;
-    font-weight: var(--eco-font-h3-weight);
-    color: var(--eco-color-text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.eco-qr__spacer {
-    width: 2.5rem;
-    flex-shrink: 0;
-}
-
 .eco-qr__body {
     flex: 1;
     display: flex;

@@ -1,9 +1,9 @@
 ﻿namespace Ecocell.Api.Shared;
 
 public class Result
-{    
+{
     private Result()
-    {        
+    {
         IsSuccess = true;
         Error = Error.None;
     }
@@ -21,7 +21,7 @@ public class Result
 
     public bool IsSuccess { get; }
 
-    public bool IsFailure => !IsSuccess;    
+    public bool IsFailure => !IsSuccess;
 
     public Error Error { get; }
 

@@ -12,13 +12,7 @@
 @inject NavigationManager Navigation
 
 <div class="eco-qr">
-    <div class="eco-qr__topbar">
-        <button type="button" class="eco-qr__back" @onclick="GoHome" aria-label="Voltar">
-            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" aria-hidden="true" />
-        </button>
-        <span class="eco-qr__pcname">@(_pointName ?? "Ponto de coleta")</span>
-        <span class="eco-qr__spacer"></span>
-    </div>
+    <EcoBackTopBar Title="@HeaderTitle" OnBack="GoHome" />
 
     <main class="eco-qr__body">
         @switch (ViewModel.State)
@@ -64,6 +58,7 @@
     private IReadOnlyList<EcoNavItem> _navItems = [];
     private string? _pointName;
     private MarkupString _qrSvg;
+    private string HeaderTitle => _pointName ?? "Ponto de coleta";
 
     protected override async Task OnInitializedAsync()
     {

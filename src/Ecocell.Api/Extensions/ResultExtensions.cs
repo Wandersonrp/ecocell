@@ -19,13 +19,13 @@ public static class ResultExtensions
     }
 
     private static IResult Handle(this Error error)
-    {        
+    {
         var extensions = new Dictionary<string, object?>
         {
             { "code", error.Code }
-        };         
+        };
 
-        if(error.Messages is { Count: > 0})
+        if (error.Messages is { Count: > 0 })
         {
             extensions.Add("errors", error.Messages);
         }
@@ -33,7 +33,7 @@ public static class ResultExtensions
         return Results.Problem(
             statusCode: GetStatusCode(error.Code),
             title: GetTitle(error.Code),
-            detail: error.Message,            
+            detail: error.Message,
             extensions: extensions);
     }
 

@@ -16,7 +16,7 @@ public class PersonTypeConfiguration : BaseEntityTypeConfiguration<Person>
 
         builder.Property(p => p.Id)
             .HasColumnName("PersonId");
-        
+
         builder.ToTable("People");
 
         builder.HasIndex(p => p.Email);

@@ -15,7 +15,7 @@ using static Ecocell.Api.Features.Person.RegisterNaturalPerson;
 namespace Ecocell.Api.Features.Person;
 
 public static class RegisterNaturalPerson
-{    
+{
     public record Command : IRequest<Result>
     {
         public string Email { get; set; } = string.Empty;
@@ -39,7 +39,7 @@ public static class RegisterNaturalPerson
 
             RuleFor(x => x.BirthDate)
                 .NotNull().WithMessage("Data de Nascimento é obrigatória.")
-                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-16))).WithMessage("Idade mínima para cadastro na plataforma deve ser de 16 anos.");                
+                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-16))).WithMessage("Idade mínima para cadastro na plataforma deve ser de 16 anos.");
         }
     }
 
@@ -59,7 +59,7 @@ public static class RegisterNaturalPerson
         }
 
         public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
-        {            
+        {
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Processando o cadastro da pessoa física {@NaturalPerson}", request);
 
@@ -72,8 +72,8 @@ public static class RegisterNaturalPerson
                 return Result.Failure(Error.ErrorOnValidation(errors));
             }
 
-            var cpfExists = await _dbContext.NaturalPeople                
-                .AnyAsync(np => np.Cpf == request.Cpf, cancellationToken);            
+            var cpfExists = await _dbContext.NaturalPeople
+                .AnyAsync(np => np.Cpf == request.Cpf, cancellationToken);
 
             if (cpfExists)
             {
@@ -125,7 +125,7 @@ public class RegisterNaturalPersonEndpoint : ICarterModule
                 Cpf = request.Cpf,
                 BirthDate = request.BirthDate
             };
-            
+
             var result = await sender.Send(command);
             return result.ToProcessResult(StatusCodes.Status201Created);
         })

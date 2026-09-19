@@ -16,10 +16,10 @@ public class ExceptionHandlerMiddleware
     public async Task InvokeAsync(HttpContext httpContext)
     {
         try
-        {            
+        {
             await _next(httpContext);
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             _logger.LogError(ex, "Ocorreu um erro ao fazer a solicitação: {@Error}", ex);
             await HandleException(httpContext);
@@ -32,5 +32,5 @@ public class ExceptionHandlerMiddleware
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
         return httpContext.Response.WriteAsJsonAsync(errorMessage, httpContext.RequestAborted);
-    }    
+    }
 }

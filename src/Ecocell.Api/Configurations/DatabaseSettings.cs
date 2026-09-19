@@ -9,4 +9,3 @@ public sealed class DatabaseSettings
     [Required(ErrorMessage = "A string de conexão é obrigatória.")]
     public string DefaultConnection { get; init; } = string.Empty;
 }
- 

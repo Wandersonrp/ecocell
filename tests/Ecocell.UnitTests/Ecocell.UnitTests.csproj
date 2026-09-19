@@ -5,10 +5,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- SQLitePCLRaw.lib.e_sqlite3 2.1.11 (GHSA-2m69-gcr7-jv3q): sem versão corrigida disponível no NuGet.
-         Impacto limitado a testes — lib não vai a produção. Revisar quando 2.1.12+ for publicada. -->
-    <NuGetAuditSuppress>GHSA-2m69-gcr7-jv3q</NuGetAuditSuppress>
   </PropertyGroup>
+
+  <!-- SQLitePCLRaw.lib.e_sqlite3 2.1.11 (GHSA-2m69-gcr7-jv3q, High): transitivo do EFCore.Sqlite,
+       sem versão corrigida no NuGet. Impacto limitado a testes — lib não vai a produção.
+       Suppress rastreado por .harness/exceptions.md (EXC-001, expira 2026-10-31). Remover quando SQLitePCLRaw 2.1.12+ sair. -->
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.5" />

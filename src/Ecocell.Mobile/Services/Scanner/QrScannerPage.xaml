@@ -3,8 +3,7 @@
     x:Class="Ecocell.Mobile.Services.Scanner.QrScannerPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
-    NavigationPage.HasNavigationBar="False">
+    xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls">
     <Grid>
         <zxing:CameraBarcodeReaderView
             x:Name="BarcodeView"

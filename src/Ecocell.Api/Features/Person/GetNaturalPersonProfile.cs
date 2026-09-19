@@ -80,17 +80,17 @@ public static class GetNaturalPersonProfile
                 .Where(np => np.Id == request.PersonId)
                 .Select(np => new ResponseNaturalPersonProfile
                 {
-                    Id           = np.Id,
-                    FullName     = np.FullName,
-                    Email        = np.Email,
-                    Cpf          = np.Cpf,
-                    BirthDate    = np.BirthDate,
-                    Role         = (Ecocell.Shared.Enums.Role)(int)np.Role,
-                    Journey      = (Ecocell.Shared.Enums.Journey)(int)np.Journey,
-                    PersonType   = (Ecocell.Shared.Enums.PersonType)(int)np.PersonType,
+                    Id = np.Id,
+                    FullName = np.FullName,
+                    Email = np.Email,
+                    Cpf = np.Cpf,
+                    BirthDate = np.BirthDate,
+                    Role = (Ecocell.Shared.Enums.Role)(int)np.Role,
+                    Journey = (Ecocell.Shared.Enums.Journey)(int)np.Journey,
+                    PersonType = (Ecocell.Shared.Enums.PersonType)(int)np.PersonType,
                     PersonStatus = (Ecocell.Shared.Enums.PersonStatus)(int)np.PersonStatus,
-                    CreatedAt    = np.CreatedAt,
-                    UpdatedAt    = np.UpdatedAt,
+                    CreatedAt = np.CreatedAt,
+                    UpdatedAt = np.UpdatedAt,
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 

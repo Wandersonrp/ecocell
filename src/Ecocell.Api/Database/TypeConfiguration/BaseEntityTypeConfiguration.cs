@@ -8,7 +8,7 @@ public abstract class BaseEntityTypeConfiguration<T> : IEntityTypeConfiguration<
     where T : BaseEntity
 {
     public virtual void Configure(EntityTypeBuilder<T> builder)
-    {        
+    {
         builder.Property(x => x.Id)
             .ValueGeneratedNever();
 
@@ -16,7 +16,7 @@ public abstract class BaseEntityTypeConfiguration<T> : IEntityTypeConfiguration<
             .HasColumnType("timestamp with time zone")
             .IsRequired();
 
-        builder.Property(x => x.UpdatedAt)            
-            .HasColumnType("timestamp with time zone");            
+        builder.Property(x => x.UpdatedAt)
+            .HasColumnType("timestamp with time zone");
     }
 }
