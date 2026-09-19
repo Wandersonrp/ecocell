@@ -1,10 +1,14 @@
+using Carter;
 using Ecocell.Api.Database;
 using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
 using Ecocell.Api.Services.CurrentUser;
 using Ecocell.Api.Shared;
+using Ecocell.Shared.Requests.Ranking;
 using Ecocell.Shared.Responses.Ranking;
 using FluentValidation;
 using Mediator;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RankingScope = Ecocell.Shared.Enums.RankingScope;
@@ -117,5 +121,36 @@ public sealed class DepositorRankingRowConfiguration : IEntityTypeConfiguration<
         builder.HasNoKey();
         builder.ToView("v_ranking_depositor");
         builder.Property(row => row.TotalPoints).HasPrecision(28, 5);
+    }
+}
+
+public sealed class GetRankingEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapGet("api/v1/rankings", async (
+            [AsParameters] RequestGetRankingJson request,
+            ISender sender) =>
+        {
+            var query = new GetRanking.Query
+            {
+                Scope = request.Scope,
+                City = request.City,
+                State = request.State,
+                Page = request.Page ?? 1,
+                PageSize = request.PageSize ?? 20
+            };
+
+            var result = await sender.Send(query);
+            return result.ToProcessResult(StatusCodes.Status200OK);
+        })
+        .RequireAuthorization(AuthorizationPolicies.Authenticated)
+        .WithTags("Ranking")
+        .WithName("GetRanking")
+        .WithSummary("Retorna o ranking Municipal ou Nacional de Depositantes PF ativos.")
+        .Produces<ResponseRankingJson>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces(StatusCodes.Status403Forbidden);
     }
 }
