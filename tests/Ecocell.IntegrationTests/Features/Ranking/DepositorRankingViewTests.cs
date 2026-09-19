@@ -33,9 +33,17 @@ public sealed class DepositorRankingViewTests(IntegrationTestFixture fixture)
                 WHERE schemaname = 'public'
                   AND indexname = 'IX_Addresses_State_City_Normalized');
             """);
+        var indexDefinition = await ScalarAsync<string>(db, """
+            SELECT indexdef
+            FROM pg_indexes
+            WHERE schemaname = 'public'
+              AND indexname = 'IX_Addresses_State_City_Normalized';
+            """);
 
         viewExists.ShouldBeTrue();
         indexExists.ShouldBeTrue();
+        indexDefinition.ShouldContain("upper(btrim((\"State\")::text))");
+        indexDefinition.ShouldContain("lower(btrim((\"City\")::text))");
     }
 
     [Fact]
