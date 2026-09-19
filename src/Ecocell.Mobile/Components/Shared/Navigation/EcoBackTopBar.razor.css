@@ -1,0 +1,43 @@
+.eco-back-topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--eco-space-sm);
+    padding: var(--eco-space-sm) var(--eco-space-md);
+    background: var(--eco-color-surface);
+    box-shadow: var(--eco-shadow-top-bar);
+}
+
+.eco-back-topbar__back,
+.eco-back-topbar__spacer {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+}
+
+.eco-back-topbar__back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--eco-radius-full);
+    background: transparent;
+    color: var(--eco-color-text-secondary);
+    cursor: pointer;
+}
+
+.eco-back-topbar__back:disabled {
+    color: var(--eco-color-text-disabled);
+    cursor: default;
+}
+
+.eco-back-topbar__title {
+    flex: 1;
+    overflow: hidden;
+    color: var(--eco-color-text-primary);
+    font-size: var(--eco-font-h3-size);
+    font-weight: var(--eco-font-h3-weight);
+    line-height: var(--eco-font-h3-lh);
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

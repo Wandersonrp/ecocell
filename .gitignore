@@ -485,3 +485,7 @@ appsettings*
 docs/superpowers/*
 
 .claude/plans/*.claude/settings.local.json
+
+# Workaround sandbox Codex (nao commitar)
+.nuget-packages/
+/nuget.config
