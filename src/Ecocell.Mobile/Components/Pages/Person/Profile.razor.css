@@ -5,10 +5,6 @@
     background: var(--eco-color-surface);
 }
 
-.eco-profile__topbar {
-    padding: var(--eco-space-sm) var(--eco-space-lg);
-}
-
 .eco-profile__header {
     padding: var(--eco-space-sm) var(--eco-space-lg) 0;
 }

@@ -114,17 +114,17 @@ public static class UpdateNaturalPerson
 
             var profile = new ResponseNaturalPersonProfile
             {
-                Id           = person.Id,
-                FullName     = person.FullName,
-                Email        = person.Email,
-                Cpf          = person.Cpf,
-                BirthDate    = person.BirthDate,
-                Role         = (Ecocell.Shared.Enums.Role)(int)person.Role,
-                Journey      = (Ecocell.Shared.Enums.Journey)(int)person.Journey,
-                PersonType   = (Ecocell.Shared.Enums.PersonType)(int)person.PersonType,
+                Id = person.Id,
+                FullName = person.FullName,
+                Email = person.Email,
+                Cpf = person.Cpf,
+                BirthDate = person.BirthDate,
+                Role = (Ecocell.Shared.Enums.Role)(int)person.Role,
+                Journey = (Ecocell.Shared.Enums.Journey)(int)person.Journey,
+                PersonType = (Ecocell.Shared.Enums.PersonType)(int)person.PersonType,
                 PersonStatus = (Ecocell.Shared.Enums.PersonStatus)(int)person.PersonStatus,
-                CreatedAt    = person.CreatedAt,
-                UpdatedAt    = person.UpdatedAt,
+                CreatedAt = person.CreatedAt,
+                UpdatedAt = person.UpdatedAt,
             };
 
             return ResultT<ResponseNaturalPersonProfile>.Success(profile);

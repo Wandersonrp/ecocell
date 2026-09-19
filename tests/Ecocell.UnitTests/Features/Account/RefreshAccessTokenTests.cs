@@ -14,7 +14,7 @@ namespace Ecocell.UnitTests.Features.Account;
 public class RefreshAccessTokenTests : TestBase
 {
     // Token válido de 64 chars hex (32 bytes) — representativo, não precisa ser real
-    private const string ValidRefreshToken = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899";
+    private const string ValidRefreshToken = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"; // gitleaks:allow
 
     private readonly RefreshAccessToken.Handler _handler;
     private readonly RefreshAccessToken.Command _command;

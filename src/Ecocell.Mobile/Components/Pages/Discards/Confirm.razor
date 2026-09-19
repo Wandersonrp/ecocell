@@ -8,7 +8,7 @@
 @implements IDisposable
 
 <div class="eco-confirm">
-    <EcoTopBar />
+    <EcoBackTopBar Title="Descartes pendentes" OnBack="GoBack" />
 
     <div class="eco-confirm__body">
         @if (ViewModel.FeedbackMessage is not null)
@@ -160,6 +160,8 @@
     }
 
     private Task LoadAsync() => ViewModel.LoadAsync();
+
+    private void GoBack() => Navigation.NavigateTo("/ponto-de-coleta");
 
     private void BackToList()
     {
