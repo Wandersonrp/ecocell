@@ -81,6 +81,8 @@
     flex-shrink: 0;
 }
 
-.eco-leaderboard ::deep .eco-filter-chip {
+.eco-leaderboard ::deep .eco-filter-chip,
+.eco-leaderboard ::deep .eco-primary-btn,
+.eco-leaderboard ::deep .eco-secondary-btn {
     min-height: 2.75rem;
 }
