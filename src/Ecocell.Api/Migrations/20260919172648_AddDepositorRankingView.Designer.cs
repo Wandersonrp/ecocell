@@ -3,6 +3,7 @@ using System;
 using Ecocell.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ecocell.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260919172648_AddDepositorRankingView")]
+    partial class AddDepositorRankingView
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -370,37 +373,6 @@ namespace Ecocell.Api.Migrations
                     b.ToTable((string)null);
 
                     b.ToView(null, (string)null);
-                });
-
-            modelBuilder.Entity("Ecocell.Api.Features.Ranking.DepositorRankingRow", b =>
-                {
-                    b.Property<string>("City")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("DepositorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("Position")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Scope")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("State")
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("TotalPoints")
-                        .HasPrecision(28, 5)
-                        .HasColumnType("numeric(28,5)");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("v_ranking_depositor", (string)null);
                 });
 
             modelBuilder.Entity("Ecocell.Api.Entities.LegalPerson", b =>

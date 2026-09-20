@@ -9,7 +9,7 @@ public static class DepositorNav
     [
         new("inicio", "Início", Icons.Material.Filled.Home, "/map"),
         new("descartar", "Descartar", Icons.Material.Filled.Recycling, "/descartes/escanear"),
-        new("ranking", "Ranking", Icons.Material.Filled.EmojiEvents),
+        new("ranking", "Ranking", Icons.Material.Filled.EmojiEvents, "/ranking"),
         new("perfil", "Perfil", Icons.Material.Filled.Person, "/perfil"),
     ];
 }

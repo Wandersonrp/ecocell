@@ -71,11 +71,17 @@ public static class MauiProgram
             .AddHttpMessageHandler<TransientRetryHandler>()
             .AddHttpMessageHandler<AuthTokenHandler>();
 
+        builder.Services.AddRefitClient<IRankingClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<TransientRetryHandler>()
+            .AddHttpMessageHandler<AuthTokenHandler>();
+
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.LegalPersonViewModel>();
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.ManagedCollectorPointsViewModel>();
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.MyQrCodeViewModel>();
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.ScanViewModel>();
         builder.Services.AddTransient<Ecocell.Mobile.ViewModels.ConfirmDiscardViewModel>();
+        builder.Services.AddTransient<Ecocell.Mobile.ViewModels.RankingViewModel>();
 
         builder.Services.AddSingleton<ISecureTokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<AuthStateService>();
