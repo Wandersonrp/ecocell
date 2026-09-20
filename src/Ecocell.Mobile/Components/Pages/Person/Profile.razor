@@ -1,6 +1,7 @@
 @page "/perfil"
 @layout MainLayout
 @using Ecocell.Mobile.Services.Auth
+@using Ecocell.Mobile.Services.Navigation
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
@@ -20,20 +21,11 @@
     </div>
 
     <div class="eco-profile__navbar">
-        <EcoNavBar Items="_navItems" ActiveId="perfil" OnSelect="OnNavSelect" />
+        <EcoNavBar Items="DepositorNav.Items" ActiveId="perfil" OnSelect="OnNavSelect" />
     </div>
 </div>
 
 @code {
-    // Só rotas existentes recebem Href; itens sem tela ainda ficam inertes.
-    private static readonly IReadOnlyList<EcoNavItem> _navItems =
-    [
-        new("inicio", "Início", Icons.Material.Filled.Home, "/map"),
-        new("descartar", "Descartar", Icons.Material.Filled.Recycling),
-        new("ranking", "Ranking", Icons.Material.Filled.EmojiEvents),
-        new("perfil", "Perfil", Icons.Material.Filled.Person, "/perfil"),
-    ];
-
     private void GoToMyCollectorPoints() => Navigation.NavigateTo("/meus-pontos-de-coleta");
 
     /// <summary>
@@ -44,7 +36,7 @@
 
     private void OnNavSelect(string id)
     {
-        var target = _navItems.FirstOrDefault(i => i.Id == id)?.Href;
+        var target = DepositorNav.Items.FirstOrDefault(i => i.Id == id)?.Href;
         if (!string.IsNullOrEmpty(target)) Navigation.NavigateTo(target);
     }
 }
