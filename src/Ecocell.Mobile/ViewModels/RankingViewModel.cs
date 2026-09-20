@@ -35,16 +35,30 @@ public sealed class RankingViewModel : IDisposable
 
     public Task InitializeAsync(CancellationToken ct = default) => LoadFirstPageAsync(RankingScope.National, ct);
 
-    public void SetCity(string city) => City = city;
+    public void SetCity(string city)
+    {
+        if (City == city)
+            return;
 
-    public void SetState(string state) => State = state;
+        City = city;
+        CancelActiveRequest();
+    }
+
+    public void SetState(string state)
+    {
+        if (State == state)
+            return;
+
+        State = state;
+        CancelActiveRequest();
+    }
 
     public Task SelectScopeAsync(RankingScope scope, CancellationToken ct = default)
     {
         if (scope == RankingScope.National)
             return LoadFirstPageAsync(scope, ct);
 
-        InvalidateRequest();
+        CancelActiveRequest();
         Scope = scope;
         ClearResults();
         IsInitialLoading = false;
@@ -117,6 +131,7 @@ public sealed class RankingViewModel : IDisposable
         Scope = scope;
         ClearResults();
         IsInitialLoading = true;
+        IsLoadingMore = false;
         IsForbidden = false;
 
         try
@@ -180,6 +195,13 @@ public sealed class RankingViewModel : IDisposable
         _requestCancellation?.Cancel();
         _requestCancellation?.Dispose();
         _requestCancellation = null;
+    }
+
+    private void CancelActiveRequest()
+    {
+        InvalidateRequest();
+        IsInitialLoading = false;
+        IsLoadingMore = false;
     }
 
     private bool IsCurrent(long generation) => generation == _generation;

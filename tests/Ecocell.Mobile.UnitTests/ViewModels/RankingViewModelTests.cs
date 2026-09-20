@@ -115,6 +115,82 @@ public sealed class RankingViewModelTests
     }
 
     [Fact]
+    public async Task SetCity_ShouldIgnoreStaleMunicipalResponse_WhenFilterChangesDuringRequest()
+    {
+        var staleResponse = new TaskCompletionSource<IApiResponse<ResponseRankingJson>>();
+        _client.Setup(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .Returns(staleResponse.Task);
+
+        await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);
+        _viewModel.SetCity("Betim");
+        _viewModel.SetState("MG");
+        var search = _viewModel.SearchMunicipalAsync(CancellationToken.None);
+        _viewModel.SetCity("Contagem");
+        staleResponse.SetResult(Success(Page([Item("Resposta antiga", 1, 10m, true)], null, 1, 20, false)));
+        await search;
+
+        _viewModel.City.ShouldBe("Contagem");
+        _viewModel.Items.ShouldBeEmpty();
+        _viewModel.IsInitialLoading.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SelectScopeAsync_ShouldLoadNationalWithNullFilters_WhenReturningFromMunicipal()
+    {
+        await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);
+        _viewModel.SetCity("Betim");
+        _viewModel.SetState("MG");
+        _client.Setup(client => client.GetAsync(
+                It.Is<RequestGetRankingJson>(request => request.Scope == RankingScope.National
+                    && request.City == null && request.State == null && request.Page == 1 && request.PageSize == RankingViewModel.PageSize),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Success(Page([], null, 1, 20, false)));
+
+        await _viewModel.SelectScopeAsync(RankingScope.National, CancellationToken.None);
+
+        _viewModel.Scope.ShouldBe(RankingScope.National);
+        _viewModel.City.ShouldBe("Betim");
+        _viewModel.State.ShouldBe("MG");
+    }
+
+    [Fact]
+    public async Task SearchMunicipalAsync_ShouldShowMunicipalMessage_WhenApiReturnsBadRequest()
+    {
+        _client.Setup(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Failure(HttpStatusCode.BadRequest));
+
+        await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);
+        _viewModel.SetCity("Betim");
+        _viewModel.SetState("MG");
+        await _viewModel.SearchMunicipalAsync(CancellationToken.None);
+
+        _viewModel.InitialErrorMessage.ShouldBe("Revise a cidade e a UF e tente novamente.");
+        _viewModel.City.ShouldBe("Betim");
+        _viewModel.State.ShouldBe("MG");
+    }
+
+    [Fact]
+    public async Task RetryInitialAsync_ShouldUseLatestValidMunicipalFilters_WhenPreviousSearchFailed()
+    {
+        var retry = Item("Resposta nova", 2, 9m, true);
+        _client.SetupSequence(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Failure(HttpStatusCode.InternalServerError))
+            .ReturnsAsync(Success(Page([retry], retry, 1, 20, false)));
+
+        await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);
+        _viewModel.SetCity("Betim");
+        _viewModel.SetState("MG");
+        await _viewModel.SearchMunicipalAsync(CancellationToken.None);
+        _viewModel.SetCity("Contagem");
+        await _viewModel.RetryInitialAsync(CancellationToken.None);
+
+        _client.Verify(client => client.GetAsync(
+            It.Is<RequestGetRankingJson>(request => request.Scope == RankingScope.Municipal && request.City == "Contagem" && request.State == "MG" && request.Page == 1),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _viewModel.Items.ShouldHaveSingleItem().ShouldBe(retry);
+    }
+
+    [Fact]
     public async Task LoadMoreAsync_ShouldAppendApiItemsWithoutChangingPositions_WhenMorePagesExist()
     {
         var first = Item("Ana S.", 1, 20m, false);
@@ -130,6 +206,41 @@ public sealed class RankingViewModelTests
         _viewModel.Items.Select(item => item.Position).ShouldBe([1, 1, 2]);
         _viewModel.Page.ShouldBe(2);
         _viewModel.HasMore.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task InitializeAsync_ShouldResetIncrementalLoading_WhenNewFirstPageInvalidatesLoadMore()
+    {
+        var nextPage = new TaskCompletionSource<IApiResponse<ResponseRankingJson>>();
+        var first = Item("Ana S.", 1, 20m, false);
+        _client.SetupSequence(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Success(Page([first], null, 1, 20, true)))
+            .Returns(nextPage.Task)
+            .ReturnsAsync(Success(Page([], null, 1, 20, false)));
+
+        await _viewModel.InitializeAsync(CancellationToken.None);
+        var loadMore = _viewModel.LoadMoreAsync(CancellationToken.None);
+        await _viewModel.InitializeAsync(CancellationToken.None);
+
+        _viewModel.IsLoadingMore.ShouldBeFalse();
+        nextPage.SetResult(Success(Page([Item("Antiga", 2, 10m, false)], null, 2, 20, false)));
+        await loadMore;
+        _viewModel.Page.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task LoadMoreAsync_ShouldNotCallApi_WhenInitialLoadIsInProgressOrNoMorePagesExist()
+    {
+        var initial = new TaskCompletionSource<IApiResponse<ResponseRankingJson>>();
+        _client.Setup(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>())).Returns(initial.Task);
+
+        var loading = _viewModel.InitializeAsync(CancellationToken.None);
+        await _viewModel.LoadMoreAsync(CancellationToken.None);
+        initial.SetResult(Success(Page([], null, 1, 20, false)));
+        await loading;
+        await _viewModel.LoadMoreAsync(CancellationToken.None);
+
+        _client.Verify(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -180,6 +291,14 @@ public sealed class RankingViewModelTests
     {
         var current = Item("Ana S.", 1, 20m, true);
         await LoadNationalFirstPageAsync(Success(Page([current], current, 1, 20, false)));
+
+        _viewModel.ShouldShowCurrentUserCard.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ShouldShowCurrentUserCard_ShouldBeFalse_WhenCurrentUserIsNull()
+    {
+        await LoadNationalFirstPageAsync(Success(Page([Item("Ana S.", 1, 20m, false)], null, 1, 20, false)));
 
         _viewModel.ShouldShowCurrentUserCard.ShouldBeFalse();
     }
