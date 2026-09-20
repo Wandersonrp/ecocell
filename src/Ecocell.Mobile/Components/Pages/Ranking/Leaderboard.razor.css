@@ -44,11 +44,16 @@
     margin: var(--eco-space-md) 0;
 }
 
+.eco-leaderboard__field-label,
 .eco-leaderboard__field-error {
     color: var(--eco-color-error);
     font-size: var(--eco-font-caption-size);
     font-weight: var(--eco-font-caption-weight);
     line-height: var(--eco-font-caption-lh);
+}
+
+.eco-leaderboard__field-label {
+    color: var(--eco-color-text-primary);
 }
 
 .eco-leaderboard__results {
@@ -57,9 +62,9 @@
 
 .eco-leaderboard__section-title {
     color: var(--eco-color-text-primary);
-    font-size: var(--eco-font-h2-size);
-    font-weight: var(--eco-font-h2-weight);
-    line-height: var(--eco-font-h2-lh);
+    font-size: var(--eco-font-body-lg-size);
+    font-weight: var(--eco-font-body-lg-weight);
+    line-height: var(--eco-font-body-lg-lh);
 }
 
 .eco-leaderboard__skeleton {

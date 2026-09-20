@@ -23,13 +23,17 @@
         else
         {
             <section class="eco-leaderboard__municipal" aria-label="Filtro municipal">
-                <EcoTextField Placeholder="Cidade"
+                <label class="eco-leaderboard__field-label" for="eco-ranking-city">Cidade</label>
+                <EcoTextField id="eco-ranking-city"
+                              Placeholder="Informe a cidade"
                               Value="@Vm.City"
                               ValueChanged="OnCityChanged"
                               HasError="@CityIsMissing"
                               ErrorText="@(CityIsMissing ? "Informe a cidade." : null)"
                               autocomplete="address-level2" />
-                <EcoSelectField Placeholder="UF"
+                <label class="eco-leaderboard__field-label" for="eco-ranking-state">UF</label>
+                <EcoSelectField id="eco-ranking-state"
+                                Placeholder="Selecione a UF"
                                 Options="_states"
                                 Value="@Vm.State"
                                 ValueChanged="OnStateChanged"
@@ -58,7 +62,7 @@
                     </div>
                 }
             }
-            else if (Vm.Items.Count == 0)
+            else if (Vm.Page > 0 && Vm.Items.Count == 0)
             {
                 <EcoEmptyState Title="Nenhum depositante encontrado"
                                Description="Ainda não há pontuações para este ranking." />
