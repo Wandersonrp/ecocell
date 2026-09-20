@@ -135,6 +135,26 @@ public sealed class RankingViewModelTests
     }
 
     [Fact]
+    public async Task SetState_ShouldIgnoreStaleMunicipalResponse_WhenFilterChangesDuringRequest()
+    {
+        var staleResponse = new TaskCompletionSource<IApiResponse<ResponseRankingJson>>();
+        _client.Setup(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .Returns(staleResponse.Task);
+
+        await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);
+        _viewModel.SetCity("Betim");
+        _viewModel.SetState("MG");
+        var search = _viewModel.SearchMunicipalAsync(CancellationToken.None);
+        _viewModel.SetState("SP");
+        staleResponse.SetResult(Success(Page([Item("Resposta antiga", 1, 10m, true)], null, 1, 20, false)));
+        await search;
+
+        _viewModel.State.ShouldBe("SP");
+        _viewModel.Items.ShouldBeEmpty();
+        _viewModel.IsInitialLoading.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task SelectScopeAsync_ShouldLoadNationalWithNullFilters_WhenReturningFromMunicipal()
     {
         await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);
@@ -229,6 +249,33 @@ public sealed class RankingViewModelTests
     }
 
     [Fact]
+    public async Task SelectScopeAsync_ShouldReleaseIncrementalLoadingAndAllowNewNationalPage_WhenLoadMoreIsPending()
+    {
+        var pendingLoadMore = new TaskCompletionSource<IApiResponse<ResponseRankingJson>>();
+        var nationalFirst = Item("Nacional", 1, 20m, false);
+        var nationalNext = Item("Próxima", 2, 10m, false);
+        _client.SetupSequence(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Success(Page([Item("Antiga", 1, 30m, false)], null, 1, 20, true)))
+            .Returns(pendingLoadMore.Task)
+            .ReturnsAsync(Success(Page([nationalFirst], null, 1, 20, true)))
+            .ReturnsAsync(Success(Page([nationalNext], null, 2, 20, false)));
+
+        await _viewModel.InitializeAsync(CancellationToken.None);
+        var loadMore = _viewModel.LoadMoreAsync(CancellationToken.None);
+        await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);
+        await _viewModel.SelectScopeAsync(RankingScope.National, CancellationToken.None);
+
+        _viewModel.IsLoadingMore.ShouldBeFalse();
+        pendingLoadMore.SetResult(Success(Page([Item("Obsoleta", 2, 10m, false)], null, 2, 20, false)));
+        await loadMore;
+        await _viewModel.LoadMoreAsync(CancellationToken.None);
+
+        _viewModel.Items.ShouldBe([nationalFirst, nationalNext]);
+        _viewModel.Page.ShouldBe(2);
+        _viewModel.HasMore.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task LoadMoreAsync_ShouldNotCallApi_WhenInitialLoadIsInProgressOrNoMorePagesExist()
     {
         var initial = new TaskCompletionSource<IApiResponse<ResponseRankingJson>>();
@@ -270,6 +317,10 @@ public sealed class RankingViewModelTests
 
         await _viewModel.InitializeAsync(CancellationToken.None);
         await _viewModel.LoadMoreAsync(CancellationToken.None);
+
+        _viewModel.Items.ShouldHaveSingleItem().ShouldBe(first);
+        _viewModel.Page.ShouldBe(1);
+        _viewModel.HasMore.ShouldBeTrue();
         await _viewModel.RetryLoadMoreAsync(CancellationToken.None);
 
         _viewModel.Items.ShouldBe([first, second]);
