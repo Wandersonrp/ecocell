@@ -330,7 +330,7 @@ public sealed class RankingViewModelTests
     [Fact]
     public async Task ShouldShowCurrentUserCard_ShouldBeTrue_WhenCurrentUserIsOutsideLoadedItems()
     {
-        var inside = Item("Ana S.", 1, 20m, true);
+        var inside = Item("Ana S.", 1, 20m, false);
         var outside = Item("Bia R.", 25, 5m, true);
         await LoadNationalFirstPageAsync(Success(Page([inside], outside, 1, 20, false)));
 
