@@ -1,0 +1,29 @@
+@using System.Globalization
+
+<EcoCard CssClass="@CssClass"
+         aria-label="@AccessibleLabel">
+    <span class="eco-ranking-card__position">@FormattedPosition</span>
+    <span class="eco-ranking-card__name">@ReducedName</span>
+    <span class="eco-ranking-card__points">@FormattedPoints pontos</span>
+</EcoCard>
+
+@code {
+    private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("pt-BR");
+
+    [Parameter, EditorRequired]
+    public string ReducedName { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public long Position { get; set; }
+
+    [Parameter, EditorRequired]
+    public decimal Points { get; set; }
+
+    [Parameter]
+    public bool IsCurrentUser { get; set; }
+
+    private string FormattedPosition => $"{Position.ToString("N0", Culture)}º";
+    private string FormattedPoints => Points.ToString("#,0.#####", Culture);
+    private string AccessibleLabel => $"Posição {FormattedPosition}, {ReducedName}, {FormattedPoints} pontos";
+    private string CssClass => IsCurrentUser ? "eco-ranking-card eco-ranking-card--current-user" : "eco-ranking-card";
+}

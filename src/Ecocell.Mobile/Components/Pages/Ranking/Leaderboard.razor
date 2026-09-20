@@ -1,0 +1,189 @@
+@page "/ranking"
+@layout MainLayout
+@implements IDisposable
+@using Ecocell.Mobile.Services.Navigation
+@using Ecocell.Shared.Enums
+@inject RankingViewModel Vm
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<div class="eco-leaderboard">
+    <main class="eco-leaderboard__content">
+        <header class="eco-leaderboard__header">
+            <h1 class="eco-leaderboard__title">Ranking de depositantes</h1>
+            <p class="eco-leaderboard__description">Acompanhe quem mais contribui para a logística reversa.</p>
+        </header>
+
+        <EcoFilterChips Options="_scopeOptions" Value="@Vm.Scope.ToString()" OnChange="OnScopeChangedAsync" />
+
+        @if (Vm.Scope == RankingScope.National)
+        {
+            <p class="eco-leaderboard__scope-description">Pontuação acumulada em todo o Brasil</p>
+        }
+        else
+        {
+            <section class="eco-leaderboard__municipal" aria-label="Filtro municipal">
+                <EcoTextField Placeholder="Cidade"
+                              Value="@Vm.City"
+                              ValueChanged="OnCityChanged"
+                              HasError="@CityIsMissing"
+                              ErrorText="@(CityIsMissing ? "Informe a cidade." : null)"
+                              autocomplete="address-level2" />
+                <EcoSelectField Placeholder="UF"
+                                Options="_states"
+                                Value="@Vm.State"
+                                ValueChanged="OnStateChanged"
+                                HasError="@StateIsMissing" />
+                @if (StateIsMissing)
+                {
+                    <span class="eco-leaderboard__field-error" role="alert">Informe a UF.</span>
+                }
+                <EcoPrimaryButton Label="Buscar ranking" OnClick="SearchMunicipalAsync" Disabled="@(!Vm.CanSearchMunicipal)" />
+            </section>
+        }
+
+        <section class="eco-leaderboard__results" aria-live="polite">
+            @if (Vm.InitialErrorMessage is not null)
+            {
+                <EcoErrorBanner Message="@Vm.InitialErrorMessage" ShowRetry="true" OnRetry="RetryInitialAsync" />
+            }
+            else if (Vm.IsInitialLoading)
+            {
+                @for (var i = 0; i < 3; i++)
+                {
+                    <div class="eco-leaderboard__skeleton">
+                        <EcoSkeleton Width="3rem" Height="1.875rem" />
+                        <EcoSkeleton Width="100%" Height="1rem" />
+                        <EcoSkeleton Width="4rem" Height="1rem" />
+                    </div>
+                }
+            }
+            else if (Vm.Items.Count == 0)
+            {
+                <EcoEmptyState Title="Nenhum depositante encontrado"
+                               Description="Ainda não há pontuações para este ranking." />
+            }
+            else
+            {
+                @if (Vm.ShouldShowCurrentUserCard)
+                {
+                    <section class="eco-leaderboard__current-user" aria-label="Sua posição">
+                        <h2 class="eco-leaderboard__section-title">Sua posição</h2>
+                        <EcoRankingCard ReducedName="@Vm.CurrentUser!.ReducedName"
+                                        Position="@Vm.CurrentUser.Position"
+                                        Points="@Vm.CurrentUser.Points"
+                                        IsCurrentUser="@Vm.CurrentUser.IsCurrentUser" />
+                    </section>
+                }
+
+                <div class="eco-leaderboard__list" aria-label="Posições do ranking">
+                    @foreach (var item in Vm.Items)
+                    {
+                        <EcoRankingCard ReducedName="@item.ReducedName"
+                                        Position="@item.Position"
+                                        Points="@item.Points"
+                                        IsCurrentUser="@item.IsCurrentUser" />
+                    }
+                </div>
+
+                @if (Vm.LoadMoreErrorMessage is not null)
+                {
+                    <EcoErrorBanner Message="@Vm.LoadMoreErrorMessage" ShowRetry="true" OnRetry="RetryLoadMoreAsync" />
+                }
+
+                @if (Vm.HasMore)
+                {
+                    <EcoSecondaryButton Label="Carregar mais"
+                                        OnClick="LoadMoreAsync"
+                                        Disabled="@Vm.IsLoadingMore"
+                                        IsLoading="@Vm.IsLoadingMore" />
+                }
+            }
+        </section>
+    </main>
+
+    <div class="eco-leaderboard__navbar">
+        <EcoNavBar Items="DepositorNav.Items" ActiveId="ranking" OnSelect="OnNavSelect" />
+    </div>
+</div>
+
+@code {
+    private static readonly IReadOnlyList<EcoFilterChip> _scopeOptions =
+    [
+        new(nameof(RankingScope.National), "Nacional"),
+        new(nameof(RankingScope.Municipal), "Municipal"),
+    ];
+
+    private static readonly IReadOnlyList<string> _states =
+    [
+        "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
+        "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+    ];
+
+    private bool _initialized;
+    private bool CityIsMissing => Vm.Scope == RankingScope.Municipal && string.IsNullOrWhiteSpace(Vm.City);
+    private bool StateIsMissing => Vm.Scope == RankingScope.Municipal && string.IsNullOrWhiteSpace(Vm.State);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_initialized)
+            return;
+
+        _initialized = true;
+        await Vm.InitializeAsync();
+        await UpdateUiAndRedirectIfForbiddenAsync();
+    }
+
+    private async Task OnScopeChangedAsync(string scopeName)
+    {
+        if (!Enum.TryParse<RankingScope>(scopeName, out var scope))
+            return;
+
+        await Vm.SelectScopeAsync(scope);
+        await UpdateUiAndRedirectIfForbiddenAsync();
+    }
+
+    private void OnCityChanged(string city) => Vm.SetCity(city);
+
+    private void OnStateChanged(string state) => Vm.SetState(state);
+
+    private async Task SearchMunicipalAsync()
+    {
+        await Vm.SearchMunicipalAsync();
+        await UpdateUiAndRedirectIfForbiddenAsync();
+    }
+
+    private async Task RetryInitialAsync()
+    {
+        await Vm.RetryInitialAsync();
+        await UpdateUiAndRedirectIfForbiddenAsync();
+    }
+
+    private async Task RetryLoadMoreAsync()
+    {
+        await Vm.RetryLoadMoreAsync();
+        await UpdateUiAndRedirectIfForbiddenAsync();
+    }
+
+    private async Task LoadMoreAsync()
+    {
+        await Vm.LoadMoreAsync();
+        await UpdateUiAndRedirectIfForbiddenAsync();
+    }
+
+    private async Task UpdateUiAndRedirectIfForbiddenAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        if (Vm.IsForbidden)
+            Navigation.NavigateTo(PostLoginRouteResolver.Resolve(AuthState.CurrentRole, AuthState.CurrentJourney), replace: true);
+    }
+
+    private void OnNavSelect(string id)
+    {
+        var item = DepositorNav.Items.FirstOrDefault(value => value.Id == id);
+        if (item?.Href is not null)
+            Navigation.NavigateTo(item.Href);
+    }
+
+    public void Dispose() => Vm.Dispose();
+}
