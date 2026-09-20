@@ -81,6 +81,31 @@ public sealed class RankingViewModelTests
     }
 
     [Fact]
+    public async Task Dispose_ShouldNotMutateInitialLoadState_WhenActiveRequestIsCanceled()
+    {
+        // Arrange
+        var canceledResponse = new TaskCompletionSource<IApiResponse<ResponseRankingJson>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _client
+            .Setup(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .Returns((RequestGetRankingJson _, CancellationToken cancellationToken) =>
+            {
+                cancellationToken.Register(() => canceledResponse.TrySetCanceled(cancellationToken));
+                return canceledResponse.Task;
+            });
+
+        var loading = _viewModel.InitializeAsync(CancellationToken.None);
+        _viewModel.IsInitialLoading.ShouldBeTrue();
+
+        // Act
+        _viewModel.Dispose();
+        await loading;
+
+        // Assert
+        _viewModel.InitialErrorMessage.ShouldBeNull();
+        _viewModel.IsInitialLoading.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task SearchMunicipalAsync_ShouldNotCallApi_WhenCityOrStateIsBlank()
     {
         await _viewModel.SelectScopeAsync(RankingScope.Municipal, CancellationToken.None);

@@ -224,7 +224,6 @@ public sealed class RankingViewModel : IDisposable
 
     public void Dispose()
     {
-        _requestCancellation?.Cancel();
-        _requestCancellation?.Dispose();
+        InvalidateRequest();
     }
 }

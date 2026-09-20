@@ -1,11 +1,11 @@
-.eco-ranking-card {
+.eco-ranking-card__surface ::deep .eco-ranking-card {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: var(--eco-space-md);
 }
 
-.eco-ranking-card--current-user {
+.eco-ranking-card__surface ::deep .eco-ranking-card--current-user {
     background: var(--eco-color-primary-tint);
     border: 0.09375rem solid var(--eco-color-primary);
 }

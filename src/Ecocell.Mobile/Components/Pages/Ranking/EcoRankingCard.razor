@@ -1,11 +1,13 @@
 @using System.Globalization
 
-<EcoCard CssClass="@CssClass"
-         aria-label="@AccessibleLabel">
-    <span class="eco-ranking-card__position">@FormattedPosition</span>
-    <span class="eco-ranking-card__name">@ReducedName</span>
-    <span class="eco-ranking-card__points">@FormattedPoints pontos</span>
-</EcoCard>
+<div class="eco-ranking-card__surface">
+    <EcoCard CssClass="@CssClass"
+             aria-label="@AccessibleLabel">
+        <span class="eco-ranking-card__position">@FormattedPosition</span>
+        <span class="eco-ranking-card__name">@ReducedName</span>
+        <span class="eco-ranking-card__points">@FormattedPoints pontos</span>
+    </EcoCard>
+</div>
 
 @code {
     private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("pt-BR");
