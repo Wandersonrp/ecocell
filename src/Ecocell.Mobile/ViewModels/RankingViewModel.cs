@@ -5,10 +5,14 @@ using Ecocell.Shared.Responses.Ranking;
 
 namespace Ecocell.Mobile.ViewModels;
 
-public sealed class RankingViewModel
+public sealed class RankingViewModel : IDisposable
 {
     private const string InitialError = "Não foi possível carregar o ranking. Tente novamente.";
+    private const string MunicipalError = "Revise a cidade e a UF e tente novamente.";
+    private const string LoadMoreError = "Não foi possível carregar mais posições. Tente novamente.";
     private readonly IRankingClient _client;
+    private CancellationTokenSource? _requestCancellation;
+    private long _generation;
 
     public RankingViewModel(IRankingClient client) => _client = client;
 
@@ -27,29 +31,105 @@ public sealed class RankingViewModel
     public string? LoadMoreErrorMessage { get; private set; }
     public bool IsForbidden { get; private set; }
     public bool CanSearchMunicipal => !string.IsNullOrWhiteSpace(City) && !string.IsNullOrWhiteSpace(State);
+    public bool ShouldShowCurrentUserCard => CurrentUser is not null && !Items.Any(item => item.IsCurrentUser);
 
     public Task InitializeAsync(CancellationToken ct = default) => LoadFirstPageAsync(RankingScope.National, ct);
 
-    private async Task LoadFirstPageAsync(RankingScope scope, CancellationToken ct)
+    public void SetCity(string city) => City = city;
+
+    public void SetState(string state) => State = state;
+
+    public Task SelectScopeAsync(RankingScope scope, CancellationToken ct = default)
     {
+        if (scope == RankingScope.National)
+            return LoadFirstPageAsync(scope, ct);
+
+        InvalidateRequest();
         Scope = scope;
-        City = string.Empty;
-        State = string.Empty;
-        Items = [];
-        CurrentUser = null;
-        Page = 0;
-        HasMore = false;
-        IsInitialLoading = true;
-        InitialErrorMessage = null;
+        ClearResults();
+        IsInitialLoading = false;
+        IsLoadingMore = false;
+        IsForbidden = false;
+        return Task.CompletedTask;
+    }
+
+    public Task SearchMunicipalAsync(CancellationToken ct = default) =>
+        Scope == RankingScope.Municipal && CanSearchMunicipal
+            ? LoadFirstPageAsync(RankingScope.Municipal, ct)
+            : Task.CompletedTask;
+
+    public Task RetryInitialAsync(CancellationToken ct = default) =>
+        Scope == RankingScope.National || CanSearchMunicipal
+            ? LoadFirstPageAsync(Scope, ct)
+            : Task.CompletedTask;
+
+    public Task RetryLoadMoreAsync(CancellationToken ct = default) => LoadMoreAsync(ct);
+
+    public async Task LoadMoreAsync(CancellationToken ct = default)
+    {
+        if (!HasMore || IsInitialLoading || IsLoadingMore || IsForbidden || Page == 0)
+            return;
+
+        var (generation, requestToken) = BeginRequest(ct);
+        IsLoadingMore = true;
+        LoadMoreErrorMessage = null;
 
         try
         {
-            var response = await _client.GetAsync(new RequestGetRankingJson
+            var response = await _client.GetAsync(CreateRequest(Page + 1), requestToken);
+            if (!IsCurrent(generation))
+                return;
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
             {
-                Scope = scope,
-                Page = 1,
-                PageSize = PageSize
-            }, ct);
+                SetForbidden();
+                return;
+            }
+
+            if (response.IsSuccessStatusCode && response.Content is not null)
+            {
+                Items = [.. Items, .. response.Content.Items];
+                CurrentUser = response.Content.CurrentUser;
+                Page = response.Content.Page;
+                HasMore = response.Content.HasMore;
+                return;
+            }
+
+            LoadMoreErrorMessage = LoadMoreError;
+        }
+        catch (OperationCanceledException) when (!IsCurrent(generation))
+        {
+        }
+        catch (Exception) when (IsCurrent(generation))
+        {
+            LoadMoreErrorMessage = LoadMoreError;
+        }
+        finally
+        {
+            if (IsCurrent(generation))
+                IsLoadingMore = false;
+        }
+    }
+
+    private async Task LoadFirstPageAsync(RankingScope scope, CancellationToken ct)
+    {
+        var (generation, requestToken) = BeginRequest(ct);
+        Scope = scope;
+        ClearResults();
+        IsInitialLoading = true;
+        IsForbidden = false;
+
+        try
+        {
+            var response = await _client.GetAsync(CreateRequest(1), requestToken);
+            if (!IsCurrent(generation))
+                return;
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                SetForbidden();
+                return;
+            }
 
             if (response.IsSuccessStatusCode && response.Content is not null)
             {
@@ -60,15 +140,69 @@ public sealed class RankingViewModel
                 return;
             }
 
-            InitialErrorMessage = InitialError;
+            InitialErrorMessage = scope == RankingScope.Municipal && response.StatusCode == System.Net.HttpStatusCode.BadRequest
+                ? MunicipalError
+                : InitialError;
         }
-        catch (Exception)
+        catch (OperationCanceledException) when (!IsCurrent(generation))
+        {
+        }
+        catch (Exception) when (IsCurrent(generation))
         {
             InitialErrorMessage = InitialError;
         }
         finally
         {
-            IsInitialLoading = false;
+            if (IsCurrent(generation))
+                IsInitialLoading = false;
         }
+    }
+
+    private RequestGetRankingJson CreateRequest(int page) => new()
+    {
+        Scope = Scope,
+        City = Scope == RankingScope.Municipal ? City : null,
+        State = Scope == RankingScope.Municipal ? State : null,
+        Page = page,
+        PageSize = PageSize
+    };
+
+    private (long Generation, CancellationToken Token) BeginRequest(CancellationToken ct)
+    {
+        InvalidateRequest();
+        _requestCancellation = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        return (_generation, _requestCancellation.Token);
+    }
+
+    private void InvalidateRequest()
+    {
+        _generation++;
+        _requestCancellation?.Cancel();
+        _requestCancellation?.Dispose();
+        _requestCancellation = null;
+    }
+
+    private bool IsCurrent(long generation) => generation == _generation;
+
+    private void ClearResults()
+    {
+        Items = [];
+        CurrentUser = null;
+        Page = 0;
+        HasMore = false;
+        InitialErrorMessage = null;
+        LoadMoreErrorMessage = null;
+    }
+
+    private void SetForbidden()
+    {
+        ClearResults();
+        IsForbidden = true;
+    }
+
+    public void Dispose()
+    {
+        _requestCancellation?.Cancel();
+        _requestCancellation?.Dispose();
     }
 }
