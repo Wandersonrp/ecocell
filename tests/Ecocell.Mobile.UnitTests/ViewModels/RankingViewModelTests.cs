@@ -37,6 +37,49 @@ public sealed class RankingViewModelTests
         _viewModel.IsInitialLoading.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task InitializeAsync_ShouldShowInitialError_WhenResponseIsNotSuccessful()
+    {
+        // Act
+        await LoadNationalFirstPageAsync(Failure(HttpStatusCode.InternalServerError));
+
+        // Assert
+        _viewModel.InitialErrorMessage.ShouldBe("Não foi possível carregar o ranking. Tente novamente.");
+        _viewModel.IsInitialLoading.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task InitializeAsync_ShouldShowInitialError_WhenSuccessfulResponseHasNoContent()
+    {
+        // Arrange
+        var response = new Mock<IApiResponse<ResponseRankingJson>>();
+        response.SetupGet(value => value.IsSuccessStatusCode).Returns(true);
+        response.SetupGet(value => value.Content).Returns((ResponseRankingJson?)null);
+
+        // Act
+        await LoadNationalFirstPageAsync(response.Object);
+
+        // Assert
+        _viewModel.InitialErrorMessage.ShouldBe("Não foi possível carregar o ranking. Tente novamente.");
+        _viewModel.IsInitialLoading.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task InitializeAsync_ShouldShowInitialError_WhenClientThrows()
+    {
+        // Arrange
+        _client
+            .Setup(client => client.GetAsync(It.IsAny<RequestGetRankingJson>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException());
+
+        // Act
+        await _viewModel.InitializeAsync(CancellationToken.None);
+
+        // Assert
+        _viewModel.InitialErrorMessage.ShouldBe("Não foi possível carregar o ranking. Tente novamente.");
+        _viewModel.IsInitialLoading.ShouldBeFalse();
+    }
+
     private static IApiResponse<ResponseRankingJson> Success(ResponseRankingJson content)
     {
         var response = new Mock<IApiResponse<ResponseRankingJson>>();
