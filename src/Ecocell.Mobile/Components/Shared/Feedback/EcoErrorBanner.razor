@@ -1,0 +1,19 @@
+<div class="eco-error-banner" role="alert">
+    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Class="eco-error-banner__icon" aria-hidden="true" />
+    <span class="eco-error-banner__text">@Message</span>
+    @if (ShowRetry)
+    {
+        <button type="button" class="eco-error-banner__retry" @onclick="OnRetry">Tentar novamente</button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Message { get; set; } = default!;
+
+    [Parameter]
+    public bool ShowRetry { get; set; }
+
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+}

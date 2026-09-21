@@ -1,0 +1,43 @@
+.eco-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--eco-space-xs) var(--eco-space-md);
+    background: var(--eco-color-surface);
+    border-radius: var(--eco-radius-full);
+    box-shadow: var(--eco-shadow-top-bar);
+}
+
+.eco-top-bar__avatar,
+.eco-top-bar__bell {
+    position: relative;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--eco-color-primary);
+}
+
+.eco-top-bar__logo {
+    display: flex;
+    align-items: center;
+}
+
+.eco-top-bar__badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.25rem;
+    border-radius: var(--eco-radius-full);
+    background: var(--eco-color-error);
+    color: var(--eco-color-text-on-primary);
+    font-size: 0.625rem;
+    line-height: 1rem;
+    text-align: center;
+}

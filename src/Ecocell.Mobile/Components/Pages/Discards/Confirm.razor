@@ -1,0 +1,256 @@
+@page "/ponto-de-coleta/descartes-pendentes"
+@layout MainLayout
+@using Ecocell.Mobile.Services.Context
+@using Ecocell.Mobile.Services.Navigation
+@inject ConfirmDiscardViewModel ViewModel
+@inject ActiveContextService Context
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="eco-confirm">
+    <EcoBackTopBar Title="Descartes pendentes" OnBack="GoBack" />
+
+    <div class="eco-confirm__body">
+        @if (ViewModel.FeedbackMessage is not null)
+        {
+            <p class="eco-confirm__feedback" role="status">@ViewModel.FeedbackMessage</p>
+        }
+
+        @if (ViewModel.State == ConfirmState.Loading)
+        {
+            <div class="eco-confirm__center">
+                <EcoSpinner Label="Carregando descartes pendentes..." />
+            </div>
+        }
+        else if (ViewModel.State == ConfirmState.Empty)
+        {
+            <div class="eco-confirm__center">
+                <EcoEmptyState Title="Nenhum descarte pendente"
+                               Description="Os próximos descartes recebidos aparecerão aqui." />
+            </div>
+        }
+        else if (ViewModel.State == ConfirmState.Error)
+        {
+            <div class="eco-confirm__center">
+                <EcoErrorBanner Message="@(ViewModel.ErrorMessage!)" ShowRetry="true" OnRetry="@(() => LoadAsync())" />
+            </div>
+        }
+        else if (ViewModel.State is ConfirmState.List or ConfirmState.Detail or ConfirmState.Submitting)
+        {
+            @if (ViewModel.State == ConfirmState.List)
+            {
+                <section class="eco-confirm__list" aria-labelledby="eco-confirm-title">
+                    <h1 id="eco-confirm-title" class="eco-confirm__title">Descartes pendentes</h1>
+                    @foreach (var discard in ViewModel.Items)
+                    {
+                        <EcoCard CssClass="eco-confirm__card">
+                            <button type="button" class="eco-confirm__card-action" @onclick="() => ViewModel.Open(discard)">
+                                <span class="eco-confirm__card-title">@discard.DepositorName</span>
+                                <span class="eco-confirm__date">@discard.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy 'às' HH:mm")</span>
+                                <span class="eco-confirm__summary">@ItemsSummary(discard)</span>
+                            </button>
+                        </EcoCard>
+                    }
+                </section>
+            }
+            else if (ViewModel.Selected is not null)
+            {
+                <section class="eco-confirm__detail" aria-labelledby="eco-confirm-title">
+                    <EcoGhostButton Label="Voltar para a lista" OnClick="BackToList" Disabled="@(ViewModel.State == ConfirmState.Submitting)" />
+                    <h1 id="eco-confirm-title" class="eco-confirm__title">Conferir descarte</h1>
+                    <p class="eco-confirm__subtitle">@ViewModel.Selected.DepositorName · @ViewModel.Selected.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy 'às' HH:mm")</p>
+
+                    @if (ViewModel.ErrorMessage is not null)
+                    {
+                        <EcoErrorBanner Message="@ViewModel.ErrorMessage" />
+                    }
+
+                    <div class="eco-confirm__drafts">
+                        @for (var index = 0; index < ViewModel.DraftItems.Count; index++)
+                        {
+                            var item = ViewModel.DraftItems[index];
+                            <EcoCard CssClass="eco-confirm__draft">
+                                <div class="eco-confirm__draft-header">
+                                    <h2 class="eco-confirm__draft-title">Material</h2>
+                                    <EcoIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                   AriaLabel="Remover material"
+                                                   Destructive="true"
+                                                   Disabled="@(ViewModel.State == ConfirmState.Submitting)"
+                                                   OnClick="() => ViewModel.RemoveItem(item)" />
+                                </div>
+                                <label class="eco-confirm__field-label" for="eco-confirm-material-@index">Material</label>
+                                <EcoSelectField id="@($"eco-confirm-material-{index}")"
+                                                Placeholder="Selecione o material"
+                                                Options="MaterialOptions()"
+                                                Value="@MaterialValue(item)"
+                                                ValueChanged="value => SetMaterial(item, value)"
+                                                HasError="@(item.MaterialError is not null)"
+                                                disabled="@(ViewModel.State == ConfirmState.Submitting)" />
+                                @if (item.MaterialError is not null)
+                                {
+                                    <span class="eco-confirm__field-error" role="alert">@item.MaterialError</span>
+                                }
+                                <label class="eco-confirm__field-label" for="eco-confirm-quantity-@index">Quantidade</label>
+                                <EcoTextField id="@($"eco-confirm-quantity-{index}")"
+                                              Placeholder="Quantidade"
+                                              Type="number"
+                                              Value="@item.QuantityText"
+                                              ValueChanged="value => SetQuantity(item, value)"
+                                              HasError="@(item.QuantityError is not null)"
+                                              ErrorText="@item.QuantityError"
+                                              disabled="@(ViewModel.State == ConfirmState.Submitting)"
+                                              inputmode="numeric" />
+                                <label class="eco-confirm__field-label" for="eco-confirm-weight-@index">Peso aproximado em kg</label>
+                                <EcoTextField id="@($"eco-confirm-weight-{index}")"
+                                              Placeholder="Peso aproximado em kg"
+                                              Type="text"
+                                              Value="@item.WeightText"
+                                              ValueChanged="value => SetWeight(item, value)"
+                                              HasError="@(item.WeightError is not null)"
+                                              ErrorText="@item.WeightError"
+                                              disabled="@(ViewModel.State == ConfirmState.Submitting)"
+                                              inputmode="decimal" />
+                            </EcoCard>
+                        }
+                    </div>
+
+                    <div class="eco-confirm__actions">
+                        <EcoGhostButton Label="Adicionar material" OnClick="ViewModel.AddItem" Disabled="@(ViewModel.State == ConfirmState.Submitting)" />
+                        <EcoPrimaryButton Label="Confirmar descarte" OnClick="ConfirmAsync" IsLoading="@(ViewModel.State == ConfirmState.Submitting)" />
+                        <EcoSecondaryButton Label="Rejeitar" Destructive="true" OnClick="OpenRejectSheet" Disabled="@(ViewModel.State == ConfirmState.Submitting)" />
+                    </div>
+                </section>
+            }
+        }
+    </div>
+
+    <div class="eco-confirm__navbar">
+        <EcoNavBar Items="_navItems" ActiveId="pc-inicio" OnSelect="OnNavSelect" />
+    </div>
+
+    <EcoBottomSheet Open="_rejectSheetOpen" OnClose="CloseRejectSheet">
+        <div class="eco-confirm__sheet">
+            <h2 class="eco-confirm__sheet-title">Rejeitar descarte?</h2>
+            <p class="eco-confirm__sheet-copy">O descarte será marcado como rejeitado e não poderá ser confirmado depois.</p>
+            <div class="eco-confirm__actions">
+                <EcoPrimaryButton Label="Rejeitar descarte" OnClick="RejectAsync" IsLoading="@(ViewModel.State == ConfirmState.Submitting)" />
+                <EcoGhostButton Label="Cancelar" OnClick="CloseRejectSheet" Disabled="@(ViewModel.State == ConfirmState.Submitting)" />
+            </div>
+        </div>
+    </EcoBottomSheet>
+</div>
+
+@code {
+    private IReadOnlyList<EcoNavItem> _navItems = [];
+    private bool _rejectSheetOpen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Context.ContextChanged += OnContextChanged;
+        ViewModel.Changed += OnViewModelChanged;
+
+        if (!Context.Current.IsCollectPoint)
+        {
+            Navigation.NavigateTo("/meus-pontos-de-coleta", replace: true);
+            return;
+        }
+
+        _navItems = NavItemsResolver.Resolve(Context.Current);
+        await ViewModel.LoadAsync();
+    }
+
+    private Task LoadAsync() => ViewModel.LoadAsync();
+
+    private void GoBack() => Navigation.NavigateTo("/ponto-de-coleta");
+
+    private void BackToList()
+    {
+        _rejectSheetOpen = false;
+        ViewModel.BackToList();
+    }
+
+    private void OpenRejectSheet() => _rejectSheetOpen = true;
+
+    private void CloseRejectSheet() => _rejectSheetOpen = false;
+
+    private async Task ConfirmAsync() => await ViewModel.ConfirmAsync();
+
+    private async Task RejectAsync()
+    {
+        _rejectSheetOpen = false;
+        await ViewModel.RejectAsync();
+    }
+
+    private static string ItemsSummary(ResponsePendingDiscardJson discard) => string.Join(
+        ", ",
+        discard.Items.Select(item => $"{item.Quantity} {ElectronicMaterialDisplay.Label(item.Material)}"));
+
+    private static IEnumerable<string> MaterialOptions() => Enum.GetValues<ElectronicMaterial>()
+        .Select(ElectronicMaterialDisplay.Label);
+
+    private static string MaterialValue(DiscardItemDraft item) => item.Material is null
+        ? string.Empty
+        : ElectronicMaterialDisplay.Label(item.Material.Value);
+
+    private void SetMaterial(DiscardItemDraft item, string value)
+    {
+        item.Material = Enum.GetValues<ElectronicMaterial>()
+            .Cast<ElectronicMaterial?>()
+            .FirstOrDefault(material => material is not null && ElectronicMaterialDisplay.Label(material.Value) == value);
+        RevalidateDrafts();
+    }
+
+    private void SetQuantity(DiscardItemDraft item, string value)
+    {
+        item.QuantityText = value;
+        RevalidateDrafts();
+    }
+
+    private void SetWeight(DiscardItemDraft item, string value)
+    {
+        item.WeightText = value;
+        RevalidateDrafts();
+    }
+
+    private void RevalidateDrafts()
+    {
+        foreach (var draft in ViewModel.DraftItems)
+        {
+            var isDuplicated = draft.Material is not null
+                && ViewModel.DraftItems.Count(value => value.Material == draft.Material) > 1;
+            draft.TryGetValues(isDuplicated, out _, out _, out _);
+        }
+    }
+
+    private void OnNavSelect(string id)
+    {
+        var item = _navItems.FirstOrDefault(value => value.Id == id);
+        if (item?.Href is not null)
+            Navigation.NavigateTo(item.Href);
+    }
+
+    private void OnViewModelChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void OnContextChanged()
+    {
+        _ = InvokeAsync(() =>
+        {
+            if (!Context.Current.IsCollectPoint)
+            {
+                _rejectSheetOpen = false;
+                Navigation.NavigateTo("/meus-pontos-de-coleta", replace: true);
+                return;
+            }
+
+            _navItems = NavItemsResolver.Resolve(Context.Current);
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        Context.ContextChanged -= OnContextChanged;
+        ViewModel.Changed -= OnViewModelChanged;
+        ViewModel.Dispose();
+    }
+}

@@ -1,0 +1,167 @@
+using System.Security.Cryptography;
+using Carter;
+using Ecocell.Api.Database;
+using Ecocell.Api.Enums;
+using Ecocell.Api.Extensions;
+using Ecocell.Api.Services.VerificationCodes;
+using Ecocell.Api.Shared;
+using Ecocell.Shared.Requests;
+using FluentValidation;
+using Mediator;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using static Ecocell.Api.Features.Account.ConfirmAccount;
+
+namespace Ecocell.Api.Features.Account;
+
+/// <summary>
+/// Slice responsável por confirmar o cadastro de uma pessoa via código OTP enviado ao e-mail.
+/// Para evitar enumeração de e-mails, conta inexistente ou em status inválido retorna a mesma
+/// resposta de código inválido (InvalidCredential/401).
+/// </summary>
+public static class ConfirmAccount
+{
+    public record Command : IRequest<Result>
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class Validator : AbstractValidator<Command>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.Email)
+                .NotEmpty().WithMessage("E-mail é obrigatório.")
+                .EmailAddress().WithMessage("E-mail inválido.");
+
+            RuleFor(x => x.Code)
+                .NotEmpty().WithMessage("Código é obrigatório.")
+                .Matches(@"^\d{6}$").WithMessage("O código deve conter exatamente 6 dígitos numéricos.");
+        }
+    }
+
+    public sealed class Handler : IRequestHandler<Command, Result>
+    {
+        private readonly AppDbContext _dbContext;
+        private readonly IVerificationCodeStore _store;
+        private readonly IValidator<Command> _validator;
+        private readonly ILogger<Handler> _logger;
+
+        public Handler(
+            AppDbContext dbContext,
+            IVerificationCodeStore store,
+            IValidator<Command> validator,
+            ILogger<Handler> logger)
+        {
+            _dbContext = dbContext;
+            _store = store;
+            _validator = validator;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Processa a confirmação de conta: valida o código OTP, transiciona o status para
+        /// <see cref="Ecocell.Api.Enums.PersonStatus.Active"/> e remove o código do store.
+        /// </summary>
+        /// <param name="request">Comando com e-mail e código OTP.</param>
+        /// <param name="cancellationToken">Token de cancelamento da operação.</param>
+        /// <returns><see cref="Result"/> indicando sucesso ou o erro encontrado.</returns>
+        public async ValueTask<Result> Handle(Command request, CancellationToken cancellationToken)
+        {
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Processando confirmação de conta para {Email}", request.Email);
+
+            var validationResult = _validator.Validate(request);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                _logger.LogWarning("Erros de validação na confirmação de conta {@Erros}", errors);
+                return Result.Failure(Error.ErrorOnValidation(errors));
+            }
+
+            var person = await _dbContext.People
+                .FirstOrDefaultAsync(p => p.Email == request.Email, cancellationToken);
+
+            if (person is null)
+            {
+                _logger.LogWarning(
+                    "Confirmação ignorada: conta inexistente para {Email} (anti-enumeração)", request.Email);
+                return Result.Failure(Error.InvalidCredential());
+            }
+
+            if (person.PersonStatus != PersonStatus.AwaitingConfirmation)
+            {
+                _logger.LogWarning(
+                    "Confirmação ignorada: status {Status} para {Email} (anti-enumeração)",
+                    person.PersonStatus, request.Email);
+                return Result.Failure(Error.InvalidCredential());
+            }
+
+            var key = IVerificationCodeStore.BuildKey(VerificationCodePurpose.EmailConfirmation, request.Email);
+            var record = await _store.GetAsync(key, cancellationToken);
+
+            if (record is null)
+            {
+                _logger.LogWarning("Código OTP inexistente ou expirado para {Email}", request.Email);
+                return Result.Failure(Error.InvalidCredential());
+            }
+
+            if (record.Attempts >= 3)
+            {
+                _logger.LogWarning("Número máximo de tentativas atingido para {Email}", request.Email);
+                return Result.Failure(Error.Forbidden());
+            }
+
+            var incomingHash = VerificationCodeGenerator.Hash(request.Code);
+            var isValid = CryptographicOperations.FixedTimeEquals(
+                Convert.FromHexString(record.CodeHash),
+                Convert.FromHexString(incomingHash));
+
+            if (!isValid)
+            {
+                await _store.IncrementAttemptsAsync(key, cancellationToken);
+                _logger.LogWarning("Código OTP incorreto para {Email}", request.Email);
+                return Result.Failure(Error.InvalidCredential());
+            }
+
+            person.Confirm();
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _store.DeleteAsync(key, cancellationToken);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Conta confirmada com sucesso para {Email}", request.Email);
+            return Result.Success();
+        }
+    }
+}
+
+/// <summary>
+/// Endpoint para confirmação de conta via OTP.
+/// </summary>
+public class ConfirmAccountEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapPost("api/account/confirm", async ([FromBody] RequestConfirmAccount request, ISender sender) =>
+        {
+            var command = new Command
+            {
+                Email = request.Email,
+                Code = request.Code
+            };
+
+            var result = await sender.Send(command);
+            return result.ToProcessResult(StatusCodes.Status200OK);
+        })
+        .WithTags("Account")
+        .WithName("ConfirmAccount")
+        .WithSummary("Confirma o cadastro da pessoa via código OTP.")
+        .WithDescription("Valida o código OTP enviado ao e-mail e ativa a conta (AwaitingConfirmation → Active). Conta inexistente, já confirmada ou bloqueada retornam 401 (resposta neutra, anti-enumeração).")
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces(StatusCodes.Status403Forbidden)
+        .RequireRateLimiting("public-ip");
+    }
+}

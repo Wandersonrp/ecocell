@@ -1,0 +1,22 @@
+.eco-ghost-btn {
+    background: transparent;
+    border: none;
+    color: var(--eco-color-primary-light);
+    font-family: 'Inter', sans-serif;
+    font-size: var(--eco-font-button-size);
+    font-weight: 500;
+    line-height: var(--eco-font-button-lh);
+    letter-spacing: var(--eco-font-button-ls);
+    padding: var(--eco-space-sm) var(--eco-space-md);
+    cursor: pointer;
+    transition: opacity 120ms ease;
+}
+
+.eco-ghost-btn:hover:not(:disabled) {
+    opacity: 0.7;
+}
+
+.eco-ghost-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}

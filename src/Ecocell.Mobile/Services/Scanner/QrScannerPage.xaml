@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Ecocell.Mobile.Services.Scanner.QrScannerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls">
+    <Grid>
+        <zxing:CameraBarcodeReaderView
+            x:Name="BarcodeView"
+            CameraLocation="Rear"
+            IsDetecting="True"
+            BarcodesDetected="OnBarcodesDetected" />
+
+        <Grid
+            Padding="24"
+            BackgroundColor="#99000000"
+            RowDefinitions="Auto,*,Auto">
+            <Label
+                Grid.Row="0"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                Text="Aponte a câmera para o QR Code do Ponto de Coleta."
+                TextColor="White"
+                FontSize="18" />
+
+            <Button
+                Grid.Row="2"
+                Text="Fechar"
+                HorizontalOptions="Center"
+                InputTransparent="False"
+                Clicked="OnCloseClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>

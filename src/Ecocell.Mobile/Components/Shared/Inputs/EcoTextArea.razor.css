@@ -1,0 +1,39 @@
+.eco-text-area {
+    display: block;
+    border: 1.5px solid var(--eco-color-border);
+    border-radius: var(--eco-radius-md);
+    background: var(--eco-color-surface);
+    padding: 0.75rem;
+}
+
+.eco-text-area:focus-within {
+    border-color: var(--eco-color-primary);
+}
+
+.eco-text-area--error {
+    border-color: var(--eco-color-error-border);
+}
+
+.eco-text-area__input {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    resize: vertical;
+    background: transparent;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--eco-color-text-primary);
+}
+
+.eco-text-area__input::placeholder {
+    color: var(--eco-color-text-tertiary);
+}
+
+.eco-text-area__error {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--eco-color-error);
+}

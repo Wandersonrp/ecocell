@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Ecocell.Api.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ecocell.Api.Database;
 
@@ -6,5 +7,21 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
+    }
+
+    public DbSet<Person> People { get; set; }
+    public DbSet<NaturalPerson> NaturalPeople { get; set; }
+    public DbSet<LegalPerson> LegalPeople { get; set; }
+    public DbSet<Address> Addresses { get; set; }
+    public DbSet<MaterialScoreRule> MaterialScoreRules { get; set; }
+    public DbSet<Discard> Discards { get; set; }
+    public DbSet<DiscardItem> DiscardItems { get; set; }
+    public DbSet<CreditScoreRequest> CreditScoreRequests { get; set; }
+    public DbSet<DepositorScoreTransaction> DepositorScoreTransactions { get; set; }
+    public DbSet<DepositorTotalScore> DepositorTotalScores { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }

@@ -1,0 +1,108 @@
+@page "/confirm-account"
+@layout AuthLayout
+@implements IDisposable
+@inject IAccountClient AccountClient
+@inject NavigationManager Navigation
+
+<div class="confirm-screen">
+    <div class="confirm-header">
+        <EcoWordmark />
+    </div>
+
+    <div class="confirm-content">
+        <div class="confirm-headline">
+            <h1>Confirme sua conta</h1>
+            <p>Digite o código de 6 dígitos enviado para @DisplayEmail</p>
+        </div>
+
+        <EcoOtpInput @ref="_otp"
+                     Value="@_code"
+                     ValueChanged="OnCodeChanged"
+                     Completed="OnCompleted"
+                     Disabled="@_verifying"
+                     HasError="@(_errorMessage is not null)"
+                     ErrorText="@_errorMessage" />
+
+        <div class="confirm-resend">
+            <EcoResendButton OnResend="HandleResend" />
+        </div>
+    </div>
+</div>
+
+@code {
+    private EcoOtpInput _otp = default!;
+    private string _code = string.Empty;
+    private bool _verifying;
+    private string? _errorMessage;
+    private readonly CancellationTokenSource _cts = new();
+
+    [SupplyParameterFromQuery]
+    public string? Email { get; set; }
+
+    private string DisplayEmail => string.IsNullOrWhiteSpace(Email) ? "seu e-mail" : Email!;
+
+    private void OnCodeChanged(string value)
+    {
+        _code = value;
+        if (_errorMessage is not null)
+        {
+            _errorMessage = null;
+        }
+    }
+
+    private async Task OnCompleted(string code)
+    {
+        if (_verifying)
+        {
+            return;
+        }
+
+        _verifying = true;
+        _errorMessage = null;
+
+        try
+        {
+            var response = await AccountClient.ConfirmAccountAsync(
+                new RequestConfirmAccount { Email = Email ?? string.Empty, Code = code },
+                _cts.Token);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            _errorMessage = response.StatusCode == System.Net.HttpStatusCode.Forbidden
+                ? "Número máximo de tentativas atingido."
+                : "Código inválido.";
+            _verifying = false;
+            await _otp.ClearAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            // Página abandonada durante a requisição — descarta sem atualizar estado.
+        }
+    }
+
+    private async Task HandleResend()
+    {
+        _errorMessage = null;
+
+        try
+        {
+            await AccountClient.ResendVerificationCodeAsync(
+                new RequestResendVerificationCode { Email = Email ?? string.Empty },
+                _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Página abandonada — descarta.
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+}

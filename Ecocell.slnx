@@ -1,7 +1,12 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Ecocell.Api/Ecocell.Api.csproj" />
+    <Project Path="src/Ecocell.Mobile/Ecocell.Mobile.csproj" Id="4931ecfa-de4d-4346-a55b-dbe57dec3d2f" />
     <Project Path="src/Ecocell.Shared/Ecocell.Shared.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Ecocell.IntegrationTests/Ecocell.IntegrationTests.csproj" />
+    <Project Path="tests/Ecocell.Mobile.UnitTests/Ecocell.Mobile.UnitTests.csproj" />
+    <Project Path="tests/Ecocell.UnitTests/Ecocell.UnitTests.csproj" Id="47b63991-b304-4340-b033-7394f72a0552" />
+  </Folder>
 </Solution>

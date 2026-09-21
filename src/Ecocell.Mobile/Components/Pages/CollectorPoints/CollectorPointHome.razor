@@ -1,0 +1,155 @@
+@page "/ponto-de-coleta"
+@layout MainLayout
+@using Ecocell.Mobile.Services.Context
+@using Ecocell.Mobile.Services.Navigation
+@using Ecocell.Mobile.Services.Notifications
+@inject ActiveContextService Context
+@inject PendingDiscardMonitor Monitor
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="eco-pc-home">
+    <div class="eco-pc-home__topbar">
+        <button type="button" class="eco-pc-home__switcher" @onclick="OpenSwitcher"
+                aria-label="Trocar de contexto">
+            <MudIcon Icon="@Icons.Material.Filled.Storefront" aria-hidden="true" />
+            <span class="eco-pc-home__pcname">@Context.Current.DisplayName</span>
+            <MudIcon Icon="@Icons.Material.Filled.UnfoldMore" aria-hidden="true" />
+        </button>
+    </div>
+
+    <main class="eco-pc-home__body">
+        <h1 class="eco-pc-home__title">Modo Ponto de Coleta</h1>
+        <p class="eco-pc-home__hint">
+            Você está atuando como <strong>@Context.Current.DisplayName</strong>.
+            Acompanhe os descartes recebidos e confira os materiais antes de confirmar.
+        </p>
+
+        <EcoCard CssClass="eco-pc-home__pending" OnClick="OpenPending">
+            <div>
+                <h2 class="eco-pc-home__pending-title">Descartes pendentes</h2>
+                <p class="eco-pc-home__pending-description">
+                    Confira os materiais recebidos antes de confirmar.
+                </p>
+            </div>
+            <span class="eco-pc-home__pending-count" aria-label="@PendingCountLabel">
+                @(Monitor.IsLoading ? "—" : Monitor.PendingCount)
+            </span>
+        </EcoCard>
+    </main>
+
+    <div class="eco-pc-home__fab">
+        <EcoFab Icon="@Icons.Material.Filled.QrCode2"
+                AriaLabel="Emitir QR Code"
+                OnClick="GoToQr" />
+    </div>
+
+    <div class="eco-pc-home__navbar">
+        <EcoNavBar Items="_navItems" ActiveId="@NavIds.CollectorPointHome" OnSelect="OnNavSelect" />
+    </div>
+
+    <EcoBottomSheet Open="_switcherOpen" OnClose="CloseSwitcher">
+        <div class="eco-pc-switcher">
+            <h2 class="eco-pc-switcher__title">Trocar de contexto</h2>
+            <button type="button" class="eco-pc-switcher__item" @onclick="ReturnToSelf">
+                <MudIcon Icon="@Icons.Material.Filled.Person" aria-hidden="true" />
+                <span>Voltar para o meu perfil</span>
+            </button>
+            <button type="button" class="eco-pc-switcher__item" @onclick="GoToList">
+                <MudIcon Icon="@Icons.Material.Filled.Storefront" aria-hidden="true" />
+                <span>Trocar de ponto de coleta</span>
+            </button>
+        </div>
+    </EcoBottomSheet>
+
+    <EcoBottomSheet Open="_notificationRationaleOpen"
+                    OnClose="DismissNotificationRationale"
+                    AriaLabel="Acompanhe novos descartes">
+        <div class="eco-pc-home__notification-sheet">
+            <h2 class="eco-pc-home__notification-title">Acompanhe novos descartes</h2>
+            <p class="eco-pc-home__notification-description">
+                Ative as notificações para saber quando um descarte chegar ao seu ponto de coleta.
+            </p>
+            <div class="eco-pc-home__notification-actions">
+                <EcoPrimaryButton Label="Ativar notificações" OnClick="EnableNotificationsAsync" />
+                <EcoGhostButton Label="Agora não" OnClick="DismissNotificationRationale" />
+            </div>
+        </div>
+    </EcoBottomSheet>
+</div>
+
+@code {
+    private bool _switcherOpen;
+    private bool _notificationRationaleOpen;
+    private IReadOnlyList<Ecocell.Mobile.Components.Shared.Navigation.EcoNavItem> _navItems = [];
+
+    private string PendingCountLabel => Monitor.IsLoading
+        ? "Carregando quantidade de descartes pendentes"
+        : Monitor.PendingCount == 1
+            ? "1 descarte pendente"
+            : $"{Monitor.PendingCount} descartes pendentes";
+
+    protected override void OnInitialized()
+    {
+        // Contexto perdido em modo não persistido volta para o mapa, home do Depositante.
+        if (!Context.Current.IsCollectPoint)
+        {
+            Navigation.NavigateTo("/map");
+            return;
+        }
+
+        _navItems = NavItemsResolver.Resolve(Context.Current);
+        Context.ContextChanged += OnContextChanged;
+        Monitor.Changed += OnMonitorChanged;
+        _notificationRationaleOpen = Monitor.ShouldExplainNotifications;
+    }
+
+    private void OnContextChanged()
+    {
+        _navItems = NavItemsResolver.Resolve(Context.Current);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnMonitorChanged() => InvokeAsync(StateHasChanged);
+
+    private void OpenSwitcher() => _switcherOpen = true;
+
+    private void CloseSwitcher() => _switcherOpen = false;
+
+    private void ReturnToSelf()
+    {
+        _switcherOpen = false;
+        Context.ReturnToSelf();
+        Navigation.NavigateTo("/map");
+    }
+
+    private void GoToList()
+    {
+        _switcherOpen = false;
+        Navigation.NavigateTo("/meus-pontos-de-coleta");
+    }
+
+    private void GoToQr() => Navigation.NavigateTo("/ponto-de-coleta/qr");
+
+    private void OpenPending() => Navigation.NavigateTo("/ponto-de-coleta/descartes-pendentes");
+
+    private async Task EnableNotificationsAsync()
+    {
+        _notificationRationaleOpen = false;
+        await Monitor.EnableNotificationsAsync();
+    }
+
+    private void DismissNotificationRationale()
+    {
+        _notificationRationaleOpen = false;
+        Monitor.DismissNotificationPrompt();
+    }
+
+    private void OnNavSelect(string id) { }
+
+    public void Dispose()
+    {
+        Context.ContextChanged -= OnContextChanged;
+        Monitor.Changed -= OnMonitorChanged;
+    }
+}

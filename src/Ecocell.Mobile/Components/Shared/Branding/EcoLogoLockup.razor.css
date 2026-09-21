@@ -1,0 +1,13 @@
+.eco-logo-lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.eco-logo-lockup--md {
+    gap: var(--eco-space-lockup-gap-md);
+}
+
+.eco-logo-lockup--lg {
+    gap: var(--eco-space-lockup-gap-lg);
+}

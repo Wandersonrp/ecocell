@@ -1,0 +1,99 @@
+@* Components/Shared/Buttons/EcoResendButton.razor *@
+@implements IDisposable
+
+<EcoGhostButton Label="@Label"
+                OnClick="HandleClick"
+                Disabled="@(_cooldownSeconds > 0 || _busy || Disabled)"
+                CssClass="@CssClass"
+                @attributes="AdditionalAttributes" />
+
+@code {
+    private int _cooldownSeconds;
+    private bool _busy;
+    private PeriodicTimer? _timer;
+    private readonly CancellationTokenSource _cts = new();
+
+    /// <summary>Ação de reenvio (chamada à API). Disparada ao tocar; o cooldown reinicia ao concluir.</summary>
+    [Parameter, EditorRequired]
+    public EventCallback OnResend { get; set; }
+
+    [Parameter]
+    public int CooldownSeconds { get; set; } = 60;
+
+    [Parameter]
+    public string IdleLabel { get; set; } = "Reenviar código";
+
+    /// <summary>Formato do rótulo durante o cooldown; {0} recebe os segundos restantes.</summary>
+    [Parameter]
+    public string CountdownLabelFormat { get; set; } = "Reenviar em {0}s";
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string Label => _cooldownSeconds > 0
+        ? string.Format(CountdownLabelFormat, _cooldownSeconds)
+        : IdleLabel;
+
+    protected override void OnInitialized() => StartCooldown();
+
+    private async Task HandleClick()
+    {
+        if (_cooldownSeconds > 0 || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await OnResend.InvokeAsync();
+            StartCooldown();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void StartCooldown()
+    {
+        _timer?.Dispose();
+        _cooldownSeconds = CooldownSeconds;
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _ = RunCooldownAsync(_timer);
+    }
+
+    private async Task RunCooldownAsync(PeriodicTimer timer)
+    {
+        try
+        {
+            while (await timer.WaitForNextTickAsync(_cts.Token))
+            {
+                _cooldownSeconds--;
+                await InvokeAsync(StateHasChanged);
+                if (_cooldownSeconds <= 0)
+                {
+                    timer.Dispose();
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Timer cancelado no Dispose.
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        _timer?.Dispose();
+    }
+}

@@ -1,0 +1,31 @@
+.eco-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.eco-sheet__scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--eco-color-scrim);
+}
+
+.eco-sheet__panel {
+    position: relative;
+    background: var(--eco-color-surface);
+    border-top-left-radius: var(--eco-radius-lg);
+    border-top-right-radius: var(--eco-radius-lg);
+    box-shadow: var(--eco-shadow-modal);
+    padding: var(--eco-space-lg);
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: eco-sheet-up 220ms ease;
+}
+
+@keyframes eco-sheet-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}

@@ -1,0 +1,11 @@
+@* src/Ecocell.Mobile/Components/Shared/Branding/EcoWordmark.razor *@
+<div class="eco-wordmark"
+     style="font-size: @(Size)px;
+            padding: @((int)Math.Round(Size * 0.18))px @((int)Math.Round(Size * 0.45))px @((int)Math.Round(Size * 0.23))px;">
+    EcoCell
+</div>
+
+@code {
+    [Parameter]
+    public int Size { get; set; } = 22;
+}

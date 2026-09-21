@@ -1,0 +1,36 @@
+.eco-fab {
+    width: 3.5rem;
+    height: 3.5rem;
+    border: none;
+    border-radius: var(--eco-radius-full);
+    background: var(--eco-color-primary);
+    color: var(--eco-color-text-on-primary);
+    box-shadow: var(--eco-shadow-fab);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 120ms ease;
+}
+
+.eco-fab:hover:not(:disabled) {
+    background: var(--eco-color-primary-light);
+}
+
+.eco-fab:disabled {
+    background: var(--eco-color-primary-muted);
+    cursor: not-allowed;
+}
+
+.eco-fab__spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 0.125rem solid currentColor;
+    border-top-color: transparent;
+    border-radius: var(--eco-radius-full);
+    animation: eco-spin 0.6s linear infinite;
+}
+
+@keyframes eco-spin {
+    to { transform: rotate(360deg); }
+}

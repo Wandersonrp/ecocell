@@ -1,0 +1,10 @@
+<span class="eco-skeleton @CssClass" style="@_style" aria-hidden="true"></span>
+
+@code {
+    [Parameter] public string Width { get; set; } = "100%";
+    [Parameter] public string Height { get; set; } = "1rem";
+    [Parameter] public string Radius { get; set; } = "var(--eco-radius-sm)";
+    [Parameter] public string? CssClass { get; set; }
+
+    private string _style => $"width:{Width};height:{Height};border-radius:{Radius};";
+}

@@ -1,0 +1,27 @@
+<div class="eco-filter-chips" role="tablist">
+    @foreach (var opt in Options)
+    {
+        <button type="button"
+                role="tab"
+                class="eco-filter-chip @(opt.Id == Value ? "eco-filter-chip--active" : "")"
+                aria-selected="@(opt.Id == Value)"
+                @onclick="() => OnChange.InvokeAsync(opt.Id)">
+            <span>@opt.Label</span>
+            @if (opt.Count is not null)
+            {
+                <span class="eco-filter-chip__count">@opt.Count</span>
+            }
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<EcoFilterChip> Options { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Value { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> OnChange { get; set; }
+}

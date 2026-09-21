@@ -1,0 +1,11 @@
+.eco-auth-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100dvh;
+    padding-top: var(--eco-space-xxl);
+    padding-left: var(--eco-space-md);
+    padding-right: var(--eco-space-md);
+    background-color: var(--eco-color-surface);
+    overflow-y: auto;
+}

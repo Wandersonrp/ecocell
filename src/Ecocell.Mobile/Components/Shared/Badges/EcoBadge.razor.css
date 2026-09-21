@@ -1,0 +1,15 @@
+.eco-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--eco-space-xs) var(--eco-space-sm);
+    font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-button-weight);
+    line-height: var(--eco-font-caption-lh);
+    border-radius: var(--eco-radius-full);
+}
+
+.eco-badge--success { background: var(--eco-color-primary-tint); color: var(--eco-color-primary); }
+.eco-badge--error   { background: var(--eco-color-error-light); color: var(--eco-color-error); }
+.eco-badge--pending { background: var(--eco-color-surface-alt); color: var(--eco-color-pending-text); }
+.eco-badge--seal    { background: var(--eco-color-primary); color: var(--eco-color-text-on-primary); }
+.eco-badge--coupon  { background: var(--eco-color-primary-tint); color: var(--eco-color-primary); border-radius: var(--eco-radius-sm); }

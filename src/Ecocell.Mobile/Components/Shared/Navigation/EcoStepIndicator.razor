@@ -1,0 +1,25 @@
+<div class="eco-step-indicator @CssClass">
+    <span class="eco-step-indicator__caption">Passo @Step de @Total</span>
+    <div class="eco-step-indicator__track"
+         role="progressbar"
+         aria-valuemin="1"
+         aria-valuemax="@Total"
+         aria-valuenow="@Step"
+         aria-label="@($"Passo {Step} de {Total}")">
+        @for (var i = 1; i <= Total; i++)
+        {
+            <span class="eco-step-indicator__segment @(i <= Step ? "eco-step-indicator__segment--active" : "")"></span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int Step { get; set; }
+
+    [Parameter]
+    public int Total { get; set; } = 2;
+
+    [Parameter]
+    public string? CssClass { get; set; }
+}

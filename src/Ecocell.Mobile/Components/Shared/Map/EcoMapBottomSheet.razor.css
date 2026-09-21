@@ -1,0 +1,64 @@
+.eco-map-sheet {
+    position: absolute;
+    left: var(--eco-space-md);
+    right: var(--eco-space-md);
+    bottom: 6.25rem;
+    z-index: 30;
+    background: var(--eco-color-surface);
+    border-radius: var(--eco-radius-lg);
+    box-shadow: var(--eco-shadow-modal);
+    padding: var(--eco-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--eco-space-md);
+}
+
+.eco-map-sheet__header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--eco-space-sm);
+}
+
+.eco-map-sheet__icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--eco-radius-md);
+    background: var(--eco-color-primary-tint);
+    color: var(--eco-color-primary);
+}
+
+.eco-map-sheet__info { flex: 1; min-width: 0; }
+
+.eco-map-sheet__title {
+    font-size: var(--eco-font-h3-size);
+    font-weight: var(--eco-font-h3-weight);
+    line-height: var(--eco-font-h3-lh);
+    color: var(--eco-color-text-primary);
+}
+
+.eco-map-sheet__address {
+    font-size: var(--eco-font-body-md-size);
+    color: var(--eco-color-text-secondary);
+    margin-top: var(--eco-space-xs);
+}
+
+.eco-map-sheet__distance {
+    display: inline-block;
+    margin-top: var(--eco-space-xs);
+    font-size: var(--eco-font-caption-size);
+    color: var(--eco-color-text-tertiary);
+}
+
+.eco-map-sheet__close {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--eco-color-text-tertiary);
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+}

@@ -1,0 +1,42 @@
+@page "/perfil"
+@layout MainLayout
+@using Ecocell.Mobile.Services.Auth
+@using Ecocell.Mobile.Services.Navigation
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<div class="eco-profile">
+    <div class="eco-profile__header">
+        <h1 class="eco-profile__title">Perfil</h1>
+    </div>
+
+    <div class="eco-profile__menu">
+        <EcoMenuItem Label="Meus Pontos de Coleta"
+                     Icon="@Icons.Material.Filled.Storefront"
+                     OnClick="GoToMyCollectorPoints" />
+        <EcoMenuItem Label="Sair"
+                     Icon="@Icons.Material.Filled.Logout"
+                     ShowChevron="false"
+                     OnClick="HandleLogout" />
+    </div>
+
+    <div class="eco-profile__navbar">
+        <EcoNavBar Items="DepositorNav.Items" ActiveId="perfil" OnSelect="OnNavSelect" />
+    </div>
+</div>
+
+@code {
+    private void GoToMyCollectorPoints() => Navigation.NavigateTo("/meus-pontos-de-coleta");
+
+    /// <summary>
+    /// Só limpa a sessão — a navegação pra Welcome é responsabilidade única do
+    /// MainLayout (assina AuthStateChanged), evitando navegação duplicada.
+    /// </summary>
+    private async Task HandleLogout() => await AuthState.SignOutAsync();
+
+    private void OnNavSelect(string id)
+    {
+        var target = DepositorNav.Items.FirstOrDefault(i => i.Id == id)?.Href;
+        if (!string.IsNullOrEmpty(target)) Navigation.NavigateTo(target);
+    }
+}

@@ -1,0 +1,6 @@
+# Falsos positivos aceitos pelo secret-scan (gitleaks) do harness.
+# Formato: <commit>:<arquivo>:<regra>:<linha>
+
+# FP: refresh-token FAKE de teste (64-char hex, "representativo, não precisa ser real"
+# conforme comentário no próprio teste). Não é secret real.
+17f998bad77d697a9c0a838debf9630b113d3adc:tests/Ecocell.UnitTests/Features/Account/RefreshAccessTokenTests.cs:generic-api-key:17

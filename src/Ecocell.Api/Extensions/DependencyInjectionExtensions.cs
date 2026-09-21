@@ -1,16 +1,66 @@
-﻿using Ecocell.Api.Database;
+using System.Text;
+using System.Text.Json;
+using System.Threading.RateLimiting;
+using Carter;
+using Ecocell.Api.Configurations;
+using Ecocell.Api.Jobs;
+using Ecocell.Api.Enums;
+using Ecocell.Api.Shared;
+using Ecocell.Api.Database;
+using Ecocell.Api.Services.Authentication;
+using Ecocell.Api.Services.CollectorPoints;
+using Ecocell.Api.Services.CurrentUser;
+using Ecocell.Api.Services.Email;
+using Ecocell.Api.Services.External;
+using Ecocell.Api.Services.VerificationCodes;
+using Ecocell.Shared.Responses;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using StackExchange.Redis;
 
 namespace Ecocell.Api.Extensions;
 
+/// <summary>
+/// Extensões de composição da injeção de dependência da API EcoCell.
+/// </summary>
 public static class DependencyInjectionExtensions
 {
-    public static void AddApi(this IServiceCollection services, IConfiguration configuration)
+    private static readonly JsonSerializerOptions CamelCaseJsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    /// <summary>
+    /// Registra todos os serviços necessários para a execução da API.
+    /// </summary>
+    /// <param name="services">Coleção de serviços da aplicação.</param>
+    /// <param name="configuration">Configurações da aplicação.</param>
+    public static void AddApi(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         ConfigLog();
         AddMediator(services);
         AddDbContext(services, configuration);
+        AddCarter(services);
+        AddSettings(services, configuration);
+        AddRedis(services, configuration);
+        AddServices(services, environment);
+        AddScoreProcessing(services, environment);
+        AddGeocoding(services, configuration);
+        AddJwtAuthentication(services, configuration);
+        AddRateLimiting(services, configuration);
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICollectorPointAccessGuard, CollectorPointAccessGuard>();
+        services.AddSingleton(TimeProvider.System);
+
+        var assembly = typeof(Program).Assembly;
+        services.AddValidatorsFromAssembly(assembly);
     }
 
     private static void ConfigLog()
@@ -23,14 +73,193 @@ public static class DependencyInjectionExtensions
 
     private static void AddMediator(IServiceCollection services)
     {
-        services.AddMediator(options => options.Assemblies = [typeof(Program)]);
+        services.AddMediator(options =>
+        {
+            options.ServiceLifetime = ServiceLifetime.Scoped;
+        });
     }
 
     private static void AddDbContext(IServiceCollection services, IConfiguration configuration)
     {
+        var dbSettings = configuration
+            .GetSection(DatabaseSettings.SectionName)
+            .Get<DatabaseSettings>();
+
         services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.UseNpgsql(dbSettings!.DefaultConnection);
+        });
+    }
+
+    private static void AddCarter(IServiceCollection services) => services.AddCarter();
+
+    private static void AddSettings(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<DatabaseSettings>()
+            .Bind(configuration.GetSection(DatabaseSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<RedisSettings>()
+            .Bind(configuration.GetSection(RedisSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection(JwtSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.Configure<MailSettings>(configuration.GetSection(MailSettings.SectionName));
+
+        services.AddOptions<NominatimSettings>()
+            .Bind(configuration.GetSection(NominatimSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+    }
+
+    /// <summary>
+    /// Registra a conexão Redis e os stores de códigos OTP e refresh tokens.
+    /// Requer a chave "Redis:ConnectionString" em appsettings ou User Secrets.
+    /// Em desenvolvimento local: docker run -d -p 6379:6379 redis:7-alpine
+    /// </summary>
+    private static void AddRedis(IServiceCollection services, IConfiguration configuration)
+    {
+        var settings = configuration
+            .GetSection(RedisSettings.SectionName)
+            .Get<RedisSettings>();
+
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(settings!.ConnectionString));
+
+        services.AddSingleton<IVerificationCodeStore, RedisVerificationCodeStore>();
+        services.AddSingleton<IRefreshTokenStore, RedisRefreshTokenStore>();
+    }
+
+    /// <summary>
+    /// Registra os serviços transversais da API (e-mail, integrações externas).
+    /// </summary>
+    private static void AddServices(IServiceCollection services, IHostEnvironment environment)
+    {
+        if (environment.IsProduction() || environment.IsStaging())
+            services.AddScoped<IEmailSender, MailKitEmailSender>();
+        else
+            services.AddSingleton<IEmailSender, LoggingEmailSender>();
+
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+    }
+
+    private static void AddScoreProcessing(
+        IServiceCollection services,
+        IHostEnvironment environment)
+    {
+        services.AddScoped<CreditScoreJob>();
+        services.AddSingleton<CreditScoreDispatcher>();
+
+        if (!environment.IsEnvironment("Testing"))
+        {
+            services.AddHostedService(provider =>
+                provider.GetRequiredService<CreditScoreDispatcher>());
+        }
+    }
+
+    /// <summary>
+    /// Registra o serviço de geocodificação Nominatim com typed HttpClient.
+    /// Requer a seção "Nominatim" em appsettings com BaseUrl, UserAgent e TimeoutSeconds.
+    /// </summary>
+    private static void AddGeocoding(IServiceCollection services, IConfiguration configuration)
+    {
+        var settings = configuration
+            .GetSection(NominatimSettings.SectionName)
+            .Get<NominatimSettings>()
+            ?? throw new InvalidOperationException("Seção 'Nominatim' não encontrada em appsettings.");
+
+        services.AddHttpClient<IGeocodingService, NominatimGeocodingService>(client =>
+        {
+            client.BaseAddress = new Uri(settings.BaseUrl);
+            client.DefaultRequestHeaders.Add("User-Agent", settings.UserAgent);
+            client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
+        });
+    }
+
+    /// <summary>
+    /// Registra autenticação JWT Bearer e autorização.
+    /// Requer a chave "Jwt:SigningKey" em User Secrets ou variável de ambiente.
+    /// </summary>
+    private static void AddJwtAuthentication(IServiceCollection services, IConfiguration configuration)
+    {
+        var jwtSettings = configuration
+            .GetSection(JwtSettings.SectionName)
+            .Get<JwtSettings>()
+            ?? throw new InvalidOperationException("Seção 'Jwt' não encontrada em appsettings.");
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings.Audience,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtSettings.SigningKey)),
+                    ClockSkew = TimeSpan.FromSeconds(30)
+                };
+            });
+
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthorizationPolicies.Authenticated, policy =>
+                policy.RequireAuthenticatedUser())
+            .AddPolicy(AuthorizationPolicies.Admin, policy =>
+                policy.RequireAuthenticatedUser()
+                    .RequireClaim("role", Ecocell.Api.Enums.Role.Admin.ToString()));
+    }
+
+    /// <summary>
+    /// Registra rate limiting por IP com política fixa baseada em janela de tempo.
+    /// Requer a seção "RateLimit" em appsettings com Enabled, PermitLimit e WindowMinutes.
+    /// </summary>
+    private static void AddRateLimiting(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<RateLimitSettings>()
+            .Bind(configuration.GetSection(RateLimitSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddRateLimiter(options =>
+        {
+            // PermitLimit e WindowMinutes resolvidos por request via IOptionsMonitor
+            // para que overrides de configuração (ex.: testes de integração com InMemory)
+            // aplicados após AddApi sejam respeitados.
+            options.AddPolicy("public-ip", context =>
+            {
+                var settings = context.RequestServices
+                    .GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<RateLimitSettings>>()
+                    .CurrentValue;
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = settings.PermitLimit,
+                        Window = TimeSpan.FromMinutes(settings.WindowMinutes),
+                        QueueLimit = 0
+                    });
+            });
+
+            options.OnRejected = async (ctx, ct) =>
+            {
+                ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                ctx.HttpContext.Response.ContentType = "application/json";
+                var body = JsonSerializer.Serialize(
+                    new ResponseError("Limite de requisições excedido. Tente novamente em instantes."),
+                    CamelCaseJsonSerializerOptions);
+                await ctx.HttpContext.Response.WriteAsync(body, ct);
+            };
         });
     }
 }

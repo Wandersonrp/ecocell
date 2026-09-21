@@ -1,0 +1,60 @@
+<label class="eco-text-field @(_focused ? "eco-text-field--focused" : "") @(HasError ? "eco-text-field--error" : "") @CssClass">
+    @if (Icon is not null)
+    {
+        <span class="eco-text-field-icon" aria-hidden="true">@Icon</span>
+    }
+    <input class="eco-text-field-input"
+           type="@Type"
+           placeholder="@Placeholder"
+           value="@Value"
+           @oninput="OnInput"
+           @onfocusin="@(() => _focused = true)"
+           @onfocusout="@(() => _focused = false)"
+           @attributes="AdditionalAttributes" />
+</label>
+@if (HasError && ErrorText is not null)
+{
+    <span class="eco-text-field-error" role="alert">@ErrorText</span>
+}
+
+@code {
+    private bool _focused;
+
+    [Parameter, EditorRequired]
+    public string Placeholder { get; set; } = default!;
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Type { get; set; } = "text";
+
+    [Parameter]
+    public RenderFragment? Icon { get; set; }
+
+    [Parameter]
+    public bool HasError { get; set; }
+
+    [Parameter]
+    public string? ErrorText { get; set; }
+
+    [Parameter]
+    public Func<string, string>? Mask { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? string.Empty;
+        var result = Mask is not null ? Mask(raw) : raw;
+        Value = result;
+        await ValueChanged.InvokeAsync(result);
+    }
+}

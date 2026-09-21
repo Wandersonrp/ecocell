@@ -1,0 +1,16 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="EcocellTheme.Theme" IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="eco-main-layout">
+    <main class="eco-content">
+        @Body
+    </main>
+</div>
+
+@code {
+    private bool _isDarkMode = false;
+}

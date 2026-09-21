@@ -1,0 +1,20 @@
+.eco-auth-headline {
+    text-align: center;
+}
+
+.eco-auth-headline h1 {
+    margin: 0;
+    font-size: var(--eco-font-h1-size);
+    font-weight: var(--eco-font-h1-weight);
+    line-height: var(--eco-font-h1-lh);
+    color: var(--eco-color-text-primary);
+    letter-spacing: -0.005em;
+}
+
+.eco-auth-headline p {
+    margin: var(--eco-space-sm) 0 0;
+    font-size: var(--eco-font-body-md-size);
+    font-weight: var(--eco-font-body-md-weight);
+    line-height: var(--eco-font-body-md-lh);
+    color: var(--eco-color-text-secondary);
+}

@@ -16,21 +16,21 @@ public class ExceptionHandlerMiddleware
     public async Task InvokeAsync(HttpContext httpContext)
     {
         try
-        {            
+        {
             await _next(httpContext);
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "Ocorreu um erro ao fazer a solicitação: {@Erro}", ex);
-            await HandleException(httpContext, ex);
+            _logger.LogError(ex, "Ocorreu um erro ao fazer a solicitação: {@Error}", ex);
+            await HandleException(httpContext);
         }
     }
 
-    private Task HandleException(HttpContext httpContext, Exception exception)
+    private static Task HandleException(HttpContext httpContext)
     {
         var errorMessage = new ResponseError("Ocorreu um erro desconhecido no servidor.");
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        return httpContext.Response.WriteAsJsonAsync(errorMessage);
-    }    
+        return httpContext.Response.WriteAsJsonAsync(errorMessage, httpContext.RequestAborted);
+    }
 }

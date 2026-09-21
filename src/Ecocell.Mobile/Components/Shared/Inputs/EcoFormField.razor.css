@@ -1,0 +1,26 @@
+.eco-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--eco-space-xs);
+}
+
+.eco-form-field__label {
+    font-size: var(--eco-font-label-size);
+    font-weight: var(--eco-font-label-weight);
+    line-height: var(--eco-font-label-lh);
+    color: var(--eco-color-text-secondary);
+    padding-left: var(--eco-input-padding-h);
+}
+
+.eco-form-field__optional {
+    color: var(--eco-color-text-tertiary);
+    font-weight: var(--eco-font-caption-weight);
+}
+
+.eco-form-field__error {
+    font-size: var(--eco-font-caption-size);
+    font-weight: var(--eco-font-caption-weight);
+    line-height: var(--eco-font-caption-lh);
+    color: var(--eco-color-error);
+    padding-left: var(--eco-input-padding-h);
+}

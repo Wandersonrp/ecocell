@@ -1,0 +1,28 @@
+<div class="eco-top-bar">
+    <button type="button" class="eco-top-bar__avatar" aria-label="Perfil" @onclick="OnAvatar">
+        <MudIcon Icon="@Icons.Material.Filled.Person" aria-hidden="true" />
+    </button>
+
+    <div class="eco-top-bar__logo">
+        <EcoWordmark />
+    </div>
+
+    <button type="button" class="eco-top-bar__bell" aria-label="Notificações" @onclick="OnBell">
+        <MudIcon Icon="@Icons.Material.Filled.Notifications" aria-hidden="true" />
+        @if (NotificationCount > 0)
+        {
+            <span class="eco-top-bar__badge">@NotificationCount</span>
+        }
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public int NotificationCount { get; set; }
+
+    [Parameter]
+    public EventCallback OnAvatar { get; set; }
+
+    [Parameter]
+    public EventCallback OnBell { get; set; }
+}
